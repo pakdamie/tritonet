@@ -56,14 +56,14 @@ List trito_metapop(
 
         Rcpp::NumericVector dy(patch_num * 7);
         
-        NumericVector dHS ;
-        NumericVector dHI ;
-        NumericVector dHR ;
+        NumericVector dHS;
+        NumericVector dHI;
+        NumericVector dHR;
         
         NumericVector dPS;
-        NumericVector dPI ;
-        NumericVector dSS ;
-        NumericVector dSI ;
+        NumericVector dPI;
+        NumericVector dSS;
+        NumericVector dSI;
         
         
 
@@ -106,12 +106,12 @@ List trito_metapop(
                 
         dy[Range(0,patch_num-1)] = dHS ;
         dy[Range(patch_num, (2*patch_num)-1)] = dHI;
-         dy[Range((2*patch_num),((3*patch_num)-1))] = dHR;
+        dy[Range((2*patch_num),((3*patch_num)-1))] = dHR;
                 
-           dy[Range((3*patch_num),((4*patch_num)-1))] = dPS;
+         dy[Range((3*patch_num),((4*patch_num)-1))] = dPS;
          dy[Range((4*patch_num),((5*patch_num)-1))] =    dPI ;
-             dy[Range((5*patch_num),((6*patch_num)-1))] =  dSS ;
-             dy[Range((6*patch_num),((7*patch_num)-1))] = dSI;
+         dy[Range((5*patch_num),((6*patch_num)-1))] =  dSS ;
+         dy[Range((6*patch_num),((7*patch_num)-1))] = dSI;
                 
                 
                 
@@ -119,57 +119,3 @@ List trito_metapop(
         return List::create(dy);
 }
 
-
-/*** R
-patch_num = 3
-initial_y <- c(HS = rep(10,patch_num),
-                 HI = rep(10,patch_num),
-                 HR = rep(0,patch_num),
-                 PS = rep(0,patch_num),
-                 PI = rep(100,patch_num),
-                 SS = rep(100,patch_num),
-                 SI = rep(100,patch_num))
-
-
-
-parameters_n <- c(
-        b_H = 10, #Human birth rate
-        b_P = 0, #P.vector birth rate
-        b_S = 0, #S. vector birth rate
-        mu_H = 0, #Human death rate
-        mu_P = 0, #P. vector death rate
-        mu_S = 0, #S. vector death rate
-        
-        a_P = 0.10, #biting rate of the p. vector
-        a_S = 0.10, #biting rate of the s.vector
-        
-        phi_P = 0.90, #transmission probability of p. vector
-        phi_S = 0.10, #transmission probability of s. vector
-        phi_H  = 0.40, #transmission probability of human
-        
-        # Recovery rate
-        gamma = 1/7,  #recovery rate of infected human
-        
-        #competition coefficient
-        c_PS = 0, #competitition effect of p.vector on s.vector
-        c_SP = 0  #competitition effect of s.vector on p.vector
-)
-
-df.contact <- matrix(c(0,0,0,
-                       0,0,0,
-                       0,0,0), ncol =3)
-
-results <- deSolve::lsoda(
-        times = 1:50,
-        y = initial_y ,
-        func = trito_metapop,
-        parms = parameters_n,
-        patch_num = 3,
-        disp_mat =df.contact 
-        
-)
-
-
-
-
-*/
