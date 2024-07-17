@@ -4,4 +4,5 @@ library(ggplot2)
 library(gganimate)
 library(reshape2) 
 library(readr)
-
+library(Rcpp)
+library(viridis)
