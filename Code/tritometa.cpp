@@ -1,45 +1,46 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 
-using namespace Rcpp;
 using namespace arma;
+using namespace Rcpp;
 //[[Rcpp::export]]
+
 
 List trito_metapop(
                 double t,  
                 NumericVector y, 
                 int patch_num,
                 NumericVector parms,
-                NumericMatrix disp_mat) {
+                NumericMatrix disp_mat_P) {
         
         //Demographic parameters
-        NumericVector b_H = rep(parms["b_H"],patch_num); //Human birth rate
-        NumericVector b_P = rep(parms["b_P"],patch_num); //P.vector birth rate
-        NumericVector b_S = rep(parms["b_S"],patch_num);  //S. vector birth rate
-        NumericVector mu_H = rep(parms["mu_H"],patch_num);  //Human death rate
+        NumericVector b_H = rep(parms["b_H"],patch_num);    //Human birth rate
+        NumericVector b_P = rep(parms["b_P"],patch_num);   //P.vector birth rate
+        NumericVector b_S = rep(parms["b_S"],patch_num);   //S. vector birth rate
+        NumericVector mu_H = rep(parms["mu_H"],patch_num); //Human death rate
         NumericVector mu_P = rep(parms["mu_P"],patch_num); //P. vector death rate
         NumericVector mu_S = rep(parms["mu_S"],patch_num); // S. vector death rate
         
         //Force of infection parameters
         NumericVector a_P = rep(parms["a_P"],patch_num); //biting rate of the p. vector
-        NumericVector a_S =  rep(parms["a_S"],patch_num);  //biting rate of the s.vector
+        NumericVector a_S = rep(parms["a_S"],patch_num);  //biting rate of the s.vector
         
-        NumericVector phi_P =   rep(parms["phi_P"],patch_num);  //transmission probability of p. vector
-        NumericVector phi_S =    rep(parms["phi_S"],patch_num);   //transmission probability of s. vector
-        NumericVector phi_H =   rep(parms["phi_H"],patch_num);   //transmission probability of human
+        NumericVector phi_P =  rep(parms["phi_P"],patch_num);  //transmission probability of p. vector
+        NumericVector phi_S =  rep(parms["phi_S"],patch_num);   //transmission probability of s. vector
+        NumericVector phi_H =  rep(parms["phi_H"],patch_num);   //transmission probability of human
         
         // Recovery rate
         NumericVector gamma = rep(parms["gamma"],patch_num);   //recovery rate of infected human
         
         //#competition coefficient
-        NumericVector c_PS =  rep(parms["c_PS"],patch_num);   //competitition effect of p.vector on s.vector
+        NumericVector c_PS =  rep(parms["c_PS"],patch_num);   //competition effect of p.vector on s.vector
         NumericVector c_SP =  rep(parms["c_SP"],patch_num);  //competition effect of s.vector on p.vector
         
         // FOI
         NumericVector FOI_P = a_P * phi_P; // #FOI for a primary vector
         NumericVector FOI_S = a_S * phi_S;  //#FOI for a secondary vector
         NumericVector FOI_H_P = a_P * phi_H; //#FOI for a human to a primary vector
-        NumericVector FOI_H_S = a_S * phi_S; //#FOI for a human to a secondary vector
+        NumericVector FOI_H_S = a_S * phi_H; //#FOI for a human to a secondary vector
         
         // Human host population
         
@@ -66,13 +67,30 @@ List trito_metapop(
         NumericVector dSI;
         
         
-
+        
+        
         // Population size
         NumericVector N_H = HS + HI + HR; //human host population 
         NumericVector N_P = PS + PI; // p. vector population
         NumericVector N_S = SS + SI; // s. vector population
-                
-                
+        
+        
+        //Disp_matrix adjusted for density-dependence
+       
+        NumericVector dispersal_vec = (4.0/(1.0 +  exp(- 0.001 * (N_P + N_S - 5e3))));
+     
+     
+        arma::mat dispersal_mat(patch_num, patch_num);
+        
+        for (int p = 0; p < patch_num; p++){
+                dispersal_mat (p, p) = dispersal_vec [p];
+        }
+
+        arma::mat disp_mat_P_convert = Rcpp::as<arma::mat>(disp_mat_P);
+        
+        NumericMatrix disp_mat = Rcpp::wrap(disp_mat_P_convert * dispersal_mat);
+
+   
         //human host population
         
         //susceptible host human population
@@ -118,4 +136,3 @@ List trito_metapop(
 
         return List::create(dy);
 }
-

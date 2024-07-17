@@ -1,0 +1,7 @@
+library(dplyr)
+library(igraph)
+library(ggplot2)
+library(gganimate)
+library(reshape2) 
+library(readr)
+
