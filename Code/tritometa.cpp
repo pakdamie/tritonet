@@ -6,6 +6,7 @@ using namespace Rcpp;
 //[[Rcpp::export]]
 
 
+
 List trito_metapop(
                 double t,  
                 NumericVector y, 
@@ -35,6 +36,7 @@ List trito_metapop(
         //#competition coefficient
         NumericVector c_PS =  rep(parms["c_PS"],patch_num);   //competition effect of p.vector on s.vector
         NumericVector c_SP =  rep(parms["c_SP"],patch_num);  //competition effect of s.vector on p.vector
+        NumericVector disp_max = rep(parms["disp_max"],patch_num);
         
         // FOI
         NumericVector FOI_P = a_P * phi_P; // #FOI for a primary vector
@@ -45,27 +47,28 @@ List trito_metapop(
         // Human host population
         
         
-        NumericVector HS = y[Range(0,patch_num-1)];
-        NumericVector HI = y[Range(patch_num, (2*patch_num)-1)];
-        NumericVector HR = y[Range((2*patch_num),((3*patch_num)-1))];
+        NumericVector HS = y[Range(0,patch_num - 1)];
+        NumericVector HI = y[Range(patch_num, (2 * patch_num) - 1)];
+        NumericVector HR = y[Range((2 * patch_num),((3 * patch_num) - 1))];
         
-        NumericVector PS = y[Range((3*patch_num),((4*patch_num)-1))];
-        NumericVector PI =  y[Range((4*patch_num),((5*patch_num)-1))];
-        NumericVector SS =  y[Range((5*patch_num),((6*patch_num)-1))];
-        NumericVector SI =  y[Range((6*patch_num),((7*patch_num)-1))];
+        NumericVector PS = y[Range((3 * patch_num),((4 * patch_num) - 1))];
+        NumericVector PI = y[Range((4 * patch_num),((5 * patch_num) - 1))];
+        NumericVector SS = y[Range((5 * patch_num),((6 * patch_num) - 1))];
+        NumericVector SI = y[Range((6 * patch_num),((7 * patch_num) - 1))];
         
 
         Rcpp::NumericVector dy(patch_num * 7);
         
+        //Human host population
         NumericVector dHS;
         NumericVector dHI;
         NumericVector dHR;
         
+        //Vector population
         NumericVector dPS;
         NumericVector dPI;
         NumericVector dSS;
         NumericVector dSI;
-        
         
         
         
@@ -76,19 +79,18 @@ List trito_metapop(
         
         
         //Disp_matrix adjusted for density-dependence
-       
-        NumericVector dispersal_vec = (4.0/(1.0 +  exp(- 0.001 * (N_P + N_S - 5e3))));
-     
-     
-        arma::mat dispersal_mat(patch_num, patch_num);
+        arma::vec dispersal_vec = 1.0/((N_S + N_P * 1e10));
         
+        arma::mat dispersal_mat(patch_num, patch_num);
         for (int p = 0; p < patch_num; p++){
-                dispersal_mat (p, p) = dispersal_vec [p];
+                dispersal_mat (p, p) = dispersal_vec[p];
         }
 
-        arma::mat disp_mat_P_convert = Rcpp::as<arma::mat>(disp_mat_P);
         
-        NumericMatrix disp_mat = Rcpp::wrap(disp_mat_P_convert * dispersal_mat);
+        arma::mat disp_mat_P_convert = Rcpp::as<arma::mat>(disp_mat_P);
+        arma::mat new_disp_matrix = disp_mat_P_convert * dispersal_mat;
+        
+        NumericMatrix disp_mat = Rcpp::wrap(new_disp_matrix);
 
    
         //human host population
@@ -97,28 +99,28 @@ List trito_metapop(
         dHS = (b_H * N_H) - (FOI_P * HS * (PI/N_P)) - (FOI_S *HS*(SI/N_S)) - (mu_H *HS);
         
         //infected host human population
-        dHI = (FOI_P*HS *(PI/N_P)) + (FOI_S *HS*(SI/N_S))- (gamma*HI) -(mu_H*HI);
+        dHI = (FOI_P * HS * (PI/N_P)) + (FOI_S * HS * (SI/N_S))- (gamma*HI) - (mu_H*HI);
         
         //recovered host human population
-        dHR = (gamma*HI)-(mu_H*HR);
+        dHR = (gamma * HI) - (mu_H * HR);
         
         //primary vector population
         
         //susceptible primary vector population
-        dPS =  (b_P * N_P) - (FOI_H_P *PS* (HS/N_H)) - (mu_P *PS) - (c_SP*(PS)*(N_S)) +
+        dPS =  (b_P*N_P) - (FOI_H_P*PS*(HI/N_H)) - (mu_P*PS) - (c_SP*(PS)*(N_S)) +
                 (transpose(disp_mat) * PS) -  (disp_mat * PS);
                 
       
         //infected primary vector population
-        dPI = (FOI_H_P * PS * (HS/N_H)) - mu_P*PI - c_SP*(PI)*(N_S) + 
-                ((disp_mat) * PI) -  (disp_mat * PI);
+        dPI = (FOI_H_P * PS * (HI/N_H)) - (mu_P*PI) - (c_SP*(PI)*(N_S)) + 
+                (transpose(disp_mat) * PI) -  (disp_mat * PI);
                 
         
         //secondary vector population
-        dSS =  (b_S * N_S) - (FOI_H_S *SS* (HS/N_H)) - mu_S *SS -  c_PS*(SS)*(N_P)+
+        dSS =  (b_S * N_S) - (FOI_H_S *SS* (HI/N_H)) - (mu_S *SS) -  (c_PS*(SS)*(N_P)) +
                 (transpose(disp_mat) * SS) -  (disp_mat * SS);
                 
-        dSI = (FOI_H_S * SS * (HS/N_H)) - mu_S*SI -  c_PS*(SI)*(N_P) + 
+        dSI = (FOI_H_S * SS * (HI/N_H)) - (mu_S*SI) -  c_PS*(SI)*(N_P) + 
                 (transpose(disp_mat) * SI) -  (disp_mat * SI);      
                 
                 
@@ -136,3 +138,4 @@ List trito_metapop(
 
         return List::create(dy);
 }
+

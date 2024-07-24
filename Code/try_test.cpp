@@ -1,25 +1,27 @@
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+
+using namespace arma;
 using namespace Rcpp;
-
-// This is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using the Rcpp::sourceCpp 
-// function (or via the Source button on the editor toolbar). Learn
-// more about Rcpp at:
-//
-//   http://www.rcpp.org/
-//   http://adv-r.had.co.nz/Rcpp.html
-//   http://gallery.rcpp.org/
-//
-
-// [[Rcpp::export]]
-NumericMatrix tryo(int num_patch) {
-        NumericVector tryit = {1,2,3};
+//[[Rcpp::export]]
+NumericMatrix tryo(int num_patch, 
+                   NumericMatrix v) {
         
-        NumericMatrix trymat = ( num_patch);
+        
+        NumericVector tryit = {2,2,2};
+        
+        arma::mat trymat(3, 3);
         for (int p = 0; p < 3; p++){
                 trymat (p, p) = tryit[p];
         }
-        return trymat;
+        
+        arma::mat v2 = Rcpp::as<arma::mat>(v);
+        
+        NumericMatrix disp_mat = Rcpp::wrap(v2 * trymat);
+        
+        return (transpose(disp_mat) );
+        
+
 }
 
 
@@ -29,5 +31,5 @@ NumericMatrix tryo(int num_patch) {
 //
 
 /*** R
-tryo(4)
+tryo(3,a)
 */

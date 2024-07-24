@@ -7,7 +7,7 @@ Simulator_function <- function(num_patches,
         ###We create a scale-free network
         new_network <-  erdos.renyi.game(
                 num_patches,
-                0.5,
+                0.1,
                 type = c("gnp"),
                 directed = FALSE,
                 loops = FALSE
@@ -20,52 +20,54 @@ Simulator_function <- function(num_patches,
         ###This gives me the adjacency matrix
         adj_matrix <- as_adjacency_matrix(new_network, sparse = FALSE)
         
-        
         ###The initial conditions
         initial_y <- c(HS = rep(1,num_patches),
                        HI = rep(5,num_patches),
                        HR = rep(0,num_patches),
-                       PS = runif(num_patches) * 0.1,
-                       PI = runif(num_patches) * 0,
-                       SS = runif(num_patches) * 0.4,
-                       SI = runif(num_patches) * 0)
+                       PS = sample.int(num_patches),
+                       PI = sample.int(num_patches),
+                       SS =  sample.int(num_patches),
+                       SI = sample.int(num_patches))
         
+       sum(    initial_y )
         
-        parameters_n <- c(
+        parameters_null <- c(
                 b_H = 0, #Human birth rate
-                b_P = 0.001, #P.vector birth rate
-                b_S = 0.005, #S. vector birth rate
-                mu_H = 1/80, #Human death rate
-                mu_P = 0.001, #P. vector death rate
-                mu_S = 0.005, #S. vector death rate
+                b_P = 0, #P.vector birth rate
+                b_S = 0, #S. vector birth rate
+                mu_H = 0, #Human death rate
+                mu_P = 0, #P. vector death rate
+                mu_S = 0, #S. vector death rate
                 
                 a_P = 0.0, #biting rate of the p. vector
                 a_S = 0.0, #biting rate of the s.vector
                 
-                phi_P = 0.10, #transmission probability of p. vector
-                phi_S = 0.10, #transmission probability of s. vector
-                phi_H  = 0.30, #transmission probability of human
+                phi_P = 0.0, #transmission probability of p. vector
+                phi_S = 0.0, #transmission probability of s. vector
+                phi_H  = 0.0, #transmission probability of human
                 
                 # Recovery rate
-                gamma = 1/7,  #recovery rate of infected human
+                gamma = 0.0,  #recovery rate of infected human
                 
                 #competition coefficient
-                c_PS = 0.05, #competitition effect of p.vector on s.vector
-                c_SP = 0.01  #competitition effect of s.vector on p.vector
+                c_PS = 0.0, #competitition effect of p.vector on s.vector
+                c_SP = 0.0,  #competitition effect of s.vector on p.vector
+                
+                disp_max = 1
         )
-        
         
         df.contact <- adj_matrix 
         
-        results <- data.frame(deSolve::lsoda(
-                times = seq(1,1000,1),
-                y = initial_y ,
+        results <- data.frame(ode(
+                times = seq(1,200,1),
+                y =   initial_y  ,
                 func = trito_metapop,
-                parms = parameters_n,
+                parms = parameters_null,
                 patch_num =  num_patches ,
                 disp_mat = df.contact 
                 
         ))
+        All_individuals = rowSums(results[,(2:ncol(results))])
         
         
         PSV_df <- calculate_PSV_ratio(results)
@@ -81,9 +83,10 @@ Simulator_function <- function(num_patches,
                 scale_size_continuous(range=c(0.05,15))+
                 theme_void()+
                 labs(title = 'Values at {(as.integer(frame_time))}')+
+                theme(legend.position = 'none')+
                 transition_time(time)
         
-        animate(a_gif, height = 800, width =800,rewind = FALSE)
+        animate(a_gif, height = 800, width =800,rewind = TRUE)
         anim_save("Gapminder_example.gif")
-        
+}
         
