@@ -5,8 +5,6 @@ using namespace arma;
 using namespace Rcpp;
 //[[Rcpp::export]]
 
-
-
 List trito_metapop(
                 double t,  
                 NumericVector y, 
@@ -45,14 +43,15 @@ List trito_metapop(
         NumericVector FOI_H_S = a_S * phi_H; //#FOI for a human to a secondary vector
         
         // Human host population
-        
-        
         NumericVector HS = y[Range(0,patch_num - 1)];
         NumericVector HI = y[Range(patch_num, (2 * patch_num) - 1)];
         NumericVector HR = y[Range((2 * patch_num),((3 * patch_num) - 1))];
         
+        //Primary vectors
         NumericVector PS = y[Range((3 * patch_num),((4 * patch_num) - 1))];
         NumericVector PI = y[Range((4 * patch_num),((5 * patch_num) - 1))];
+        
+        //Secondary vectors
         NumericVector SS = y[Range((5 * patch_num),((6 * patch_num) - 1))];
         NumericVector SI = y[Range((6 * patch_num),((7 * patch_num) - 1))];
         
@@ -69,8 +68,6 @@ List trito_metapop(
         NumericVector dPI;
         NumericVector dSS;
         NumericVector dSI;
-        
-        
         
         // Population size
         NumericVector N_H = HS + HI + HR; //human host population 
