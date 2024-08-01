@@ -78,11 +78,15 @@ List trito_metapop(
         //Disp_matrix adjusted for density-dependence
         arma::vec dispersal_vec = 1.0/((N_S + N_P * 1e10));
         
+        
+        //Distance_matrix
+        
+        
+        
         arma::mat dispersal_mat(patch_num, patch_num);
         for (int p = 0; p < patch_num; p++){
                 dispersal_mat (p, p) = dispersal_vec[p];
         }
-
         
         arma::mat disp_mat_P_convert = Rcpp::as<arma::mat>(disp_mat_P);
         arma::mat new_disp_matrix = disp_mat_P_convert * dispersal_mat;
