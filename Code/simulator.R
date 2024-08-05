@@ -14,24 +14,24 @@ Simulator_function <- function(num_patch,
         g9 <- graph_from_adjacency_matrix(adjacency_matrix , weighted=TRUE,
                                           mode="plus", diag=FALSE)
         
-        
-        sames <- sample(seq(1,100),num_patch, replace = TRUE)
+        degree_vec <- degree(g9 )
+        same1 <- sample(seq(1,100),num_patch, replace = TRUE)
         
         
         ###The initial conditions
         initial_y <- c(HS = sample(seq(1,1000),num_patch, replace = TRUE),
                        HI = rep(5,num_patch),
                        HR = rep(0,num_patch),
-                       PS =  sames ,
+                       PS =   sample(seq(1,10),num_patch, replace = TRUE) ,
                        PI = rep(5,num_patch),
-                       SS =  sames ,
+                       SS =   sample(seq(1,10),num_patch, replace = TRUE) ,
                        SI = rep(5,num_patch))
         
 
-        parameters_null <- c(
+        parameters_full <- c(
                 b_H = 1/27375, #Human birth rate
-                b_P = 0.05, #P.vector birth rate
-                b_S = 0.05, #S. vector birth rate
+                b_P = 0.01, #P.vector birth rate
+                b_S = 0.01, #S. vector birth rate
                 mu_H = 1/27375, #Human death rate
                 mu_P = 0.01, #P. vector death rate
                 mu_S = 0.01, #S. vector death rate
@@ -47,14 +47,14 @@ Simulator_function <- function(num_patch,
                 gamma = 1/56,  #recovery rate of infected human
                 
                 #competition coefficient
-                c_PS = 0.0001, #competitition effect of p.vector on s.vector
-                c_SP = 0.0001,  #competitition effect of s.vector on p.vector
+                c_PS = 2e-4,#competitition effect of p.vector on s.vector
+                c_SP = 0,  #competitition effect of s.vector on p.vector
                 
-                a_max = 0.0001,
-                k = 0.001,
-                a_0 = 1000, 
+                a_max = 1,
+                k = 1e-2,
+                a_0 = 2500, 
                 
-                lambda = 3     )
+                lambda = 1   )
         
         
         
@@ -62,26 +62,27 @@ Simulator_function <- function(num_patch,
                replace = FALSE))
         
         
-        disturbance <- data.frame(var = c(chosen_compartments( chosen_patch )),
-                       value = c(rep(0.55,2 * length(chosen_patch)),
-                                 rep(0.80, 2* length(chosen_patch))),
+        disturbance <- data.frame(var = c(namer_chosen_compartments( chosen_patch )),
+                       value = c(rep(0.25,2 * length(chosen_patch)),
+                                 rep(0.85, 2* length(chosen_patch))),
                        method = c(rep( "mult", 4 * length(chosen_patch) )))
 
         
-       a<-  disturbance[rep(seq_len(nrow(disturbance)), length(seq(1,100,frequency))), ]
+       a<-  disturbance[rep(seq_len(nrow(disturbance)), length(seq(1,50,frequency))), ]
         
         
-        a$time= rep(seq(1,100,frequency) ,each = nrow(disturbance))
+        a$time= rep(seq(1,50,frequency) ,each = nrow(disturbance))
 
         results <- data.frame(ode(
-                times = seq(1,100,1),
+                times = seq(1,1000,1),
                 y =   initial_y  ,
                 func = model_ross_trito_metapopulation,
-                parms = parameters_null,
+                parms = parameters_full,
                 patch_num =  num_patch ,
                 adj_matrix = adjacency_matrix,
-                events = list(data = a),
-                method = 'lsodar'
+                degree_vec = degree_vec))
+                #events = list(data = a),
+                #method = 'lsodar'
                 
         ))
         
@@ -105,9 +106,14 @@ Simulator_function <- function(num_patch,
         a_gif <- ggplot(data = df_network)+
                 geom_segment(aes( x=x, xend = xend, y = y, yend = yend))+
                 geom_point(data=full_PI,aes(x=x,y=y,color =value),size = 10)+
-                scale_color_viridis(option = 'turbo', name = "Dominance")+                theme_void()+
-                labs(title = 'Values at {(as.integer(frame_time))}')+
-                transition_time(time)
+                scale_colour_gradient2(
+                        name = "Primary/Secondary",
+                        low = ("blue"),
+                        mid = "white",
+                        high = ("red"),
+                        midpoint = 1)+
+       labs(title = 'Values at {(as.integer(frame_time))}')+
+                transition_time(time) + theme_dark()
         
         animate(a_gif, height = 800, width =800)
         anim_save("Gapminder_example.gif")

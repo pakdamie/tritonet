@@ -1,10 +1,9 @@
 ###Modeling metapopulation 
 
-model_ross_trito_metapopulation <- function(t, state, param, patch_num, adj_matrix) {
+model_ross_trito_metapopulation <- function(t, state, param, patch_num, adj_matrix,degree_vec) {
         
         with(as.list(c(state, param)), {
                 
-        
         ###The metapopulation
         H_S = matrix(state[1:num_patch], ncol = 1)
         H_I = matrix(state[(num_patch+1):(2*num_patch)], ncol = 1)
@@ -15,12 +14,12 @@ model_ross_trito_metapopulation <- function(t, state, param, patch_num, adj_matr
         S_I = matrix(state[((6*num_patch)+1):(7*num_patch)], ncol = 1)
         
         ###Demographic parameters
-        b_H <- matrix(rep(param["b_H"],num_patch) , ncol = 1) #Human birth rate
-        b_P <- matrix(rep(param["b_P"],num_patch) , ncol = 1)  #P.vector birth rate
-        b_S <-  matrix(rep(param["b_S"],num_patch) , ncol = 1)  #S. vector birth rate
-        mu_H <- matrix(rep(param["mu_H"],num_patch) , ncol = 1)  #Human death rate
-        mu_P <-  matrix(rep(param["mu_P"],num_patch) , ncol = 1)  #P. vector death rate
-        mu_S <- matrix(rep(param["mu_S"],num_patch) , ncol = 1)  #S. vector death rate
+        b_H <- matrix(rep(param["b_H"],num_patch), ncol = 1) #Human birth rate
+        b_P <- matrix(rep(param["b_P"],num_patch), ncol = 1)  #P.vector birth rate
+        b_S <-  matrix(rep(param["b_S"],num_patch), ncol = 1)  #S. vector birth rate
+        mu_H <- matrix(rep(param["mu_H"],num_patch), ncol = 1)  #Human death rate
+        mu_P <-  matrix(rep(param["mu_P"],num_patch), ncol = 1)  #P. vector death rate
+        mu_S <- matrix(rep(param["mu_S"],num_patch), ncol = 1)  #S. vector death rate
         
         #Force of infection parameters
         a_P <- matrix(rep(param["a_P"],num_patch) , ncol = 1)  #biting rate of the p. vector
@@ -31,11 +30,11 @@ model_ross_trito_metapopulation <- function(t, state, param, patch_num, adj_matr
         phi_H  <-  matrix(rep(param["phi_H"],num_patch) , ncol = 1)   #transmission probability of human
         
         # Recovery rate
-        gamma <-  matrix(rep(param["gamma"],num_patch) , ncol = 1)   #recovery rate of infected human
+        gamma <-  matrix(rep(param["gamma"],num_patch), ncol = 1)   #recovery rate of infected human
         
         #competition coefficient
-        c_PS <-  matrix(rep(param["c_PS"],num_patch) , ncol = 1)   #competitition effect of p.vector on s.vector
-        c_SP <-  matrix(rep(param["c_SP"],num_patch) , ncol = 1)  #competition effect of s.vector on p.vector
+        c_PS <-  matrix(rep(param["c_PS"],num_patch), ncol = 1)   #competitition effect of p.vector on s.vector
+        c_SP <-  matrix(rep(param["c_SP"],num_patch), ncol = 1)  #competition effect of s.vector on p.vector
         
         ### FOI
         FOI_P <- matrix(a_P * phi_P, ncol = 1) #FOI for a primary vector
@@ -72,9 +71,13 @@ model_ross_trito_metapopulation <- function(t, state, param, patch_num, adj_matr
         ###Account for the distance...
         probability_matrix <- exp(-lambda * adj_matrix)
         diag(probability_matrix) <- 0
+
+        
+        diag_connection <- matrix(1,num_patch,num_patch)
+        diag(diag_connection) <-degree_vec
         
         ###Account for the density-dependence
-        dd_mat <- diag(c(a_max/(1.00 +  exp(k *(N_V - a_0 )))),num_patch,num_patch)
+        dd_mat <- diag(c(a_max/(1.00 +  exp(-k *(N_V - a_0 )))),num_patch,num_patch)/1
         
         disp.contact2<- dd_mat %*%  probability_matrix 
         
