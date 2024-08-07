@@ -87,7 +87,6 @@ model_ross_trito_metapopulation <- function(t,
         dd_mat <- diag(c(a_max/(1.00 +  exp(-k *(N_V - a_0 )))),num_patch,num_patch)
         adjusted_prob = sweep(probability_matrix, 1, rowSums(probability_matrix), FUN = "/")
         adjusted_prob_2 <- adjusted_prob * probability_matrix
-
         disp.contact2 <-adjusted_prob_2 %*% dd_mat
 
        
