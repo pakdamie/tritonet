@@ -3,6 +3,8 @@ Simulator_function <- function(num_patch,
                                max_distance = 20,
                                coverage,
                                frequency,
+                               species1 = 0.8,
+                               species2 = 0.2,
                                initial_values = "default",
                                parameter_values = "default",
                                disturbance = 'default', 
@@ -14,108 +16,60 @@ Simulator_function <- function(num_patch,
         g9 <- graph_from_adjacency_matrix(adjacency_matrix , weighted=TRUE,
                                           mode="plus", diag=FALSE)
         
-        degree_vec <- degree(g9 )
-        same1 <- sample(seq(1,100),num_patch, replace = TRUE)
-        
-        
+        degree_vec <- degree(g9)
         ###The initial conditions
         initial_y <- c(HS = sample(seq(1,1000),num_patch, replace = TRUE),
                        HI = rep(5,num_patch),
                        HR = rep(0,num_patch),
-                       PS =   sample(seq(1,10),num_patch, replace = TRUE) ,
+                       PS =   sample(seq(1,100),num_patch, replace = TRUE) ,
                        PI = rep(5,num_patch),
-                       SS =   sample(seq(1,10),num_patch, replace = TRUE) ,
+                       SS =   sample(seq(1,100),num_patch, replace = TRUE) ,
                        SI = rep(5,num_patch))
         
 
         parameters_full <- c(
                 b_H = 1/27375, #Human birth rate
-                b_P = 0.01, #P.vector birth rate
-                b_S = 0.01, #S. vector birth rate
+                b_P = 0.09, #P.vector birth rate
+                b_S = 0.09, #S. vector birth rate
                 mu_H = 1/27375, #Human death rate
-                mu_P = 0.01, #P. vector death rate
-                mu_S = 0.01, #S. vector death rate
+                mu_P =0.09, #P. vector death rate
+                mu_S = 0.09, #S. vector death rate
                 
                 a_P = 4, #biting rate of the p. vector
                 a_S = 2, #biting rate of the s.vector
                 
-                phi_P = 0.00008, #transmission probability of p. vector
+                phi_P =  0.0009, #transmission probability of p. vector
                 phi_S = 0.00004, #transmission probability of s. vector
                 phi_H  = 0.5, #transmission probability of human
                 
-                # Recovery rate
+                # Recovery rate of the acute phae
                 gamma = 1/56,  #recovery rate of infected human
                 
                 #competition coefficient
-                c_PS = 2e-4,#competitition effect of p.vector on s.vector
-                c_SP = 0,  #competitition effect of s.vector on p.vector
+                c_PS = 1e-4,#competitition effect of p.vector on s.vector
+                c_SP = 1e-4,  #competitition effect of s.vector on p.vector
                 
                 a_max = 1,
                 k = 1e-2,
                 a_0 = 2500, 
                 
-                lambda = 1   )
+                lambda = 1)
         
         
-        
-       chosen_patch <-  matrix(sample(seq(1, num_patch),floor(num_patch * coverage),
-               replace = FALSE))
-        
-        
-        disturbance <- data.frame(var = c(namer_chosen_compartments( chosen_patch )),
-                       value = c(rep(0.25,2 * length(chosen_patch)),
-                                 rep(0.85, 2* length(chosen_patch))),
-                       method = c(rep( "mult", 4 * length(chosen_patch) )))
-
-        
-       a<-  disturbance[rep(seq_len(nrow(disturbance)), length(seq(1,50,frequency))), ]
+        event_DF <-force_event_ODE(num_patch, frequency, coverage,
+                        species1, species2, end_time)
         
         
-        a$time= rep(seq(1,50,frequency) ,each = nrow(disturbance))
 
         results <- data.frame(ode(
                 times = seq(1,1000,1),
                 y =   initial_y  ,
                 func = model_ross_trito_metapopulation,
                 parms = parameters_full,
-                patch_num =  num_patch ,
+                num_patch =  num_patch ,
                 adj_matrix = adjacency_matrix,
-                degree_vec = degree_vec))
-                #events = list(data = a),
-                #method = 'lsodar'
+                events = list(data = event_DF),
+                method = 'lsodar'))
                 
-        ))
-        
-        
-        
-        
-        
-        ### ALL SUBSEQUENT CODE AFTER IS PLACED SOMEWHERE ELSE.
-        All_individuals = rowSums(results[,(2:ncol(results))])
-        
-        
-        PSV_df <- calculate_PSV_ratio(results)
-        
-        df_network <- ggnetwork::fortify(   g9 )
-        nodes_coord <-  distinct(df_network,x,y,name)
-        
-        nodes_coord$name <- as.numeric(nodes_coord$name) 
-        
-        full_PI <- left_join(nodes_coord, PSV_df, by=c("name" = "patch_num"))
-        
-        a_gif <- ggplot(data = df_network)+
-                geom_segment(aes( x=x, xend = xend, y = y, yend = yend))+
-                geom_point(data=full_PI,aes(x=x,y=y,color =value),size = 10)+
-                scale_colour_gradient2(
-                        name = "Primary/Secondary",
-                        low = ("blue"),
-                        mid = "white",
-                        high = ("red"),
-                        midpoint = 1)+
-       labs(title = 'Values at {(as.integer(frame_time))}')+
-                transition_time(time) + theme_dark()
-        
-        animate(a_gif, height = 800, width =800)
-        anim_save("Gapminder_example.gif")
 }
         

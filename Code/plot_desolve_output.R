@@ -62,8 +62,6 @@ plotter_dynamics <- function(results, sprayed_patches){
                       axis.title = element_text(size =15))     
         
         
-}
-
 
 melted_S_vec <- melt(    vector_S,id.vars = 'time')
 melted_S_vec$sprayed <- "NO"
@@ -84,4 +82,4 @@ gg_sv <- ggplot( melted_S_vec, aes(x=time, y = log10(value+1), color = variable,
 
 
 gg_pv + gg_sv
-4}
+}
