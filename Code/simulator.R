@@ -7,8 +7,9 @@ Simulator_function <- function(num_patch,
                                species2 = 0.2,
                                initial_values = "default",
                                parameter_values = "default",
-                               disturbance = 'default', 
-                               times){
+                               disturbance = 'yes', 
+                               disease_on = 'no',
+                               end_length){
         
         adjacency_matrix <- simulate_final_adjacency_matrix(24601, num_patch,
                                         connectance,max_distance)
@@ -17,6 +18,8 @@ Simulator_function <- function(num_patch,
                                           mode="plus", diag=FALSE)
         
         degree_vec <- degree(g9)
+        
+        if(initial_values == "default"){
         ###The initial conditions
         initial_y <- c(HS = sample(seq(1,1000),num_patch, replace = TRUE),
                        HI = rep(5,num_patch),
@@ -25,8 +28,12 @@ Simulator_function <- function(num_patch,
                        PI = rep(5,num_patch),
                        SS =   sample(seq(1,100),num_patch, replace = TRUE) ,
                        SI = rep(5,num_patch))
-        
+        }
+        else{
+        initial_y = initial_values 
+        }
 
+        if( parameter_values == "default"){
         parameters_full <- c(
                 b_H = 1/27375, #Human birth rate
                 b_P = 0.09, #P.vector birth rate
@@ -54,22 +61,59 @@ Simulator_function <- function(num_patch,
                 a_0 = 2500, 
                 
                 lambda = 1)
+        }
+        else{
+                parameters_full =    parameter_values
+        }
         
+        if(disease_on == "no"){
+                parameters_full["phi_P"]<- 1.0
+                parameters_full["phi_S"]<- 1.0
+                parameters_full["phi_H"]<- 1.0
+        }
+        else{
+                print("Disease is spreading!")
+        }
         
         event_DF <-force_event_ODE(num_patch, frequency, coverage,
                         species1, species2, end_time)
         
-        
+        if(disturbance == "yes"){
+                results <- data.frame(ode(
+                        times = seq(1,end_length,1),
+                        y =   initial_y  ,
+                        func = model_ross_trito_metapopulation,
+                        parms = parameters_full,
+                        num_patch =  num_patch ,
+                        adj_matrix = adjacency_matrix,
+                        events = list(data = event_DF),
+                        method = 'lsodar'))
+                
+        }
+        else{
 
         results <- data.frame(ode(
-                times = seq(1,1000,1),
+                times = seq(1,end_length,1),
                 y =   initial_y  ,
                 func = model_ross_trito_metapopulation,
                 parms = parameters_full,
                 num_patch =  num_patch ,
                 adj_matrix = adjacency_matrix,
-                events = list(data = event_DF),
                 method = 'lsodar'))
                 
+        }
+        return(results)
 }
+        
+        
+
+Simulator_function(num_patch = 25,connectance = 0.01,max_distance = 20,
+                   coverage = 0.5, frequency = 2, 
+                   species1 = 0.8, species2 = 0.2,
+                   initial_values = "default",
+                   parameter_values = "default",
+                   disturbance = "yes",         
+                   disease_on = 'no',
+                   end_length = 100)
+
         

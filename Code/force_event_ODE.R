@@ -27,10 +27,10 @@ force_event_ODE <- function(num_patch, frequency, coverage,
   )
 
 
-  event_df <- disturbance[rep(seq_len(nrow(disturbance)),
+  event_df <- disturbance_df[rep(seq_len(nrow( disturbance_df )),
                               length(seq(1,end_time,frequency))), ]
 
 
-  event_df$time <- rep(seq(1, end_time, frequency), each = nrow(disturbance))
+  event_df$time <- rep(seq(1, end_time, frequency), each = nrow(disturbance_df))
   return(event_df)
 }

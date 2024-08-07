@@ -7,7 +7,7 @@ model_ross_trito_metapopulation <- function(t,
                                             adj_matrix) {
         
         with(as.list(c(state, param)), {
-                
+
         ###The metapopulation
         H_S = matrix(state[1:num_patch], ncol = 1)
         H_I = matrix(state[(num_patch+1):(2*num_patch)], ncol = 1)
@@ -85,20 +85,21 @@ model_ross_trito_metapopulation <- function(t,
         
         ###Account for the density-dependence
         dd_mat <- diag(c(a_max/(1.00 +  exp(-k *(N_V - a_0 )))),num_patch,num_patch)
-        adjusted_prob = sweep(probability_matrix, 1, rowSums(probability_matrix), FUN = "/")
+        adjusted_prob <- sweep(probability_matrix, 1, rowSums(probability_matrix), FUN = "/")
+        adjusted_prob[is.nan(adjusted_prob )== TRUE] = 0
         adjusted_prob_2 <- adjusted_prob * probability_matrix
         disp.contact2 <-adjusted_prob_2 %*% dd_mat
 
-       
+
 
         ###P. vector
         ###Susceptible
-        dP_S <-  (b_P* N_P) - (FOI_H_P *P_S* (H_I/N_H)) - mu_P *P_S - c_SP*(P_S)*(N_S) -
+        dP_S <-  (b_P* N_P) - (FOI_H_P *P_S* (H_I/N_H)) - (mu_P *P_S) - c_SP*(P_S)*(N_S) -
                 (colSums(disp.contact2) * P_S) +  (disp.contact2 %*% P_S)
                 
 
         ###Infected
-        dP_I <- (FOI_H_P * P_S * (H_I/N_H)) - mu_P*P_I- c_SP*(P_I)*(N_S) -
+        dP_I <- (FOI_H_P * P_S * (H_I/N_H)) - mu_P*P_I- c_SP*(P_I)*(N_S) #-
                 (colSums(disp.contact2 ) * P_I) +  (disp.contact2 %*% P_I)
         
         
@@ -110,7 +111,8 @@ model_ross_trito_metapopulation <- function(t,
         
         ###Infected
         dS_I <- (FOI_H_S * S_S * (H_I/N_H)) - mu_S*S_I -  c_PS*(S_I)*(N_P) -
-                (colSums(disp.contact2) * S_I) +  (disp.contact2 %*% S_I)
+               (colSums(disp.contact2) * S_I) +  (disp.contact2 %*% S_I)
+        
         
         return(list(c(dH_S,dH_I,dH_R,dP_S, dP_I, dS_S, dS_I)))
         }
