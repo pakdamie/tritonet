@@ -99,7 +99,7 @@ model_ross_trito_metapopulation <- function(t,
                 
 
         ###Infected
-        dP_I <- (FOI_H_P * P_S * (H_I/N_H)) - mu_P*P_I- c_SP*(P_I)*(N_S) #-
+        dP_I <- (FOI_H_P * P_S * (H_I/N_H)) - mu_P*P_I- c_SP*(P_I)*(N_S) -
                 (colSums(disp.contact2 ) * P_I) +  (disp.contact2 %*% P_I)
         
         

@@ -17,8 +17,7 @@ Simulator_function <- function(num_patch,
         g9 <- graph_from_adjacency_matrix(adjacency_matrix , weighted=TRUE,
                                           mode="plus", diag=FALSE)
         
-        degree_vec <- degree(g9)
-        
+
         if(initial_values == "default"){
         ###The initial conditions
         initial_y <- c(HS = sample(seq(1,1000),num_patch, replace = TRUE),
@@ -28,9 +27,8 @@ Simulator_function <- function(num_patch,
                        PI = rep(5,num_patch),
                        SS =   sample(seq(1,100),num_patch, replace = TRUE) ,
                        SI = rep(5,num_patch))
-        }
-        else{
-        initial_y = initial_values 
+        }else{
+        initial_y <-  initial_values 
         }
 
         if( parameter_values == "default"){
@@ -47,7 +45,7 @@ Simulator_function <- function(num_patch,
                 
                 phi_P =  0.0009, #transmission probability of p. vector
                 phi_S = 0.00004, #transmission probability of s. vector
-                phi_H  = 0.5, #transmission probability of human
+                phi_H  = 0.005, #transmission probability of human
                 
                 # Recovery rate of the acute phae
                 gamma = 1/56,  #recovery rate of infected human
@@ -56,22 +54,20 @@ Simulator_function <- function(num_patch,
                 c_PS = 1e-4,#competitition effect of p.vector on s.vector
                 c_SP = 1e-4,  #competitition effect of s.vector on p.vector
                 
-                a_max = 1,
+                a_max =1,
                 k = 1e-2,
-                a_0 = 2500, 
+                a_0 = 250, 
                 
-                lambda = 1)
-        }
-        else{
+                lambda = 0.01)
+        } else{
                 parameters_full =    parameter_values
         }
         
         if(disease_on == "no"){
-                parameters_full["phi_P"]<- 1.0
-                parameters_full["phi_S"]<- 1.0
-                parameters_full["phi_H"]<- 1.0
-        }
-        else{
+                parameters_full["phi_P"]<- 0
+                parameters_full["phi_S"]<-0
+                parameters_full["phi_H"]<- 0
+        }else{
                 print("Disease is spreading!")
         }
         
@@ -80,7 +76,7 @@ Simulator_function <- function(num_patch,
         
         if(disturbance == "yes"){
                 results <- data.frame(ode(
-                        times = seq(1,end_length,1),
+                        times = seq(1,  end_length,1),
                         y =   initial_y  ,
                         func = model_ross_trito_metapopulation,
                         parms = parameters_full,
@@ -102,18 +98,16 @@ Simulator_function <- function(num_patch,
                 method = 'lsodar'))
                 
         }
-        return(results)
+        return(list(results, unique(event_DF$var)))
 }
-        
-        
 
-Simulator_function(num_patch = 25,connectance = 0.01,max_distance = 20,
-                   coverage = 0.5, frequency = 2, 
-                   species1 = 0.8, species2 = 0.2,
-                   initial_values = "default",
-                   parameter_values = "default",
-                   disturbance = "yes",         
-                   disease_on = 'no',
-                   end_length = 100)
+results_ode<- Simulator_function(num_patch = 25,connectance = 0.251,max_distance = 20,
+                  coverage = 0.5, frequency = 2, 
+                  species1 = 0.3, species2 = 0.8,
+                  initial_values = "default",
+                  parameter_values = "default",
+                  disturbance = "yes",         
+                  disease_on = 'no',
+                  end_length = 300)
 
         
