@@ -1,12 +1,12 @@
 
 
 
-
+blah = Simulated[[10]][[1]]
 ### ALL SUBSEQUENT CODE AFTER IS PLACED SOMEWHERE ELSE.
-All_individuals = rowSums(results[,(2:ncol(results))])
+All_individuals = rowSums(blah [,(2:ncol(blah))])
 
 
-PSV_df <- calculate_PSV_ratio(results)
+PSV_df <- calculate_PSV_ratio(Simulated[[10]])
 
 df_network <- ggnetwork::fortify(   g9 )
 nodes_coord <-  distinct(df_network,x,y,name)

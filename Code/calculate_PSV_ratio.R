@@ -1,5 +1,7 @@
 calculate_PSV_ratio <- function(results){
         
+        results = results[[1]]
+        num_patch <- (ncol(results)-1)/7
         primary_susceptible <- cbind(time=results[,'time'],
                                   results [ , grepl( "PS", names(results))])
         
@@ -20,8 +22,8 @@ calculate_PSV_ratio <- function(results){
         
        
         primary_secondary_ratio =cbind.data.frame(time = results[,'time'], 
-                                (primarys_mat + primaryi_mat)/
-                                (secondarys_mat + secondaryi_mat))
+                                (primarys_mat + primaryi_mat )/
+                                (secondarys_mat + secondaryi_mat ))
         
         primary_secondary_ratio_Melted <- melt(primary_secondary_ratio, id.vars ='time')
         

@@ -17,15 +17,15 @@ Simulator_function <- function(num_patch,
         g9 <- graph_from_adjacency_matrix(adjacency_matrix , weighted=TRUE,
                                           mode="plus", diag=FALSE)
         
-
+        initial_vec <- sample(seq(1,100),num_patch, replace = TRUE)
         if(initial_values == "default"){
         ###The initial conditions
         initial_y <- c(HS = sample(seq(1,1000),num_patch, replace = TRUE),
                        HI = rep(5,num_patch),
                        HR = rep(0,num_patch),
-                       PS =   sample(seq(1,100),num_patch, replace = TRUE) ,
-                       PI = rep(5,num_patch),
-                       SS =   sample(seq(1,100),num_patch, replace = TRUE) ,
+                       PS =       initial_vec ,
+                       PI = rep(10,num_patch),
+                       SS =        initial_vec ,
                        SI = rep(5,num_patch))
         }else{
         initial_y <-  initial_values 
@@ -52,7 +52,7 @@ Simulator_function <- function(num_patch,
                 
                 #competition coefficient
                 c_PS = 1e-4,#competitition effect of p.vector on s.vector
-                c_SP = 1e-4,  #competitition effect of s.vector on p.vector
+                c_SP = 1e-6,  #competitition effect of s.vector on p.vector
                 
                 a_max =1,
                 k = 1e-2,
@@ -101,8 +101,9 @@ Simulator_function <- function(num_patch,
         return(list(results, unique(event_DF$var)))
 }
 
-results_ode<- Simulator_function(num_patch = 25,connectance = 0.251,max_distance = 20,
-                  coverage = 0.5, frequency = 2, 
+results_ode<- Simulator_function(num_patch = 25,connectance = 0.05,
+                 max_distance = 20,
+                  coverage = 0.1, frequency = 10, 
                   species1 = 0.3, species2 = 0.8,
                   initial_values = "default",
                   parameter_values = "default",
