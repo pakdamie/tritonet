@@ -2,6 +2,7 @@ plotter_dynamics <- function(desolve_list) {
         
   results <- desolve_list[[1]]
   chosen_patch <- desolve_list[[2]]
+  
   ### TOTAL HUMAN- N_H
   human_all <- cbind(
     time = results[, "time"],

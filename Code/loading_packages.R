@@ -1,3 +1,5 @@
+#All the packages that need to be loaded for the project
+
 library(dplyr)
 library(igraph)
 library(ggplot2)

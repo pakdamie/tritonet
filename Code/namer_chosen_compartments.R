@@ -1,7 +1,11 @@
-
-###This functions give you the names of the compartment and patch 
-### to be used for the event function in deSolve
-
+#' Labels the group of interest and the patch of interest 
+#'
+#' @param chosen_patch The patches that are chosen to be targeted
+#'
+#' @return A vector that includes "PS1", "PI1", etc
+#' @export
+#'
+#' @examples
 namer_chosen_compartments <- function(chosen_patch){
         
      ###Primary susceptible

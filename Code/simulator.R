@@ -1,3 +1,24 @@
+#' Simulate the primary and secondary vector on the network
+#'
+#' @param num_patch Number of patches that you want to simulate
+#' @param connectance The connectance of the network
+#' @param max_distance Default = 20, The total maximum distance
+#' @param coverage The proportion of the patches that is targeted
+#' @param frequency How many times are the patches disturbed
+#' @param species1 How much of the primary vector species survive
+#' @param species2 How much of the secondary vector species survive
+#' @param initial_values "default" uses the standard setting, but user
+#' can input a data.frame.
+#' @param parameter_values 'default' uses the standard setting, but
+#' user can input a data.frame
+#' @param disturbance 'default' - yes, includes disturbance in the model
+#' @param disease_on 'default' - no 
+#' @param end_length total length of the simulation
+#' @param seed the random seed generator 
+#' @return
+#' @export
+#'
+#' @examples
 Simulator_function <- function(num_patch,
                                connectance,
                                max_distance = 20,
@@ -9,15 +30,17 @@ Simulator_function <- function(num_patch,
                                parameter_values = "default",
                                disturbance = 'yes', 
                                disease_on = 'no',
-                               end_length){
+                               end_length, 
+                               seed = 24601){
         
-        adjacency_matrix <- simulate_final_adjacency_matrix(24601, num_patch,
+        adjacency_matrix <- simulate_final_adjacency_matrix(seed, num_patch,
                                         connectance,max_distance)
         
-        g9 <- graph_from_adjacency_matrix(adjacency_matrix , weighted=TRUE,
+        g9 <- graph_from_adjacency_matrix(adjacency_matrix, weighted=TRUE,
                                           mode="plus", diag=FALSE)
         
-        initial_vec <- sample(seq(1,100),num_patch, replace = TRUE)
+        initial_vec <- sample(seq(1,100), num_patch, replace = TRUE)
+        
         if(initial_values == "default"){
         ###The initial conditions
         initial_y <- c(HS = sample(seq(1,1000),num_patch, replace = TRUE),
@@ -72,7 +95,7 @@ Simulator_function <- function(num_patch,
         }
         
         event_DF <-force_event_ODE(num_patch, frequency, coverage,
-                        species1, species2, end_time)
+                        species1, species2, end_length)
         
         if(disturbance == "yes"){
                 results <- data.frame(ode(
@@ -101,14 +124,15 @@ Simulator_function <- function(num_patch,
         return(list(results, unique(event_DF$var)))
 }
 
-results_ode<- Simulator_function(num_patch = 25,connectance = 0.05,
-                 max_distance = 20,
-                  coverage = 0.1, frequency = 10, 
-                  species1 = 0.3, species2 = 0.8,
-                  initial_values = "default",
-                  parameter_values = "default",
-                  disturbance = "yes",         
-                  disease_on = 'no',
-                  end_length = 300)
+###Test
+#results_ode<- Simulator_function(num_patch = 25,connectance = 0.05,
+#                 max_distance = 20,
+#                  coverage = 0.1, frequency = 10, 
+#                  species1 = 0.3, species2 = 0.8,
+#                  initial_values = "default",
+#                  parameter_values = "default",
+#                  disturbance = "yes",         
+#                  disease_on = 'no',
+#                  end_length = 300)
 
         

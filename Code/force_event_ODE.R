@@ -1,21 +1,24 @@
-### This is the disturbance function that we incorporate into the
-### desolve equation
-### supply with num_patch which is the number of patches,
-### frequency - how many times to disturb (day)
-### coverage- the proportion of patches
-### species1 - survivorship (How many should survive?)
-### species2 - survivorship (How many should survive?)
-### end_time - how long should the disturbance run for?
-
-
+#' Force a disturbance (used in conjuction for ODE)
+#'
+#' @param num_patch Number of patches that you want to simulate
+#' @param frequency How many times are the patches disturbed
+#' @param coverage The proportion (0-1) of the patches that is targeted
+#' @param species1  How much of the primary vector species survive
+#' @param species2 How much of the secondary vector species survive
+#' @param end_time total length of the simulation
+#'
+#' @return
+#' @export
+#'
+#' @examples
 force_event_ODE <- function(num_patch, frequency, coverage,
                             species1, species2, end_time) {
-  # Sample from the different number of patches
-  chosen_patch <- matrix(sample(seq(1, num_patch), floor(num_patch * coverage),
-    replace = FALSE
+        
+  # Sample from all the different patches. 
+  # If patch is 
+  chosen_patch <- matrix(sample(seq(1, num_patch), 
+                                floor(num_patch * coverage), replace = FALSE
   ))
-
-  # Sample from the different number of patches
 
   disturbance_df <- data.frame(
     var = c(namer_chosen_compartments(chosen_patch)),
@@ -29,7 +32,6 @@ force_event_ODE <- function(num_patch, frequency, coverage,
 
   event_df <- disturbance_df[rep(seq_len(nrow( disturbance_df )),
                               length(seq(1,end_time,frequency))), ]
-
 
   event_df$time <- rep(seq(1, end_time, frequency), each = nrow(disturbance_df))
   return(event_df)
