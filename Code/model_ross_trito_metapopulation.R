@@ -18,27 +18,27 @@ model_ross_trito_metapopulation <- function(t,
         S_I = matrix(state[((6*num_patch)+1):(7*num_patch)], ncol = 1)
         
         ###Demographic parameters
-        b_H <- matrix(rep(param["b_H"],num_patch), ncol = 1) #Human birth rate
-        b_P <- matrix(rep(param["b_P"],num_patch), ncol = 1)  #P.vector birth rate
-        b_S <-  matrix(rep(param["b_S"],num_patch), ncol = 1)  #S. vector birth rate
-        mu_H <- matrix(rep(param["mu_H"],num_patch), ncol = 1)  #Human death rate
-        mu_P <-  matrix(rep(param["mu_P"],num_patch), ncol = 1)  #P. vector death rate
-        mu_S <- matrix(rep(param["mu_S"],num_patch), ncol = 1)  #S. vector death rate
+        b_H <- matrix(rep_len(param["b_H"],num_patch), ncol = 1) #Human birth rate
+        b_P <- matrix(rep_len(param["b_P"],num_patch), ncol = 1)  #P.vector birth rate
+        b_S <-  matrix(rep_len(param["b_S"],num_patch), ncol = 1)  #S. vector birth rate
+        mu_H <- matrix(rep_len(param["mu_H"],num_patch), ncol = 1)  #Human death rate
+        mu_P <-  matrix(rep_len(param["mu_P"],num_patch), ncol = 1)  #P. vector death rate
+        mu_S <- matrix(rep_len(param["mu_S"],num_patch), ncol = 1)  #S. vector death rate
         
         #Force of infection parameters
-        a_P <- matrix(rep(param["a_P"],num_patch) , ncol = 1)  #biting rate of the p. vector
-        a_S <-  matrix(rep(param["a_S"],num_patch) , ncol = 1)  #biting rate of the s.vector
+        a_P <- matrix(rep_len(param["a_P"],num_patch) , ncol = 1)  #biting rate of the p. vector
+        a_S <-  matrix(rep_len(param["a_S"],num_patch) , ncol = 1)  #biting rate of the s.vector
         
-        phi_P <-  matrix(rep(param["phi_P"],num_patch) , ncol = 1)  #transmission probability of p. vector
-        phi_S <-  matrix(rep(param["phi_S"],num_patch) , ncol = 1)   #transmission probability of s. vector
-        phi_H  <-  matrix(rep(param["phi_H"],num_patch) , ncol = 1)   #transmission probability of human
+        phi_P <-  matrix(rep_len(param["phi_P"],num_patch) , ncol = 1)  #transmission probability of p. vector
+        phi_S <-  matrix(rep_len(param["phi_S"],num_patch) , ncol = 1)   #transmission probability of s. vector
+        phi_H  <-  matrix(rep_len(param["phi_H"],num_patch) , ncol = 1)   #transmission probability of human
         
         # Recovery rate
-        gamma <-  matrix(rep(param["gamma"],num_patch), ncol = 1)   #recovery rate of infected human
+        gamma <-  matrix(rep_len(param["gamma"],num_patch), ncol = 1)   #recovery rate of infected human
         
         #competition coefficient
-        c_PS <-  matrix(rep(param["c_PS"],num_patch), ncol = 1)   #competitition effect of p.vector on s.vector
-        c_SP <-  matrix(rep(param["c_SP"],num_patch), ncol = 1)  #competition effect of s.vector on p.vector
+        c_PS <-  matrix(rep_len(param["c_PS"],num_patch), ncol = 1)   #competitition effect of p.vector on s.vector
+        c_SP <-  matrix(rep_len(param["c_SP"],num_patch), ncol = 1)  #competition effect of s.vector on p.vector
         
         ### FOI
         FOI_P <- matrix(a_P * phi_P, ncol = 1) #FOI for a primary vector
@@ -54,8 +54,7 @@ model_ross_trito_metapopulation <- function(t,
         ###Dispersal matrix
         ###exponential decay parameter
         lambda <- param["lambda"]
-        
-        
+
         ### Population size
         N_H <- matrix(H_S + H_I + H_R)#human host population 
         N_P <- matrix(P_S + P_I) #p. vector population
@@ -74,22 +73,18 @@ model_ross_trito_metapopulation <- function(t,
         
         ###Account for the distance...
         
-        probability_matrix <- apply(adj_matrix, c(1, 2),function(x) {
-                if (x != 0) {
-                        return(exp(-lambda * x))
-                } else {
-                        return(x)
-                }
-        })
-        
-        
-        ###Account for the density-dependence
-        dd_mat <- diag(c(a_max/(1.00 +  exp(-k *(N_V - a_0 )))),num_patch,num_patch)
-        adjusted_prob <- sweep(probability_matrix, 1, rowSums(probability_matrix), FUN = "/")
-        adjusted_prob[is.nan(adjusted_prob )== TRUE] = 0
-        adjusted_prob_2 <- adjusted_prob * probability_matrix
-        disp.contact2 <-adjusted_prob_2 %*% dd_mat
+        probability_matrix <- -lambda * adj_matrix
 
+        
+        ###Accounts for the density-dependence- matrix
+        dd_mat <- Diagonal(num_patch,x=c(a_max/(1.00 +  exp(-k *(N_V - a_0 )))))
+        
+        adjusted_prob <- sweep_sparse(probability_matrix,1, rowSums(probability_matrix), fun= "/")
+        adjusted_prob[is.na(adjusted_prob)== TRUE] <-  0
+        
+        
+        disp.contact2 <- as.matrix(adjusted_prob %*% dd_mat)
+        
 
 
         ###P. vector
