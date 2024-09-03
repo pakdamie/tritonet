@@ -1,6 +1,5 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
-
 using namespace arma;
 using namespace Rcpp;
 //[[Rcpp::export]]
@@ -80,9 +79,7 @@ List trito_metapop(
         
         
         //Distance_matrix
-        
-        
-        
+
         arma::mat dispersal_mat(patch_num, patch_num);
         for (int p = 0; p < patch_num; p++){
                 dispersal_mat (p, p) = dispersal_vec[p];

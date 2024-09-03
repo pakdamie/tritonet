@@ -1,4 +1,7 @@
 #' Simulate the primary and secondary vector on the network
+#' 
+#' This is the main simulation function for the model
+#' 
 #'
 #' @param num_patch Number of patches that you want to simulate
 #' @param connectance The connectance of the network
@@ -33,8 +36,10 @@ Simulator_function <- function(num_patch,
                                end_length, 
                                seed = 24601){
         
-        adjacency_matrix <- simulate_final_adjacency_matrix(seed, num_patch,
-                                        connectance,max_distance)
+        adjacency_matrix <- Matrix(simulate_adjacency_matrix(num_patch,
+                                                     max_distance,
+                                                     connectance,seed),
+                                   sparse = TRUE)
         
         g9 <- graph_from_adjacency_matrix(adjacency_matrix, weighted=TRUE,
                                           mode="plus", diag=FALSE)
@@ -57,11 +62,11 @@ Simulator_function <- function(num_patch,
         if( parameter_values == "default"){
         parameters_full <- c(
                 b_H = 1/27375, #Human birth rate
-                b_P = 0.09, #P.vector birth rate
-                b_S = 0.09, #S. vector birth rate
+                b_P = 0.05, #P.vector birth rate
+                b_S = 0.05, #S. vector birth rate
                 mu_H = 1/27375, #Human death rate
-                mu_P =0.09, #P. vector death rate
-                mu_S = 0.09, #S. vector death rate
+                mu_P =0.05, #P. vector death rate
+                mu_S = 0.05, #S. vector death rate
                 
                 a_P = 4, #biting rate of the p. vector
                 a_S = 2, #biting rate of the s.vector
@@ -70,16 +75,16 @@ Simulator_function <- function(num_patch,
                 phi_S = 0.00004, #transmission probability of s. vector
                 phi_H  = 0.005, #transmission probability of human
                 
-                # Recovery rate of the acute phae
+                # Recovery rate of the acute phase
                 gamma = 1/56,  #recovery rate of infected human
                 
                 #competition coefficient
-                c_PS = 1e-4,#competitition effect of p.vector on s.vector
+                c_PS = 1e-3,#competitition effect of p.vector on s.vector
                 c_SP = 1e-6,  #competitition effect of s.vector on p.vector
                 
-                a_max =1,
+                a_max = 1,
                 k = 1e-2,
-                a_0 = 250, 
+                a_0 = 100, 
                 
                 lambda = 0.01)
         } else{

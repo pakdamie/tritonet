@@ -1,27 +1,48 @@
 ###coverage versus frequency
+library(here)
+source(here("Code", "force_event_ODE.R"))
+source(here("Code", "namer_chosen_compartments.R"))
+source(here("Code", "simulate_network.R" ))
+
 
 coverage = seq(0.1,1,0.1)
-frequency = seq(5,50,5)
-connectance = c(0.02)
-expandDF <- expand.grid(coverage = coverage,frequency =frequency,
+frequency = seq(5,50,10)
+connectance = c(0.1,0.5)
+expandDF <- expand.grid(coverage = coverage,
+                        frequency = frequency,
                         connectance = connectance)
 
 
 Simulated <- mcmapply(Simulator_function,
-                              num_patch =100,
+                      num_patch = 25,
                       connectance = expandDF$connectance,
                       max_distance = 20,
                       coverage = expandDF$coverage,
                       frequency = expandDF$frequency,
-                      species1 = 0.5, species2 = 0.75,
+                      species1 = 0.3, 
+                      species2 = 0.75,
                       initial_values = "default",
                       parameter_values = "default",
                       disturbance = "yes",         
                       disease_on = 'no',
                       end_length = 100,
                       mc.cores = 3,
-                      SIMPLIFY = FALSE
-)
+                      SIMPLIFY = FALSE,
+                      seed = 24601)
+
+
+expandDF[1,]
+
+expandDF [51,]
+expandDF[70,]
+plot_abundance_patch_time (Simulated [[51]][[1]])
+
+plot_abundance_patch_time (Simulated [[1]][[1]])
+
+list = Simulated [[333]][[1]]
+list = Simulated [[10]][[1]]
+
+
 
 
 

@@ -14,7 +14,8 @@
 
 simulate_adjacency_matrix <- function(num_patch, 
                                       max_distance, 
-                                      connectance, seed = 24601) {
+                                      connectance, 
+                                      seed = 24601) {
   
  set.seed(seed) #Sets the number of seeds
   
@@ -25,7 +26,7 @@ simulate_adjacency_matrix <- function(num_patch,
   xy_coord <- cbind(x_coord, y_coord) #xy-coordinates 
   NegExpDist <- as.matrix(exp(-dist(xy_coord))) #distance matrice with kernel
   
-  ###Create an adjacency matrix 
+  ###Create an graph
   Adj_graph <- graph.adjacency(NegExpDist, mode = 'undirected', 
                                diag = FALSE, 
                                weighted = TRUE)
@@ -43,11 +44,11 @@ simulate_adjacency_matrix <- function(num_patch,
   ### choose the 10 likeliest (highest weight) edges.
   deleted_edges_graph <- delete.edges(Adj_graph,
                          which(E(Adj_graph)$weight < sort(E(Adj_graph)$weight, 
-                        decreasing = T)[number_of_edges])) 
+                         decreasing = T)[number_of_edges])) 
  
   ###This will likely lead to partitions into different components
 
-  ###It is split if the 
+  ###The graph is split into components if the length of the decomposition is not 1!
   is_it_split <- ifelse(length(decompose(deleted_edges_graph)) != 1, "split", "complete")
   
 
@@ -80,6 +81,17 @@ simulate_adjacency_matrix <- function(num_patch,
                                       c(maximum_edgeweight[,1],
                                         maximum_edgeweight[,2]))
              
+             
+            ###TAD's ADVICE: (1) SIMULATE n = 100 with low connectance;
+            ###  (2) Look only for biggest component (3) and then add
+            ### edges as needed 
+            
+            ###WHEE~ 
+             
+             
+            ### connectance: EXTREMES ARE OK! FOR MODELING. 
+             
+            
              
              
          }

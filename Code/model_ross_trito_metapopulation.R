@@ -1,9 +1,7 @@
 ###Modeling metapopulation 
 
-model_ross_trito_metapopulation <- function(t, 
-                                            state, 
-                                            param, 
-                                            num_patch, 
+model_ross_trito_metapopulation <- function(t, state, 
+                                            param, num_patch, 
                                             adj_matrix) {
         
         with(as.list(c(state, param)), {
@@ -41,8 +39,8 @@ model_ross_trito_metapopulation <- function(t,
         c_SP <-  matrix(rep_len(param["c_SP"],num_patch), ncol = 1)  #competition effect of s.vector on p.vector
         
         ### FOI
-        FOI_P <- matrix(a_P * phi_P, ncol = 1) #FOI for a primary vector
-        FOI_S <- matrix(a_S * phi_S , ncol = 1) #FOI for a secondary vector
+        FOI_P <-  matrix(a_P * phi_P, ncol = 1) #FOI for a primary vector
+        FOI_S <-  matrix(a_S * phi_S , ncol = 1) #FOI for a secondary vector
         FOI_H_P <- matrix(a_P * phi_H,ncol =1) #FOI for a human to a primary vector
         FOI_H_S <- matrix(a_S * phi_S,ncol = 1) #FOI for a human to a secondary vector
         
@@ -84,8 +82,6 @@ model_ross_trito_metapopulation <- function(t,
         
         
         disp.contact2 <- as.matrix(adjusted_prob %*% dd_mat)
-        
-
 
         ###P. vector
         ###Susceptible
