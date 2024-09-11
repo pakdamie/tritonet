@@ -89,8 +89,8 @@ recalculate_distance_matrix <- function(network_bigcomp) {
         
         # Get the x-y coordinates
         xy_coord_interest <- cbind(
-                V(etwork_bigcom)$Long,
-                V(etwork_bigcom)$Lat
+                V(network_bigcomp)$Long,
+                V(network_bigcomp)$Lat
         )
         
         # Calculate new distance matrices
