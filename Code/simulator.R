@@ -1,7 +1,6 @@
 #' Simulate the primary and secondary vector on the network
 #' 
 #' This is the main simulation function for the model
-#' 
 #'
 #' @param num_patch Number of patches that you want to simulate
 #' @param connectance The connectance of the network

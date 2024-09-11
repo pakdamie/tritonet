@@ -1,115 +1,177 @@
-#' Simulate the adjacency matrix for the main simulation
-#' 
-#' As the main simulation requires a spatial network, this
-#' function generates the necessary adjacency matrix for
-#' dispersal.
+###Subroutines for the main function.
+
+
+#' Simulating the x and y coordinates for the spatial network
 #'
-#' @param num_patch an integer, number of patches that you want to simulate
-#' @param connectance a numeric variable (0-1), the connectance of the network
-#' @param seed a numeric variable, the random seed generator (default is 24601)
-#' @return a matrix (the adjacency matrix) 
+#' @param seed Default seed is 24601
+#' @param max_distance The maximum distance that the xy coordinates lie in
 #'
-#' @examples simulate_adjacency_matrix(100, 10, 0.2)
-#' 
+#' @return A list element with the data.frame of xy coordinates and 
+#' the distance matrix with kernal
+#' @export
+#'
+#' @examples
+simulate_xy_coordinates <- function(seed = 24601, max_distance) {
+        set.seed(seed)
+        xy <- seq(1, max_distance, length.out = 2000) ### List of all possible coordinates
+        x_coord <- sample(xy, 100, replace = TRUE) # x-coordinate
+        y_coord <- sample(xy, 100, replace = TRUE) # y-coordinate
+        xy_coord <- cbind(x_coord, y_coord) # xy-coordinates combined
+        NegExpDist <- as.matrix(exp(-dist(xy_coord))) # distance matrix with kernel
+        
+        return(list(xy_coord, NegExpDist))
+}
 
-simulate_adjacency_matrix <- function(num_patch, 
-                                      max_distance, 
-                                      connectance, 
-                                      seed = 24601) {
-  
- set.seed(seed) #Sets the number of seeds
-  
-  ###Generate the patches and their coordinates
-  xy <- seq(1, max_distance, length.out = 2000) #possible coordinates
-  x_coord <- sample(xy, num_patch, replace = TRUE) #x-coordinate
-  y_coord <- sample(xy, num_patch, replace = TRUE) #y-coordinate 
-  xy_coord <- cbind(x_coord, y_coord) #xy-coordinates 
-  NegExpDist <- as.matrix(exp(-dist(xy_coord))) #distance matrice with kernel
-  
-  ###Create an graph
-  Adj_graph <- graph.adjacency(NegExpDist, mode = 'undirected', 
-                               diag = FALSE, 
-                               weighted = TRUE)
-  
-  ##Adding latitude and longitude
-  V(Adj_graph)$Long <- xy_coord [,1]
-  V(Adj_graph)$Lat <-  xy_coord [,2]
+test_list <- simulate_xy_coordinates(seed = 24601, 20)
 
-  
-  ### The number of edges we need to calculate the connectance.
-  number_of_edges <- (connectance * (num_patch^2))
-  
 
-  ###If the number of edges required for connectance is 10, then 
-  ### choose the 10 likeliest (highest weight) edges.
-  deleted_edges_graph <- delete.edges(Adj_graph,
-                         which(E(Adj_graph)$weight < sort(E(Adj_graph)$weight, 
-                         decreasing = T)[number_of_edges])) 
- 
-  ###This will likely lead to partitions into different components
-
-  ###The graph is split into components if the length of the decomposition is not 1!
-  is_it_split <- ifelse(length(decompose(deleted_edges_graph)) != 1, "split", "complete")
-  
-
-  while(is_it_split == "split"){
-         
-         for (c in seq(1, length(component_graph))){
-                
-             component_graphs <- decompose(deleted_edges_graph)
-                 
-             vertex_component <-  as_ids(V(component_graphs[[c]])) ###identify vertex in component of interest
-             
-             ###identify the vertices that are not in the same component
-             non_component_vertex = as_ids(all_vertex[!(all_vertex %in%  vertex_component)]) 
-             
-             ###create possible edges
-             possible_edges <- expand.grid(as.numeric(vertex_component), as.numeric(non_component_vertex))
-             
-             ###Get the weight from the original adjacency matrix 
-             possible_edges$weight <- E(Adj_graph)[possible_edges[,1] %--% possible_edges[,2]]$weight
-             
-             ###Get the maximum weight edge
-             maximum_edgeweight <- possible_edges[which.max(  possible_edges$weight),]
-             
-             ###Delete the lowest-weight edge
-             deleted_edge <-  delete.edges(deleted_edges_graph,
-                                 which.min(E(deleted_edges_graph)$weight))
-             
-             ###Add the maximum weight edge 
-             deleted_edges_graph <- add_edges(deleted_edge,
-                                      c(maximum_edgeweight[,1],
-                                        maximum_edgeweight[,2]))
-             
-             
-            ###TAD's ADVICE: (1) SIMULATE n = 100 with low connectance;
-            ###  (2) Look only for biggest component (3) and then add
-            ### edges as needed 
-            
-            ###WHEE~ 
-             
-             
-            ### connectance: EXTREMES ARE OK! FOR MODELING. 
-             
-            
-             
-             
-         }
-  }
-  
- adj_matrix<-  as_adjacency_matrix(
-          deleted_edges_graph,
-          type = "both",
-          attr = "weight",sparse = F)
-  
-  
-  return(adj_matrix)
+#' Retrieve the biggest component from the simulated network
+#'
+#' @param xy_list The list from simulate_xy_coordinates
+#'
+#' @return an igraph object
+#' @export
+#'
+#' @examples
+retrieve_biggest_component <- function(xy_list) {
+        Adj_graph <- graph_from_adjacency_matrix(xy_list[[2]],
+                                                 mode = "undirected",
+                                                 diag = FALSE,
+                                                 weighted = TRUE
+        )
+        
+        ## Adding latitude and longitude
+        V(Adj_graph)$Long <- xy_list[[1]][,1] # x-coordinates
+        V(Adj_graph)$Lat <- xy_list[[1]][,2] # y-coordinates
+        
+        ###The number of edges we need for a connectance
+        number_of_edges <- (0.020 * (100^2))
+        
+       
+        ###You choose the top number of edges (from above) 
+        ###and delete everything else 
+        deleted_edges_graph <- delete_edges(
+                Adj_graph,
+                which(E(Adj_graph)$weight < sort(E(Adj_graph)$weight,
+                                                 decreasing = T
+                )[number_of_edges])
+        )
+        
+        
+        decomposed_components <- decompose(deleted_edges_graph)
+        
+        # Count the number of nodes for each component and then give me
+        ### the index for the largest.
+        biggest_component_length <- which.max(lapply(
+                decomposed_components,
+                function(x) {
+                        vcount(x)
+                }
+        ))
+        
+        ### retrieve our network of interest
+        network_bigcomp <- decomposed_components[[biggest_component_length]]
+        
+        return(network_bigcomp)
 }
 
 
-          
-          
-  
-  
-  
-  
+
+#' Recalculate the new network
+#'
+#' @param network_bigcomp 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+recalculate_distance_matrix <- function(network_bigcomp) {
+        
+        # Get the x-y coordinates
+        xy_coord_interest <- cbind(
+                V(etwork_bigcom)$Long,
+                V(etwork_bigcom)$Lat
+        )
+        
+        # Calculate new distance matrices
+        DispMat_interest <- as.matrix(exp(-dist(xy_coord_interest)))
+        
+        edgelist_of_interest <- as_edgelist(network, names = F)
+        
+        melted_edge_list <- melt(DispMat_interest)
+        
+        colnames(melted_edge_list) <- c("patch1", "patch2", "weight")
+        
+        
+        new_distance <- subset(
+                melted_edge_list,
+                !(paste0(
+                        melted_edge_list$patch1, "-",
+                        melted_edge_list$patch2
+                )
+                %in%
+                        paste0(
+                                edgelist_of_interest[, 1],
+                                "-", edgelist_of_interest[, 2]
+                        )
+                )
+        )
+        
+        new_distance_df <- new_distance[order(new_distance$weight, decreasing = TRUE), ]
+        
+        return(new_distance_df)
+}
+
+
+#' Main function for simulating the spatial network
+#'
+#' @param seed Default seed is 24601
+#' @param max_distance The maximum distance that the xy coordinates lie in
+#'
+#' @return
+#' @export
+#'
+#' @examples
+simulate_spatial_network <- function(seed, max_distance) {
+        
+        list_xy_coord <- simulate_xy_coordinates(seed, max_distance)
+        network_interest <- retrieve_biggest_component(list_xy_coord)
+        possible_edges_df <- recalculate_distance_matrix(network_interest)
+        adj_list <- NULL
+        adj_info_list <- NULL
+        
+        ### Manually add the first network in
+        
+        adj_list[[1]] <- network_interest
+        adj_info_list[[1]] <- c(
+                num_nodes = vcount(network_interest),
+                num_edges = ecount(network_interest),
+                connectance = connectance_calculator(
+                        vcount(network_interest),
+                        ecount(network_interest)
+                )
+        )
+        
+        ### For loop time
+        for (new_edge in seq(1, nrow(possible_edges_df))) {
+                network_interest <- network_interest + 
+                        edge(c(new_distance[new_edge, "patch1"], 
+                               new_distance[new_edge, "patch2"]),
+                       weight = new_distance[new_edge, "weight"]
+                )
+                
+                
+                adj_list[[new_edge + 1]] <- network_interest
+                adj_info_list[[new_edge + 1]] <- c(
+                        num_nodes = vcount(network_interest),
+                        num_edges = ecount(network_interest),
+                        connectance = connectance_calculator(
+                                vcount(network_interest),
+                                ecount(network_interest)
+                        )
+                )
+        }
+        return(list(adj_list, do.call(rbind, adj_info_list)))
+}
+
+

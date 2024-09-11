@@ -1,0 +1,412 @@
+---
+title: "Proof of test"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo = FALSE, warning = FALSE,message = FALSE}
+library(here)
+source(here("Code", "loading_packages.R"))
+source(here("Code", "simulate_network.R"))
+source(here("Code", "model_ross_trito_metapopulation.R"))
+```
+
+### Turning off birth/death/dispersal/infection for all groups
+
+Note that we turned off human and vector per capita birth rate, the mortality rate, and all infection rate. \textbf{This means that the population in a patch will be all the same}. When you subtract the population at a patch j at time t with the population at t-1, you should get 0. This is the simplest test.
+
+```{r}
+p_test_no_bdd <- c(
+  b_H = 0, # OFF- Human birth rate
+  b_P = 0, # OFF - P.vector birth rate
+  b_S = 0, # OFF - S. vector birth rate
+  mu_H = 0, # OFF - Human death rate
+  mu_P = 0, # OFF - P. vector death rate
+  mu_S = 0, # OFF - S. vector death rate
+
+  a_P = 0, # biting rate of the p. vector
+  a_S = 0, # biting rate of the s.vector
+
+  phi_P = 0.00008, # transmission probability of p. vector
+  phi_S = 0.00004, # transmission probability of s. vector
+  phi_H = 0.5, # transmission probability of human
+
+  # Recovery rate
+  gamma = 0, # recovery rate of infected human
+
+  # competition coefficient
+  c_PS = 0, # OFF- competitition effect of p on  s.vector
+  c_SP = 0, # OFF- competitition effect of s on p.vector
+
+  a_max = 0.0, # OFF
+  k = 1e-2,
+  a_0 = 2500,
+  lambda = 0
+)
+```
+
+The initial conditions are:
+
+```{r}
+set.seed(248)
+num_patch  = 10
+### The initial conditions
+initial_y_test <- c(
+  HS = sample(seq(1, 10), num_patch , replace = TRUE),
+  HI = sample(seq(1, 10), num_patch , replace = TRUE),
+  HR = sample(seq(1, 10), num_patch , replace = TRUE),
+  PS = sample(seq(1, 10), num_patch , replace = TRUE),
+  PI = sample(seq(1, 10), num_patch , replace = TRUE),
+  SS = sample(seq(1, 10), num_patch , replace = TRUE),
+  SI = sample(seq(1, 10), num_patch , replace = TRUE)
+)
+
+```
+
+Here, is the simulated network:
+
+```{r}
+adjacency_matrix_test <- simulate_adjacency_matrix(
+  num_patch, 20,
+  0.25, 24601
+)
+
+
+graph_test <- graph_from_adjacency_matrix(adjacency_matrix_test,
+  weighted = TRUE,
+  mode = "plus", diag = FALSE
+)
+
+
+```
+
+```{r}
+results_no_bdd_0 <- data.frame(ode(
+  times = seq(1, 100, 1),
+  y = initial_y_test,
+  func = model_ross_trito_metapopulation,
+  parms = p_test_no_bdd,
+  num_patch= num_patch,
+  adj_matrix = Matrix(adjacency_matrix_test, sparse = TRUE),
+))
+```
+
+Here, I create a function to plot out the patches:
+
+```{r}
+check_0 <- function(column_data) {
+  ifelse(any(column_data == 0) == "TRUE", "OK!", "WARNING")
+}
+
+
+diff_test_1 <- function(result) {
+  diff_result <- apply(result[, 2:ncol(result)], 2, diff)
+
+  melted_2 <- melt(diff_result)
+
+  return(list(diff_result, melted_2))
+}
+```
+
+```{r}
+ggplot(diff_test_1(results_no_bdd_0)[[2]], aes(
+  x = seq(1, nrow(diff_test_1(results_no_bdd_0)[[2]])),
+  y = value,
+  color = Var2
+)) +
+  geom_line() +
+  geom_hline(yintercept = 0, col = "red") +
+  theme_bw() +
+  xlab("Time-step") +
+  ylab("N(t) - N(t-1)") +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 14)
+  )
+```
+
+You should see a pure red-line, nothing else! Everything should be 0.
+
+```{r}
+verbal_check <- apply(diff_test_1(results_no_bdd_0)[[1]], 2, check_0)
+ifelse(any(verbal_check != "OK!") == "FALSE", "YOU'RE FINE!", "STOP!") # FALSE means
+```
+
+## Turning on birth and death and they are equal to each other
+
+We turn off the human and vector per capita birth rate and the mortality rate. The infection is turned off. \textbf{This still means that the total human population within a patch will be all the same}. When you add the total subpopulations (susceptible, infected, recovered) population at a patch j at time t with the population at t-1, you should get 0. Though this is only true if the birth and mortality rates are the SAME!
+
+```{r}
+p_test_no_id <- c(
+  b_H = 1, # Human birth rate
+  b_P = 1, # P.vector birth rate
+  b_S = 1, # S. vector birth rate
+  mu_H = 1, # Human death rate
+  mu_P =1, # P. vector death rate
+  mu_S = 1, # S. vector death rate
+
+  a_P = 0.0, # biting rate of the p. vector
+  a_S = 0.0, # biting rate of the s.vector
+
+  phi_P = 0.0, # transmission probability of p. vector
+  phi_S = 0.0, # transmission probability of s. vector
+  phi_H = 0.0, # transmission probability of human
+
+  # Recovery rate
+  gamma = 0.0, # recovery rate of infected human
+
+  # competition coefficient
+  c_PS = 0.0, # OFF- competitition effect of p on  s.vector
+  c_SP = 0.0, # OFF- competitition effect of s on p.vector
+
+  a_max =0.01, # OFF
+  k = 1e-2,
+  a_0 = 2500,
+  lambda = 0
+)
+```
+
+```{r}
+results_no_id_0 <- data.frame(ode(
+  times = seq(1, 100, 1),
+  y = initial_y_test,
+  func = model_ross_trito_metapopulation,
+  parms = p_test_no_id,
+  num_patch = num_patch,
+  adj_matrix = Matrix(adjacency_matrix_test,sparse = TRUE),
+  method = 'lsodar',
+  atol = 1e-8, rtol = 1e-8
+))
+```
+
+```{r}
+aggregate_subpopulations <- function(results){
+ primary_all <-  results [ , grepl("PS", names(results)) |
+                                grepl( "PI", names(results))]
+ 
+ secondary_all <-  results [ , grepl("SS", names(results)) |
+                              grepl( "SI", names(results))]
+ 
+ human_all<-  results [ , grepl("HS", names(results)) |
+                           grepl( "HI", names(results)) |
+                           grepl( "HR", names(results))]
+           
+         
+ primary_summed <- rowSums(primary_all)
+ secondary_summed <- rowSums(secondary_all)
+ humans_summed <- rowSums(human_all)
+ 
+ full_df <- cbind(primary_summed , secondary_summed, humans_summed )
+ diff(humans_summed)
+ 
+ diff_result <- data.frame(apply(full_df[, 1:ncol( full_df )], 2, diff))
+
+ full_df_melted <- melt(
+ diff_result )
+   
+
+ 
+ return(list(full_df, full_df_melted))
+}
+
+```
+
+A slight numerical accuracy problem but it's very small 1e-10
+
+```{r}
+
+ggplot(aggregate_subpopulations(results_no_id_0)[[2]], 
+       aes(
+  x = seq(1, nrow(aggregate_subpopulations(results_no_id_0)[[2]])),
+  y = value,
+  color = variable
+)) +
+  geom_line() +
+  geom_hline(yintercept = 0, col = "red") +
+  theme_bw() +
+  xlab("Time-step") +
+  ylab("N(t) - N(t-1)") +
+  theme(
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 14)
+  )
+```
+
+# Turning on infection
+
+We turn off the human and vector per-capita birth rate and the mortality rate. The infection processes is turned on. \textbf{This still means that the total human population within a patch will be all the same}. When you add the total subpopulations (susceptible, infected, recovered) population at a patch j at time t with the population at t-1, you should get 0. Though this is only true if the birth and mortality rates are the SAME!
+
+```{r}
+p_inf_only <- c(
+  b_H = 0, # Human birth rate
+  b_P = 0, # P.vector birth rate
+  b_S = 0, # S. vector birth rate
+  mu_H = 0, # Human death rate
+  mu_P =0, # P. vector death rate
+  mu_S = 0, # S. vector death rate
+
+  a_P = 1, # biting rate of the p. vector
+  a_S = 1, # biting rate of the s.vector
+
+  phi_P = 1, # transmission probability of p. vector
+  phi_S = 1, # transmission probability of s. vector
+  phi_H = 1, # transmission probability of human
+
+  # Recovery rate
+  gamma = 1, # recovery rate of infected human
+
+  # competition coefficient
+  c_PS = 0.0, # OFF- competitition effect of p on  s.vector
+  c_SP = 0.0, # OFF- competitition effect of s on p.vector
+
+  a_max = 0.0, # OFF
+  k = 1e-2,
+  a_0 = 2500,
+  lambda = 0
+)
+```
+
+```{r}
+results_inf_only <- data.frame(ode(
+  times = seq(1, 100, 1),
+  y = initial_y_alt,
+  func = model_ross_trito_metapopulation,
+  parms = p_inf_only ,
+  patch_num = 3,
+  adj_matrix = adjacency_matrix_test,
+  degree_vec = degree_vec_test, 
+  method = 'lsodar',
+  atol = 1e-8, rtol = 1e-8
+))
+```
+
+```{r}
+aggregate_subpopulations(results_inf_only)[[1]]
+```
+
+A slight numerical accuracy problem but it's very small 1e-10
+
+```{r}
+
+ggplot(aggregate_subpopulations(results_inf_only)[[2]], 
+       aes(
+  x = seq(1, nrow(aggregate_subpopulations(results_inf_only)[[2]])),
+  y = value,
+  color = variable
+)) +
+  geom_line() +
+  geom_hline(yintercept = 0, col = "red") +
+  theme_bw() +
+  xlab("Time-step") +
+  ylab("N(t) - N(t-1)") +
+  theme(
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 14)
+  )
+
+```
+
+## Turning on dispersal only
+
+We turn off the human and vector per capita birth rate and the mortality rate. The infection processes is turned off. \textbf{This still means that the total vector population should still be the same}. When you add the total subpopulations (susceptible, infected, recovered) population at a patch j at time t with the population at t-1, you should get 0. Though this is only true if the birth and mortality rates are the SAME!
+
+```{r}
+p_disp_only <- c(
+  b_H = 0, # Human birth rate
+  b_P = 0, # P.vector birth rate
+  b_S = 0, # S. vector birth rate
+  mu_H = 0, # Human death rate
+  mu_P =0, # P. vector death rate
+  mu_S = 0, # S. vector death rate
+
+  a_P = 0, # biting rate of the p. vector
+  a_S = 0, # biting rate of the s.vector
+
+  phi_P = 0, # transmission probability of p. vector
+  phi_S = 0, # transmission probability of s. vector
+  phi_H = 0, # transmission probability of human
+
+  # Recovery rate
+  gamma = 0, # recovery rate of infected human
+
+  # competition coefficient
+  c_PS = 0.0, # OFF- competitition effect of p on  s.vector
+  c_SP = 0.0, # OFF- competitition effect of s on p.vector
+
+  a_max = 10, # OFF
+  k = 1e-2,
+  a_0 =3,
+  lambda = 0.05
+)
+```
+
+```{r}
+results_dispersal_only <- data.frame(ode(
+  times = seq(1, 100, 0.1),
+  y = initial_y_test,
+  func = model_ross_trito_metapopulation,
+  parms = p_disp_only ,
+  num_patch = 10,
+  adj_matrix = Matrix(adjacency_matrix_test,sparse = TRUE),
+  method = 'lsodar',
+  atol = 1e-8, rtol = 1e-8
+))
+```
+
+```{r}
+primary_s <- results_dispersal_only [ , grepl("PS", names(results_dispersal_only))]
+ 
+  primary_summed <- rowSums( primary_s); primary_summed
+  
+ primary_i <-  results_dispersal_only[ , grepl("PI", names( results_dispersal_only))]
+ 
+   primary_i_summed <- rowSums( primary_i); primary_i_summed 
+
+   secondary_s <-  results_dispersal_only [ , grepl("SS", names(results_dispersal_only ))]
+   secondary_s_summed <- rowSums( secondary_s); secondary_s_summed 
+
+    secondary_i <-results_dispersal_only[ , grepl("SI", names(results_dispersal_only))]
+
+       secondary_i_summed <- rowSums( secondary_i); secondary_i_summed 
+```
+
+```{r}
+
+aggregate_subpopulations_finetune <- function(results){
+ primary_s <- results_dispersal_only [ , grepl("PS", names(results_dispersal_only))]
+ 
+  primary_summed <- rowSums( primary_s); primary_summed
+
+ primary_i <-  results_dispersal_only[ , grepl("PI", names( results_dispersal_only))]
+ 
+   primary_i_summed <- rowSums( primary_i); primary_i_summed 
+
+ secondary_s <-  results_dispersal_only [ , grepl("SS", names(results_dispersal_only ))]
+   secondary_s_summed <- rowSums( secondary_s); secondary_s_summed 
+
+    secondary_i <-results_dispersal_only[ , grepl("SI", names(results_dispersal_only))]
+
+       secondary_i_summed <- rowSums( secondary_i); secondary_i_summed 
+
+ 
+ 
+ secondary_summed <- rowSums(secondary_all)
+ humans_summed <- rowSums(human_all)
+ 
+ full_df <- cbind(primary_summed , secondary_summed, humans_summed )
+ diff(humans_summed)
+ 
+ diff_result <- data.frame(apply(full_df[, 1:ncol( full_df )], 2, diff))
+
+ full_df_melted <- melt(
+ diff_result )
+   
+
+ 
+ return(list(full_df, full_df_melted))
+}
+
+```
