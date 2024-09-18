@@ -1,13 +1,10 @@
 ###coverage versus frequency
 library(here)
-source(here("Code", "force_event_ODE.R"))
-source(here("Code", "namer_chosen_compartments.R"))
-source(here("Code", "simulate_network.R" ))
-
+source(here("Code","Function"))
 
 coverage = seq(0.1,1,0.1)
 frequency = seq(5,50,10)
-connectance = c(0.1,0.5)
+c
 expandDF <- expand.grid(coverage = coverage,
                         frequency = frequency,
                         connectance = connectance)

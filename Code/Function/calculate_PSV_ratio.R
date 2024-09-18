@@ -16,12 +16,19 @@
 #' 
 calculate_PSV_ratio <- function(results){
         
-        calculate_vector_abundance_patch(results)
+        list_abundance <- calculate_vector_abundance_patch(results)
        
         ###This should be how you calculate the primary to secondary.
-        primary_secondary_ratio =cbind.data.frame(time = results[,'time'], 
-                                (primarys_mat + primaryi_mat )/
-                                (secondarys_mat + secondaryi_mat ))
+        primary_secondary_ratio <- cbind.data.frame(time = results[,1], 
+                                (list_abundance[[1]] +  list_abundance[[2]])/
+                                (list_abundance[[3]] +  list_abundance[[4]]))
+        
+        primary_secondary_ratio <- primary_secondary_ratio[,-2]
+        
+        colnames(primary_secondary_ratio)[2:ncol(primary_secondary_ratio)] <- 
+                seq(2:ncol(primary_secondary_ratio))
+        
+        
         
         primary_secondary_ratio_Melted <- melt(primary_secondary_ratio, 
                                                id.vars ='time')

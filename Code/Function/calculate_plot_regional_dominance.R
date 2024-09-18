@@ -10,9 +10,10 @@ calculate_dominance_region <- function(results_ODE){
                                               function(x) nrow(x[x$value < 1,])))
         
        return(data.frame(time = seq(1:length(primary_dom)),
-                          prop=primary_dom/(primary_dom+ secondary_dom)))
+                          prop = primary_dom/(primary_dom+ secondary_dom)))
        
 }
+
 
 plot_dominance_region <- function(results_ODE){
  ggplot(results_ODE, aes(x= time, y= prop))+
@@ -23,7 +24,4 @@ plot_dominance_region <- function(results_ODE){
 }
 
 
-
-regional_dominance <- calculate_dominance_region (results_ode)
-plot_dominance_region(regional_dominance)
 

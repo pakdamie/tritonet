@@ -1,5 +1,5 @@
 
-#' Reformat the list of desolve outputs for plotting
+#' Reformat the list of desolve outputs for plotting (vectors)
 #'
 #' @param list The desolve outputs that are in a list
 #'
@@ -52,8 +52,45 @@ reformat_abundance_patch_vector <- function(list){
        return(list(full_abundance_vectors, agg_full_df ))
 }
 
+#' Reformat the list of desolve outputs for plotting (hosts)
+#'
+#' @param list 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+reformat_abundance_patch_host <- function(list){
+        
+        abundance_matrices <-  calculate_host_abundance_patch(list) 
+        
+        melted_abundance_matrices<- lapply(abundance_matrices, 
+                                           function(x) melt(as.data.frame(x), id.vars = "time"))
+        
+        melted_abundance_matrices <- lapply(melted_abundance_matrices, 
+                                            function(x) 
+                                                    cbind.data.frame(x, 
+                                                                     idvariable = gsub("[^a-zA-Z]", "", x$variable),
+                                                                     patch_num = parse_number(as.character(x$variable))))
+        
+        full_abundance_host <- do.call(rbind,melted_abundance_matrices)
+        
+    
+        
+        return(full_abundance_host)
+}
 
-plot_abundance_patch_time <- function(list){
+
+#' Plot vector abundance 
+#'
+#' @param list 
+#' @param aggregate 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_abundance_patch_time <- function(list, aggregate = "no"){
       
       gg_df <-  reformat_abundance_patch_vector(list)[[1]]
       agg_full_df <- reformat_abundance_patch_vector(list)[[2]]
@@ -62,11 +99,11 @@ plot_abundance_patch_time <- function(list){
                                   aes(x = time, y= log10(x+1), 
                                       color = patch_num,
                                       group =  patch_num))+
-              geom_line()+
+              geom_line(alpha = 0.6)+
               facet_wrap(~ id,ncol = 1)+
               xlab("Time")+
               ylab("Abundance ")+
-              scale_color_viridis(option = 'mako') + 
+              scale_color_viridis(option = 'viridis') + 
               theme_minimal()
               
               
@@ -78,40 +115,34 @@ plot_abundance_patch_time <- function(list){
               facet_wrap(~ idvariable)+
               xlab("Time")+
               ylab("Abundance ")+
-              scale_color_viridis(option = 'mako') + 
+              scale_color_viridis(option = 'viridis') + 
               theme_minimal()
          
         
+      if(aggregate == "no"){
+      
        return( gg_abundance_full + gg_abundance_facet + plot_layout(guides = 'collect'))
+      }
+      else{
+              return(gg_abundance_full)
+      }
 }
 
-plot_abundance_bar<-function(list, doi){
-        agg_full_df <- reformat_abundance_patch_vector(list)[[2]]
         
-        agg_full_df_doi <- subset(agg_full_df,
-                                  agg_full_df$time == doi)
-        agg_full_df_doi$logx <-     ( agg_full_df_doi $x)
-        agg_full_df_doi$logx <- ifelse(agg_full_df_doi$id == "Primary", -agg_full_df_doi$logx ,
-                                    agg_full_df_doi$logx )
+plot_abundance_patch_time_host <- function(list){
         
-        agg_full_df_doi$dominant <-  aggregate(agg_full_df_doi$x,
-                  list(agg_full_df_doi$patch_num),'diff')$x
-        agg_full_df_doi$dominant<- ifelse(  agg_full_df_doi$dominant > 0 ,
-                                             "S","P" )
-        ggplot(agg_full_df_doi,    
-                                    aes(x = patch_num, y= logx,
-                                        fill =id, color = dominant))+
-                geom_bar(stat = 'identity')+
-                xlab("Patch")+
-                ylab("Abundance")+
-                ylim(-80,80)+
-                geom_hline(yintercept = 0)+
-                scale_color_manual(values = c("P" = 'white', "S" ='black'))+
+        gg_df <-  reformat_abundance_patch_host(list)
+        
+        gg_abundance_full <- ggplot(subset(gg_df,gg_df$idvariable!= "HS"),    
+                                    aes(x = time, y = log10(value+1), 
+                                        color = patch_num,
+                                        group =  patch_num))+
+                geom_line(alpha = 0.6)+
+                facet_wrap(~ idvariable,ncol = 3)+
+                xlab("Time")+
+                ylab("Abundance ")+
+                scale_color_viridis(option = 'viridis') + 
                 theme_minimal()
         
-        
-        
+       return( gg_abundance_full)
 }
-
-
-        
