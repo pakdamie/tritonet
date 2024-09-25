@@ -34,12 +34,12 @@ model_ross_trito_metapopulation <- function(t, state,
         mu_S <- matrix(rep_len(param["mu_S"],num_patch), ncol = 1)  #S. vector death rate
         
         #Force of infection (FOI) parameters
-        a_P <- matrix(rep_len(param["a_P"],num_patch) , ncol = 1)  #Biting rate of the P. vector
-        a_S <-  matrix(rep_len(param["a_S"],num_patch) , ncol = 1)  #Biting rate of the S.vector
+        a_P <- matrix(rep_len(param["a_P"],num_patch), ncol = 1)  #Biting rate of the P. vector
+        a_S <-  matrix(rep_len(param["a_S"],num_patch), ncol = 1)  #Biting rate of the S.vector
         
-        phi_P <-  matrix(rep_len(param["phi_P"],num_patch) , ncol = 1)  #Transmission probability of p. vector
-        phi_S <-  matrix(rep_len(param["phi_S"],num_patch) , ncol = 1)   #Transmission probability of s. vector
-        phi_H  <-  matrix(rep_len(param["phi_H"],num_patch) , ncol = 1)   #Transmission probability of human
+        phi_P <-  matrix(rep_len(param["phi_P"],num_patch), ncol = 1)  #Transmission probability of p. vector
+        phi_S <-  matrix(rep_len(param["phi_S"],num_patch), ncol = 1)   #Transmission probability of s. vector
+        phi_H  <-  matrix(rep_len(param["phi_H"],num_patch), ncol = 1)   #Transmission probability of human
         
         # Recovery rate
         gamma <-  matrix(rep_len(param["gamma"],num_patch), ncol = 1)   #Recovery rate of infected humans
@@ -50,27 +50,23 @@ model_ross_trito_metapopulation <- function(t, state,
         
         ### FOI
         FOI_P <-  matrix(a_P * phi_P, ncol = 1) #FOI for a primary vector
-        FOI_S <-  matrix(a_S * phi_S , ncol = 1) #FOI for a secondary vector
+        FOI_S <-  matrix(a_S * phi_S, ncol = 1) #FOI for a secondary vector
         FOI_H_P <- matrix(a_P * phi_H, ncol =1) #FOI for a human to a primary vector
-        FOI_H_S <- matrix(a_S * phi_S,ncol = 1) #FOI for a human to a secondary vector
+        FOI_H_S <- matrix(a_S * phi_H,ncol = 1) #FOI for a human to a secondary vector
         
         ###Dispersal matrix (density-dependent function)
         a_max <- param["a_max"]
         k <- param["k"]#steepness parameter
         a_0 <- param["a_0"]  ###midpoint population size
 
-        ###Dispersal matrix
-        ###exponential decay parameter
-        lambda <- param["lambda"]
-
         ### Population size
-        N_H <- matrix(H_S + H_I + H_R)#human host population 
+        N_H <- matrix(H_S + H_I + H_R) #human host population 
         N_P <- matrix(P_S + P_I) #p. vector population
         N_S <- matrix(S_S + S_I) #s. vector population
         N_V <- matrix(N_P + N_S) # primary and secondary vector population
        
         ###Human susceptible 
-        dH_S <- (b_H * N_H) - (FOI_P * H_S * (P_I/N_P)) - (FOI_S * H_S * (S_I/N_S))- (mu_H*H_S) 
+        dH_S <- (b_H * N_H) - (FOI_P * H_S * (P_I/N_P)) - (FOI_S * H_S * (S_I/N_S)) - (mu_H * H_S) 
         
         ###Human infected
         dH_I <- (FOI_P * H_S * (P_I/N_P)) + (FOI_S * H_S * (S_I/N_S)) - (gamma * H_I) - (mu_H * H_I)
@@ -78,32 +74,34 @@ model_ross_trito_metapopulation <- function(t, state,
         ###Human recovered
         dH_R <- (gamma * H_I) - (mu_H * H_R)
         
-        ###Account for the distance:
+        ###Accounts for the distance:
         probability_matrix <- adj_matrix
         
         ###Accounts for the density-dependence- matrix
-        dd_mat <- Diagonal(num_patch, x = c(a_max)/(1.00 +  exp(-k *(N_V - a_0 ))))
-        adjusted_prob <- sweep_sparse(probability_matrix,1, 
+        dd_mat <- Diagonal(num_patch, x = c(a_max)/(1.00 +  exp(-k *(N_V - a_0))))
+        
+        adjusted_prob <- sweep_sparse(probability_matrix, 1, 
                                       rowSums(probability_matrix), fun= "/")
+        
         adjusted_prob[is.na(adjusted_prob) == TRUE] <-  0
         
         disp.contact2 <- as.matrix(adjusted_prob %*% dd_mat)
 
         ###P. vector
         ###Susceptible
-        dP_S <-  (b_P* N_P) - (FOI_H_P *P_S* (H_I/N_H)) - (mu_P *P_S) - c_SP*(P_S)*(N_S) -
-                (colSums(disp.contact2) * P_S) +  (disp.contact2 %*% P_S)
+        dP_S <-  (b_P * N_P) - (FOI_H_P * P_S * (H_I/N_H)) - (mu_P * P_S) - c_SP * (P_S) * (N_S) -
+                (colSums(disp.contact2) * P_S) + (disp.contact2 %*% P_S)
                 
 
         ###Infected
-        dP_I <- (FOI_H_P * P_S * (H_I/N_H)) - mu_P*P_I- c_SP*(P_I)*(N_S) -
+        dP_I <- (FOI_H_P * P_S * (H_I/N_H)) - (mu_P * P_I)- c_SP * (P_I) * (N_S) -
                 (colSums(disp.contact2 ) * P_I) +  (disp.contact2 %*% P_I)
         
         
         ###S. vector 
         ###Susceptible
-        dS_S <-  (b_S * N_S) - (FOI_H_S *S_S* (H_I/N_H)) - mu_S *S_S -  c_PS*(S_S)*(N_P) -
-                (colSums(disp.contact2 ) * S_S) +  (disp.contact2 %*% S_S)
+        dS_S <-  (b_S * N_S) - (FOI_H_S *S_S* (H_I/N_H)) - (mu_S * S_S) -  c_PS * (S_S) * (N_P) -
+                (colSums(disp.contact2) * S_S) +  (disp.contact2 %*% S_S)
         
         
         ###Infected
@@ -111,7 +109,9 @@ model_ross_trito_metapopulation <- function(t, state,
                (colSums(disp.contact2) * S_I) +  (disp.contact2 %*% S_I)
         
         
-        return(list(c(dH_S,dH_I,dH_R,dP_S, dP_I, dS_S, dS_I)))
+        return(list(c(dH_S, dH_I, dH_R,
+                      dP_S,dP_I, 
+                      dS_S, dS_I)))
         }
         )
 }

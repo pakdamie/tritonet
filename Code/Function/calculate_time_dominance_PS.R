@@ -1,7 +1,7 @@
 ###Proportion of time dominated by one species or not 
 
 Calculate_time_dominance_PS <- function(dominance_region){
-       splitted_list <-  split(Simulated_dominance_region_ALL,
+       splitted_list <-  split(dominance_region,
                               ~coverage+frequency+connectance)
         
         prop_p <- do.call(rbind,
@@ -15,9 +15,6 @@ Calculate_time_dominance_PS <- function(dominance_region){
         return(cbind(variables_interest,prop_p))
 }
 
-Time_dominance_PS<- Calculate_time_dominance_PS(Simulated_dominance_region_ALL)
-
-Time_dominance_PS$connectance= factor(Time_dominance_PS$connectance, levels=c('L',"M","H"))
 
 
 ggplot(Time_dominance_PS,

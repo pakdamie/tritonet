@@ -7,8 +7,10 @@
 #' @export
 #'
 #' @examples
+
 calculate_vector_abundance_patch <- function(desolve_df) {
-  num_patch <- (ncol(desolve_df) - 1) / 7 # the number of patches should simply be
+  
+   num_patch <- (ncol(desolve_df) - 1) / 7 # the number of patches should simply be
   # the number of columns in desolve_df (-1, to get rid of the time column) divided
   ### by the number of different stages (H, P, and S)
 

@@ -1,0 +1,286 @@
+---
+title: "Next generation method"
+author: "Damie Pak"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The mathematical formulation
+For calculating the reproductive number ($R0$) or the effective reproductive number, we can use the next generation method (NGM). Here, we create an *$F$* matrix where we track how new infections in class $i$ emerge. We also create a $*V*$ matrix where we record how individuals leave the infectious stage. By calculating the eigenvalue of ($FV^-1$), we should be able to calculate the $R0$ by calculating the NGM at the disease-free equilibirum. 
+
+This is fairly simple doing it in a single-patch system, but becomes a bit harder when we have multiple patches and multiple vectors. Here, we show step-by-step on how to calculate the R-effective of the individual patches. 
+
+## One-host and one vector on a 2-patch system
+
+Assumptions
+
+1. There are two patches and assume we do not care about the distance
+
+2. The host human population do not disperse and is kept constant over time 
+
+3. The vector population (both susceptible and infected) disperses between PATCH 1
+and PATCH 2
+
+The full model can be written as below:
+
+$$
+\frac{dH_{S(j)}}{dt} = \wedge N_j - \lambda_V H_S \frac{V_I}{N_V} - \mu_H H_{S(j)}
+$$
+
+$$
+\frac{dH_{I(j)}}{dt} = \lambda_V H_S \frac{V_I}{N_V} - \gamma H_{S(j)} - \mu_H H_{S(j)}
+$$
+
+$$
+\frac{dV_{S(j)}}{dt} = BN_V - \lambda_H V_S \frac{H_I}{N_H} - \mu_V V_{S(j)} - a V_{S(j)} +aP_{S(k)}
+$$ 
+
+$$
+\frac{dV_{I(j)}}{dt} = \lambda_H V_S \frac{H_I}{N_H} - \mu_V V_{I(j)} - a V_{I(j)} +
+a V_{I(k)}
+$$
+
+To construct the NGM of the entire metapopulation. Let us think of this way. We have two patches and 2 classes of infected ($H_I$ and $V_I$). If $n$ represents the number of patches and $c$ represents the infected classes, we should have a $n \times c$ matrix.
+
+Specifically,
+
+$$
+\begin{bmatrix}
+H_{I(1)} \leftarrow H_{I(1)} & H_{I(1)} \leftarrow H_{I(2)}  & H_{I(1)} \leftarrow 
+V_{I(1)}  &  H_{I(1)} \leftarrow 
+V_{I(2)}\\
+H_{I(2)} \leftarrow H_{I(1)} & H_{I(2)} \leftarrow H_{I(2)}  & H_{I(2)} \leftarrow 
+V_{I(1)}  &  H_{I(2)} \leftarrow 
+V_{I(2)}\\
+V_{I(1)} \leftarrow H_{I(1)} & V_{I(1)} \leftarrow H_{I(2)}  & V_{I(1)} \leftarrow 
+V_{I(1)}  &  V_{I(1)} \leftarrow 
+V_{I(2)}\\
+V_{I(2)} \leftarrow H_{I(1)} & V_{I(2)} \leftarrow H_{I(2)}  & V_{I(2)} \leftarrow 
+V_{I(1)}  &  V_{I(2)} \leftarrow 
+V_{I(2)}\\
+\end{bmatrix}
+$$
+
+Because infected humans and vectors do not directly infect other humans and vectors in the same- the
+diagonals can all be 0. Additionally, because infectious humans do not disperse, we can make these entries 0.
+
+$$
+\begin{bmatrix}
+0&0  & H_{I(1)} \leftarrow 
+V_{I(1)}  &  0\\
+0 & 0  &0  &  H_{I(2)} \leftarrow 
+V_{I(2)}\\
+V_{I(1)} \leftarrow H_{I(1)} & 0 & 0 &  V_{I(1)} \leftarrow 
+V_{I(2)}\\
+0& V_{I(2)} \leftarrow H_{I(2)}  & V_{I(2)} \leftarrow 
+V_{I(1)}  & 0\\
+\end{bmatrix}
+$$
+
+For $H_{I(j)} \leftarrow V_{I(j)}$, we have $\lambda_V \frac{H_{S(j)}}{N_{V(j)}}$.For $V_{I(j)} \leftarrow H_{I(j)}$, we have $\lambda_H \frac{V_{S(j)}}{N_{H(j)}}$
+
+$$
+\textbf{F} =\begin{bmatrix}
+0&0  &\lambda_V \frac{H_{S(1)}}{N_{V(1)}} &  0\\
+0 & 0  &0  &  \lambda_V \frac{H_{S(2)}}{N_{V(2)}}\\
+\lambda_H \frac{V_{S(1)}}{N_{H(1)}} & 0 & 0 & a\\
+0& \lambda_H \frac{V_{S(2)}}{N_{H(2)}} & a & 0\\
+\end{bmatrix}
+$$
+
+The V matrix is: 
+$$
+\textbf{V} =\begin{bmatrix}
+-(\gamma + \mu_H)  & 0 &  0 &0\\
+0 &  -(\gamma + \mu_H)  &0  &0 \\
+0 & 0 & -(a + \mu_V) & 0\\
+0& 0 & 0 & -(a + \mu_V)\\
+\end{bmatrix}
+$$
+
+Therefore the $V^{-1}$ matrix is:
+
+$$
+\begin{bmatrix}
+-\frac{1}{\gamma + \mu_H} & 0 & 0 & 0 \\
+0 & -\frac{1}{\gamma + \mu_H} & 0 & 0 \\
+0 & 0 & -\frac{1}{a + \mu_V} & 0 \\
+0 & 0 & 0 & -\frac{1}{a + \mu_V}
+\end{bmatrix}
+$$
+
+
+the matrix
+$$
+{FV^{-1}} =\begin{bmatrix}
+0&0  &\frac{\lambda_V  H_{S(1)}}{N_{V(1)} (a+ \mu_V)} &  0\\
+0 & 0  &0  &  \frac{\lambda_V H_{S(2)}}{N_{V(2)}(a+ \mu_V)}\\
+ \frac{\lambda_H V_{S(1)}}{N_{H(1)}(\gamma + \mu_H)} & 0 & 0 & \frac{a}{a+\mu_V}\\
+0&  \frac{\lambda_H V_{S(2)}}{N_{H(2)}(\gamma + \mu_H)} & \frac{a}{a + \mu_V} & 0\\
+\end{bmatrix}
+$$
+It is most likely that the equation is going to be horrible solving by hand so let's 
+code this up:
+
+## The desolve code
+
+Let's write the first system of equations in a desolve code 
+
+```{r}
+metapopulation_model <- function(time, state, parameters) {
+  with(as.list(c(state, parameters)), {
+          
+        b_H <- matrix(rep_len(parameters["b_H"], 2), ncol = 1) # Human birth rate
+        b_V<- matrix(rep_len(parameters["b_V"], 2), ncol = 1)  #P.vector birth rate
+        mu_H <- matrix(rep_len(parameters["mu_H"], 2), ncol = 1)  #
+        mu_V <-  matrix(rep_len(parameters["mu_V"], 2), ncol = 1)  #P. vector death rate
+          
+        lambda_H <- matrix(rep_len(parameters["lambda_H"], 2), ncol = 1)
+        lambda_V <- matrix(rep_len(parameters["lambda_V"], 2), ncol = 1) 
+        
+        a <- matrix(c(0,0,1,0),ncol =2,byrow = TRUE)
+       ###The metapopulation
+        H_S <- matrix(state[1:2], ncol = 1) #Susceptible human
+        H_I <- matrix(state[3:4], ncol = 1) #Infected human
+        H_R <- matrix(state[5:6], ncol = 1) #Recovered human
+        V_S <- matrix(state[7:8], ncol = 1) #Susceptible 
+        V_I <- matrix(state[9:10], ncol = 1) #Infected primary
+  
+        N_H <- H_S + H_I + H_R
+        N_V <- V_S + V_I
+            # Differential equations
+    
+        dH_S <-  (b_H * N_H) - (lambda_V * H_S * (V_I/N_V)) - (mu_H * H_S)     
+        
+        dH_I <- (lambda_V * H_S * (V_I/N_V)) - (gamma  + mu_H) * H_I  
+        
+        dH_R <-  (gamma  - mu_H) * H_I  
+
+        dV_S <-  (b_V * N_V) - (lambda_H * V_S * (H_I/N_H)) - (mu_H * V_S)  + 
+                (a %*% V_S) - (colSums(a) * V_S)
+        
+        dV_I <- (lambda_H * V_S * (H_I/N_H))  - (mu_H * V_I)  +
+                (a %*% V_I) - (colSums(a) * V_I)
+
+    # Return the rates of change
+    return(list(c(dH_S, dH_I, dH_R, dV_S, dV_I)))
+  })
+}
+
+```
+
+```{r}
+initial_y <- c(HS =  rep(100, 2),
+               HI = rep(0,2),
+               HR = rep(0,2),
+               VS = rep(100,2),
+               VI =rep(10,2))
+
+ parameters_full <-  c(b_H = 0.05, #Human birth rate
+                b_V = (0.05), #P.vector birth rate
+                mu_H = 0.01, #Human death rate
+                mu_V = 0.05, #P. vector death rate
+
+                lambda_V= 0.132, #transmission probability of p. vector
+                lambda_H = 0.132 * 0.55, #transmission probability of s. vector
+
+                # Recovery rate of the acute phase
+                gamma = 1/56)
+```                
+
+
+```{r}
+
+deSolve_results <-data.frame(ode(
+                times = seq(1,100,1),
+                y =   initial_y  ,
+                func = metapopulation_model,
+                parms = parameters_full,
+                method = 'lsodar'))
+```
+
+## Calculating the R effective
+
+```{r}
+HS_1 <- deSolve_results[,"HS1"]
+HS_2 <- deSolve_results[,"HS2"]
+
+HI_1 <- deSolve_results[,"HI1"]
+HI_2 <- deSolve_results[,"HI2"]
+
+HR_1 <- deSolve_results[,"HR1"]
+HR_2 <- deSolve_results[,"HR2"]
+
+NH_1 <- HS_1 + HI_1 + HR_1
+NH_2 <- HS_2 + HI_2 + HR_2
+
+
+VS_1 <- deSolve_results[,"VS1"]
+VS_2 <- deSolve_results[,"VS2"]
+
+VI_1 <- deSolve_results[,"VI1"]
+VI_2 <- deSolve_results[,"VI2"]
+
+NV_1 <-  VS_1 + VI_1 
+NV_2 <- VS_2 + VI_2
+
+```
+
+```{r}
+R_effective_calculator_list<- NULL
+New_addition_list <- NULL
+for (i in seq(1,100)){
+
+HI1_from_VI1 <-  (parameters_full[["lambda_V"]] * HS_1[i])/ 
+        (NV_1[i] * (0 + parameters_full[["mu_V"]]))
+HI2_from_VI2 <-  (parameters_full[["lambda_V"]] * HS_2[i])/ 
+        (NV_2[i] * (1 + parameters_full[["mu_V"]]))
+
+VI1_from_HI1 <- (parameters_full[["lambda_H"]] * VS_1[i])/ 
+        (NH_1[i] * (parameters_full[["gamma"]] + parameters_full[["mu_H"]]))
+
+VI1_from_VI2 <- 1/(1+ parameters_full[["mu_V"]])
+VI2_from_VI1<- 0/(1+ parameters_full[["mu_V"]])
+
+VI2_from_HI2 <- (parameters_full[["lambda_H"]] * VS_2[i])/ 
+        (NH_2[i] * (parameters_full[["gamma"]] + parameters_full[["mu_H"]]))
+
+FV_1 <- matrix(c(0,0,HI1_from_VI1,0,
+         0,0,0,HI2_from_VI2,
+       VI1_from_HI1 ,0,0,VI1_from_VI2,
+       0,VI2_from_HI2,VI2_from_VI1,0),ncol = 4)
+
+
+R_effective_calculator_list[[i]] <- max(eigen(FV_1)$values)
+New_addition_list [[i]]<-cbind.data.frame(states = c("HI1","HI2","VI1","VI2"), new =rowSums(FV_1 ),time = i)
+
+}
+
+```
+
+
+```{r}
+R_effective_calculator_df <- cbind.data.frame(time=seq(1,100,1),
+                                   R_eff=unlist(R_effective_calculator_list))
+```
+
+```{r}
+plot(R_effective_calculator_df$time,
+     R_effective_calculator_df$R_eff)
+
+```
+
+
+```{r}
+New_addition_df <- do.call(rbind, New_addition_list)
+```
+
+
+```{r}
+ggplot(New_addition_df, aes( x= time, y =log10(new) , color = states))+
+        geom_line()
+```

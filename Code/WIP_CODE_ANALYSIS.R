@@ -1,9 +1,7 @@
 ### A WIP ANALYSIS SCRIPT THAT IS A PLACEHOLDER.
-coverage = c(0.10,0.25,.50,1)
-frequency = c(5,25,50,100,200)
+coverage = c(0.25,.50, 1)
+frequency = c(5,25,50)
 
-###
-list_networks <- simulate_spatial_network(24601,30)
 
 
 expandDF <- expand.grid(coverage = coverage,
@@ -13,65 +11,77 @@ expandDF <- expand.grid(coverage = coverage,
 LOW_CONNECTANCE_LIST <-NULL
 MED_CONNECTANCE_LIST <- NULL
 HIGH_CONNECTANCE_LIST <- NULL
-for (i in seq(1,nrow(expandDF))){
+
+networks_interest_low <- replicate(100,simulate_spatial_network(sample(1:24601,1),20,0.05))
+networks_interest_med<- replicate(100,simulate_spatial_network(sample(1:24601,1),20,0.10))
+networks_interest_high<- replicate(100,simulate_spatial_network(sample(1:24601,1),20,0.20))
+
+LOW_NETWORK_LIST <- NULL
+MED_NETWORK_LIST <- NULL
+HIGH_NETWORK_LIST <- NULL
+
+for (network in seq(1,100)){
         
-LOW_CONNECTANCE_LIST[[i]] <- 
-        Simulate_model(
-                user_network = list_networks[[1]],
-                max_distance = 30,
+        for (i in seq(1,nrow(expandDF))){
+                
+                LOW_CONNECTANCE_LIST[[i]] <- 
+                Simulate_model(
+                user_network = networks_interest_low[[network]],
+                max_distance = 20,
                 coverage = expandDF$coverage[i],
                 frequency = expandDF$frequency[i],
-                species1 = 0.6, 
-                species2 = 0.9,
+                species1 = 0.5, 
+                species2 = 0.8,
                 initial_values = "default",
                 parameter_values = "default",
                 disturbance = "yes",         
                 disease_on = 'no',
-                simulation_time = 300,
-                intervention_time = 300)
+                simulation_time = 365,
+                intervention_time = 365,
+                randomize = TRUE)
+                
+               MED_CONNECTANCE_LIST[[i]] <- 
+                       Simulate_model(
+                               user_network = networks_interest_med[[network]],
+                               max_distance = 20,
+                               coverage = expandDF$coverage[i],
+                               frequency = expandDF$frequency[i],
+                               species1 = 0.5, 
+                               species2 = 0.8,
+                               initial_values = "default",
+                               parameter_values = "default",
+                               disturbance = "yes",         
+                               disease_on = 'no',
+                               simulation_time = 365,
+                               intervention_time = 365,
+                               randomize = TRUE)
+                
+                HIGH_CONNECTANCE_LIST[[i]] <- 
+                        Simulate_model(
+                                user_network = networks_interest_high[[network]],
+                                max_distance = 20,
+                                coverage = expandDF$coverage[i],
+                                frequency = expandDF$frequency[i],
+                                species1 = 0.5, 
+                                species2 = 0.8,
+                                initial_values = "default",
+                                parameter_values = "default",
+                                disturbance = "yes",         
+                                disease_on = 'no',
+                                simulation_time = 365,
+                                intervention_time = 365,
+                                randomize = TRUE)
+                
+}
+               
         
-        
-
-MED_CONNECTANCE_LIST[[i]] <- 
-        Simulate_model(
-                user_network = list_networks[[2]],
-                max_distance = 30,
-                coverage = expandDF$coverage[i],
-                frequency = expandDF$frequency[i],
-                species1 = 0.6, 
-                species2 = 0.9,
-                initial_values = "default",
-                parameter_values = "default",
-                disturbance = "yes",         
-                disease_on = 'no',
-                simulation_time = 300,
-                intervention_time = 300)
-
-HIGH_CONNECTANCE_LIST[[i]] <- 
-        Simulate_model(
-                user_network = list_networks[[11]],
-                max_distance = 30,
-                coverage = expandDF$coverage[i],
-                frequency = expandDF$frequency[i],
-                species1 = 0.6, 
-                species2 = 0.9,
-                initial_values = "default",
-                parameter_values = "default",
-                disturbance = "yes",         
-                disease_on = 'no',
-                simulation_time = 300,
-                intervention_time = 300)
-
+       LOW_NETWORK_LIST[[network]] <- LOW_CONNECTANCE_LIST 
+       MED_NETWORK_LIST[[network]] <- MED_CONNECTANCE_LIST 
+       HIGH_NETWORK_LIST[[network]] <- HIGH_CONNECTANCE_LIST 
 }
 
 plot_patchwork_abundance(LOW_CONNECTANCE_LIST)
 plot_patchwork_abundance(result_list1=LOW_CONNECTANCE_LIST, result_list2 = HIGH_CONNECTANCE_LIST)
-
-
-
-
-
-
 
 
 Simulated_dominance_region_L <- lapply(LOW_CONNECTANCE_LIST,function(x) 
