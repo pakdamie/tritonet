@@ -1,67 +1,111 @@
-calculate_R_effective <- function() 
+###The user inputs an FVec assuming that there is one patch (the function should
+### change it )
+
+
+adjacency_matrix <- matrix(c(0,1,1,
+                             1,0,0,
+                             1,0,0),nrow = 3, ncol = 3)
+
+
+R_effective_calculator <- (adjacency_matrix, I_states, Full_states,
+                           FVec, VVec, deSolve_Dataframe,
+                           parameter_list){
         
-mu_H = 1/27375 #Human death rate
-mu_P = 0.05 #P. vector death rate
-mu_S = 0.05 #S. vector death rate
+        
+        
+        #Calculate the total number of patches
+        num_patch <- nrow(adjacency_matrix)
+        
+        states <- c("HI","PI","SI")
+        non_infected_states <- c("HS","HR", "PS", "SS")
+        full_states <- c("NH", "NP", "NS")
+        
+        
+        total_state_variables <- c(states, non_infected_states,full_states)
+                
+        infected_full_states <- paste0(states, rep(1:num_patch, 
+                                          each = length(states)))
+        
+        
+        full_F_matrix <- NULL
+        
+        for (i in seq(2,num_patch + 1)){
+        full_F_matrix[[i-1]]  <- unlist(lapply(F_matrix_test, function(x) 
+                        gsub("[0-9]", i-1, x)))
+        }
+        
+        ###
+        
+            
+         connected_to = apply(adjacency_matrix, 1, 
+                                  function(x) which(x!=0))
+         adjacency_df = NULL
+         for (i in seq(1,num_patch)){
+                 adjacency_df [[i]] = cbind.data.frame(patch = i, 
+                                                       connected_to_P = 
+                                                               paste0("PI",
+                                                               connected_to[[i]]),
+                                                       connected_to_S = 
+                                                               paste0("SI",
+                                                                connected_to[[i]]))
+         }  
+         adjacency_df <- do.call(rbind, adjacency_df)   
+         
+         full_V_matrix <- NULL
+         
+         for (i in seq(1,num_patch)){
+                 
+                 patch_specific <- subset(adjacency_df, adjacency_df$patch == i)
+                 
+                 added_PI_dispersal_term <- unlist(lapply(patch_specific$connected_to_P,
+                       function(x) paste0("(a * ",x,")")))
+                 
+                 added_SI_dispersal_term <- unlist(lapply(patch_specific$connected_to_S,
+                                                          function(x) paste0("(a * ",x,")")))
+                 full_PI_dispersal_term <- paste(added_PI_dispersal_term, collapse = " + ")
+                 full_SI_dispersal_term <- paste(added_SI_dispersal_term, collapse = " + ")
+                 
+                 
+                 V_mat_expression1 <- gsub("[0-9]", i, V_matrix_test[[1]])
+                 V_mat_expression2 <- gsub("[0-9]", i, V_matrix_test[[2]])
+                 V_mat_expression3 <- gsub("[0-9]", i, V_matrix_test[[3]])
+                 
+                 V_mat_expression2 <-sub("MAT", 
+                                         full_PI_dispersal_term, V_mat_expression2)
+                 
+                 V_mat_expression3 <-sub("MAT", 
+                                         full_SI_dispersal_term, 
+                                         V_mat_expression3 )
+                 
+                 full_V_matrix[[i]] <- list(   V_mat_expression1,
+                                               V_mat_expression2,
+                                               V_mat_expression3)
+                 
+         }      
+                
+        full_F_matrix <- unlist(full_F_matrix)
+        full_V_matrix <- unlist(full_V_matrix)
 
-a_P = 7 #daily biting rate of the p. vector
-a_S = 7 * (0.55) #daily biting rate of the s.vector
-
-phi_P = 0.132 #transmission probability of p. vector
-phi_S = 0.132 * 0.55 #transmission probability of s. vector
-phi_H  = 0.116 #transmission probability of human
-
-# Recovery rate of the acute phase
-gamma = 1/56  #recovery rate of infected human
-
-#competition coefficient
-c_PS = 5e-4 #competitition effect of p.vector on s.vector
-c_SP = 1e-6#competitition effect of s.vector on p.vector
-
-a_max = 2 * 10^-2 
-k = 0.02
-a_0 = 300
-
-H_I <- sample((1:10), 2, replace = TRUE)
-H_S <- sample((1:10), 2, replace = TRUE)
-H_R <- sample((1:10), 2, replace = TRUE)
-
-
-
-P_S <- sample((1:10), 2, replace = TRUE)
-P_I <- sample((1:10), 2, replace = TRUE)
-S_S <- sample((1:10), 2, replace = TRUE)
-S_I <- sample((1:10), 2, replace = TRUE)
-
-N_S <- S_I + S_S
-N_P <- P_I + P_S
-N_H <- H_S + H_I + H_R
-
-adjacency_matrix <- matrix(c(0,1,1,0), 
-                           ncol = 2, 
-                           byrow = TRUE)
-
-Dispersal_Matrix <- a_max/(1 + k*(( (N_P + N_S) -a_0)))
-
-
-HI_Input_from_P <- ((phi_P * a_P) * P_I[1]/N_P[1]) 
-HI_Input_from_S <-  ((phi_S* a_S) * S_I[1]/N_S[1]) 
-
-PI_Input_from_H <- ((phi_H * a_P) * H_I[1]/N_H[1]) + (adjacency_matrix %*%((Dispersal_Matrix) * matrix(P_I ,ncol = 1)))[1]
-SI_Input_from_H <- ((phi_H * a_S) * H_I[1]/N_H[1]) + (adjacency_matrix %*%((Dispersal_Matrix) * matrix(S_I,ncol = 1)))[1]
-          
-                                                        
-                                                                                               
-HI_Output <- -(gamma + mu_H)
-PI_Output <- -(mu_P + (c_SP*N_S[1])) - (adjacency_matrix %*%((Dispersal_Matrix) * matrix(P_I ,ncol = 1)))[1]
-SI_Output <- -(mu_S + (c_PS *N_P[1]))   -(adjacency_matrix %*%((Dispersal_Matrix) * matrix(P_I ,ncol = 1)))[1]
-
-F_matrix <- matrix(c(0,HI_Input_from_P ,HI_Input_from_S,
-              PI_Input_from_H,0,0,
-              SI_Input_from_H,0,0),ncol = 3, byrow = TRUE)
-              
-V_matrix <- matrix(c(HI_Output,0,0,
-                     0,PI_Output,0,
-                     0,0,SI_Output), ncol =3,byrow = TRUE)
-
-max(eigen(F_matrix%*%solve(V_matrix))$values)
+        jacobian_F <- matrix(0, nrow = length(infected_full_states),
+                                ncol = length(infected_full_states))
+        
+        jacobian_V <- matrix(0, nrow = length(infected_full_states),
+                       ncol = length(infected_full_states))
+        
+        for(jac_ele in seq(1,length( infected_full_states ))){
+                
+                state_interest <- infected_full_states[[jac_ele]]
+                
+                jacobian_F[,jac_ele] <- unlist(lapply(full_F_matrix, 
+                                            function(x) 
+                                                    Deriv(x, state_interest)))
+                
+                jacobian_V[,jac_ele] <- unlist(lapply(full_V_matrix,
+                                                      function(x)
+                                                     Deriv(x, state_interest)))
+                
+        }
+        
+        
+        
+        
