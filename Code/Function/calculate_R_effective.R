@@ -112,7 +112,7 @@ R_effective_calculator <- (adjacency_matrix, I_states, Full_states,
                      
         Evaluated_FV1 <- Evaluated_F  %*% solve(Evaluated_V)        
             
-        R_Effective <- max(Re(eigen(  Evaluated_FV1 )$values))
+        R_Effective <- max(Re(eigen(Evaluated_FV1 )$values))
            
         rowSums(Evaluated_FV1)      
         
