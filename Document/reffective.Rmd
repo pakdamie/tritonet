@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## The mathematical formulation
+
 For calculating the reproductive number ($R0$) or the effective reproductive number, we can use the next generation method (NGM). Here, we create an *$F$* matrix where we track how new infections in class $i$ emerge. We also create a $*V*$ matrix where we record how individuals leave the infectious stage. By calculating the eigenvalue of ($FV^-1$), we should be able to calculate the $R0$ by calculating the NGM at the disease-free equilibirum. 
 
 This is fairly simple doing it in a single-patch system, but becomes a bit harder when we have multiple patches and multiple vectors. Here, we show step-by-step on how to calculate the R-effective of the individual patches. 
@@ -252,7 +253,8 @@ VI2_from_HI2 <- (parameters_full[["lambda_H"]] * VS_2[i])/
 FV_1 <- matrix(c(0,0,HI1_from_VI1,0,
          0,0,0,HI2_from_VI2,
        VI1_from_HI1 ,0,0,VI1_from_VI2,
-       0,VI2_from_HI2,VI2_from_VI1,0),ncol = 4)
+       0,VI2_from_HI2,VI2_from_VI1,0),
+       ncol = 4)
 
 
 R_effective_calculator_list[[i]] <- max(eigen(FV_1)$values)
@@ -284,3 +286,6 @@ New_addition_df <- do.call(rbind, New_addition_list)
 ggplot(New_addition_df, aes( x= time, y =log10(new) , color = states))+
         geom_line()
 ```
+
+
+

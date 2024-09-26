@@ -105,7 +105,14 @@ R_effective_calculator <- (adjacency_matrix, I_states, Full_states,
                                                      Deriv(x, state_interest)))
                 
         }
-        
-        
-        
+ 
+        with(params, eval(parse(text =jacobian_V)))
+        Evaluated_V <-apply(jacobian_V, 1:2,function(x) with(params, eval(parse(text =x))))
+        Evaluated_F <- apply(jacobian_F, 1:2, function(x) with(params, eval(parse(text =x))))
+                     
+        Evaluated_FV1 <- Evaluated_F  %*% solve(Evaluated_V)        
+            
+        R_Effective <- max(Re(eigen(  Evaluated_FV1 )$values))
+           
+        rowSums(Evaluated_FV1)      
         
