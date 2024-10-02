@@ -1,6 +1,8 @@
 
 #' Discrete-time metapopulation model with human hosts and two vectors
 #'
+#'
+#'
 #' @param ntime How long to simulate the model for
 #' @param param The data.frame to feed into the model 
 #' @param adjacency_matrix The adjacency matrix of the network
@@ -12,9 +14,14 @@
 
 discrete_trito_model <- function(ntime,
                                  param,
-                                 adjacency_matrix) {
-  
-  
+                                 adjacency_matrix, 
+                                 disturbance_time,
+                                 mortality_P,
+                                 mortality_S,
+                                 coverage
+                                 ) {
+   
+  # The set up of the model
   # The number of patches in the adjacency matrix should be the nrow/ncol        
   patch_num <- nrow(adjacency_matrix)
   
@@ -41,10 +48,10 @@ discrete_trito_model <- function(ntime,
   HI_mat[1, ] <- rep(50, patch_num )
   HR_mat[1, ] <- rep(0, patch_num)
   
-  PS_mat[1, ] <- sample(800:1000, patch_num) 
-  PI_mat[1, ] <- sample(0:100, patch_num) 
-  SS_mat[1, ] <- sample(800:1000, patch_num)
-  SI_mat[1, ] <- sample(0:100, patch_num)
+  PS_mat[1, ] <- sample(300:500, patch_num) 
+  PI_mat[1, ] <- sample(0:10, patch_num) 
+  SS_mat[1, ] <- sample(300:500, patch_num)
+  SI_mat[1, ] <- sample(0:10, patch_num)
   
   #The parameters
   b_H <- param["b_H"] #birth rate of humans
@@ -93,10 +100,10 @@ discrete_trito_model <- function(ntime,
       #The if else statements prevent situations where the force
       # of infection is divided by 0 (for example, if the total vector
       # population is wiped out in one patch...)
-      HS_ratio<- ifelse(!(is.finite((SI_mat[j,]/ NS_mat))),
+      HS_ratio <- ifelse(!(is.finite((SI_mat[j,]/ NS_mat))),
                          0,SI_mat[j,]/NS_mat)
       
-      HP_ratio<- ifelse(!(is.finite((PI_mat[j,]/ NP_mat))),
+      HP_ratio <- ifelse(!(is.finite((PI_mat[j,]/ NP_mat))),
                          0,PI_mat[j,]/NP_mat)
       
       
@@ -144,23 +151,48 @@ discrete_trito_model <- function(ntime,
       total_change_SS [total_change_SS  < 0] <- 0
       total_change_SI [total_change_SI  < 0] <- 0
 
+      if(j != disturbance_time){
       #We then update these row by row
-      HS_mat[j + 1, ] <-  total_change_HS
+      HS_mat[j + 1, ] <- total_change_HS
       HI_mat[j + 1, ] <- total_change_HI
       HR_mat[j + 1, ] <- total_change_HR
       PS_mat[j + 1, ] <- total_change_PS
       PI_mat[j + 1, ] <- total_change_PI
       SS_mat[j + 1, ] <- total_change_SS
       SI_mat[j + 1, ] <- total_change_SI
-
+      }
+      
+      else if (j == disturbance_time){
+      
+      coverage <- sample(1: patch_num , size = floor(coverage *  patch_num ))
+                        
+      total_change_PS [coverage] <- PS_mat[j,coverage ] *  mortality_P
+      total_change_PI [coverage] <- PI_mat[j, coverage ] *  mortality_P
+      total_change_SS[coverage] <- SS_mat[j, coverage] * mortality_S
+      total_change_SI [coverage] <- SI_mat[j, coverage] * mortality_S
      
+      
+      #We then update these row by row
+      HS_mat[j + 1, ] <- total_change_HS
+      HI_mat[j + 1, ] <- total_change_HI
+      HR_mat[j + 1, ] <- total_change_HR
+      PS_mat[j + 1, ] <- total_change_PS
+      PI_mat[j + 1, ] <- total_change_PI
+      SS_mat[j + 1, ] <- total_change_SS
+      SI_mat[j + 1, ] <- total_change_SI
+              
+             
+      }
   }
+
   
+  
+    
   list_abundance <- list(HS_mat, HI_mat, HR_mat,
                          PS_mat, PI_mat, 
                          SS_mat, SI_mat)
   
-  names(list_abundance) <- c("HS","HI","HR","PS","PI","SS","SI")
+
 
   #When the loop has ended- put the matrices into the list
   return(list(
