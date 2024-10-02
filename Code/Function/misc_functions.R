@@ -52,3 +52,6 @@ namer_chosen_compartments <- function(chosen_patch) {
         
         return(do.call(rbind,result))
 }
+
+
+

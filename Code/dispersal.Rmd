@@ -1,0 +1,45 @@
+---
+title: "Modeling update"
+author: "Damie Pak"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Dispersal matrix
+
+We model the density-dependent dispersal matrix as being a diagonal matrix with a logistic function of dispersal. The rate of dispersal increases as the primary and secondary vectors
+increase.
+
+$$
+\frac{a}{1.00 +  exp(-k (N_V - N_0))},
+$$
+
+where $a$ is the maximum dispersal rate, -k is th
+
+```{r}
+ ###Dispersal matrix (density-dependent function)
+  a_max_parm <-1.17*10^-5 
+  k_parm <- 0.02 #steepness parameter
+  N0_parm <-250  ###midpoint population size
+
+disp_function <- function(a_max, k, N0){
+        N <-  seq(0,1000,length =1000)
+        Disp <- a_max / (1 + exp(-k * (N - N0)))
+        
+        return(data.frame(N, Disp))
+}
+```
+
+```{r}
+plot(disp_function(a_max_parm,k_parm, N0_parm))
+  
+```
+
+###Let's create a matrix
+
+```{r}
+dd_mat <- Diagonal(num_patch, x = c(a_max)/(1.00 +  exp(-k *(N_V - N0))))
+```
+## Adjacency matrix
+
+

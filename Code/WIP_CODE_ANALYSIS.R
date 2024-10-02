@@ -12,7 +12,7 @@ LOW_CONNECTANCE_LIST <-NULL
 MED_CONNECTANCE_LIST <- NULL
 HIGH_CONNECTANCE_LIST <- NULL
 
-networks_interest_low <- replicate(100,simulate_spatial_network(sample(1:24601,1),20,0.05))
+networks_interest_low <- replicate(1,simulate_spatial_network(sample(1:24601,1),20,0.05))
 networks_interest_med<- replicate(100,simulate_spatial_network(sample(1:24601,1),20,0.10))
 networks_interest_high<- replicate(100,simulate_spatial_network(sample(1:24601,1),20,0.20))
 
@@ -23,21 +23,20 @@ HIGH_NETWORK_LIST <- NULL
 for (network in seq(1,100)){
         
         for (i in seq(1,nrow(expandDF))){
-                
-                LOW_CONNECTANCE_LIST[[i]] <- 
+                tmp <- 
                 Simulate_model(
                 user_network = networks_interest_low[[network]],
                 max_distance = 20,
-                coverage = expandDF$coverage[i],
-                frequency = expandDF$frequency[i],
+                coverage = expandDF$coverage[1],
+                frequency = expandDF$frequency[1],
                 species1 = 0.5, 
                 species2 = 0.8,
                 initial_values = "default",
                 parameter_values = "default",
                 disturbance = "yes",         
                 disease_on = 'no',
-                simulation_time = 365,
-                intervention_time = 365,
+                simulation_time = 10,
+                intervention_time = 10,
                 randomize = TRUE)
                 
                MED_CONNECTANCE_LIST[[i]] <- 
