@@ -31,8 +31,10 @@ plot_R0_groups <- function(list){
        ggplot(full_R0_dataframe, aes(x = time, y= (V1), color = as.factor(patch), 
                                      group = as.factor(patch)))+
                geom_point(size =1) +
-               scale_color_viridis(discrete = TRUE) +
+               scale_color_viridis(discrete = TRUE,option ='inferno') +
                theme_classic() +
+               xlab("Time") + 
+               ylab("R effective")+
                theme(legend.position = 'none')
 }
 list <- test_function_L[[1]]
