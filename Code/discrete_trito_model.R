@@ -15,7 +15,8 @@ calculate_R_effective_discrete_patch <- function(parameters,
         f_S <- parameters["f_S"]
         c_SP <- parameters["c_SP"]
         c_PS <- parameters["c_PS"]
-        
+        c_SS <- parameters["c_SS"]
+        c_PP <- parameters["c_PP"]
         
         humanR0_patch <- NULL
         
@@ -38,8 +39,8 @@ calculate_R_effective_discrete_patch <- function(parameters,
                 F_mat[!(is.finite(F_mat))] <- 0
                 
                 V_mat <- matrix(c(gamma + mu_H, 0, 0,
-                                  0, mu_V + (c_SP * NS[k]), 0,
-                                  0, 0, mu_V + (c_PS * NP[k])),
+                                  0, mu_V + (c_SP * NS[k]) + (c_PP * NP[k]), 0,
+                                  0, 0, mu_V + (c_PS * NP[k]) + (c_SS * NS[k])),
                                   ncol = 3)
                 
                 humanR0_patch[[k]] <- max(eigen(F_mat %*% solve(V_mat))$values)
@@ -91,7 +92,7 @@ discrete_trito_model <- function(ntime,
   HI_mat[1, ] <- rep(0, patch_num)
   HR_mat[1, ] <- rep(0, patch_num)
   
-  PS_mat[1, ] <- rep(250, patch_num) 
+  PS_mat[1, ] <- rep(500, patch_num) 
   PI_mat[1, ] <- rep(10, patch_num) 
   SS_mat[1, ] <- rep(250, patch_num)
   SI_mat[1, ] <- rep(10, patch_num)
@@ -110,9 +111,10 @@ discrete_trito_model <- function(ntime,
   gamma <- param["gamma"] #recovery rate
   c_PS <- param["c_PS"] #competition coefficient of primary on secondary
   c_SP <- param["c_SP"] #competition coefficient of secondary on primary
+  c_PP <- param["c_PP"]
+  c_SS <- param["c_SS"] #competition coefficient of secondary on primary
   d <- param["d"] #dispersal rate
-  k_p <- param["k_p"]
-  k_s <- param["k_s"]
+
  
  List_R_effective <- NULL
          
@@ -148,12 +150,12 @@ discrete_trito_model <- function(ntime,
       HR_Rates <- (gamma * HI_mat[j, ]) - (mu_H * HR_mat[j, ])
 
       #Rates of primary vector
-      PS_Rates <- (b_P * NP_mat * (1 - NP_mat/k_p)) - (infections_P + mu_V + (c_SP * NS_mat)) * PS_mat[j, ] 
-      PI_Rates <- (infections_P * PS_mat[j, ]) - (mu_V  + (c_SP * NS_mat)) * PI_mat[j, ]
+      PS_Rates <- (b_P * NP_mat) - (infections_P + mu_V + (c_SP * NS_mat) + (c_PP * NP_mat)) * PS_mat[j, ] 
+      PI_Rates <- (infections_P * PS_mat[j, ]) - (mu_V  + (c_SP * NS_mat) + (c_PP * NP_mat)) * PI_mat[j, ]
 
       #Rates of secondary vector
-      SS_Rates <- (b_S * NS_mat * (1 - NS_mat/k_s)) - (infections_S + mu_V + (c_PS * NP_mat)) * SS_mat[j, ] 
-      SI_Rates <- (infections_S * SS_mat[j, ]) - (mu_V +  (c_PS * NP_mat)) * SI_mat[j, ]
+      SS_Rates <- (b_S * NS_mat) - (infections_S + mu_V + (c_PS * NP_mat)+ (c_SS * NS_mat)) * SS_mat[j, ] 
+      SI_Rates <- (infections_S * SS_mat[j, ]) - (mu_V +  (c_PS * NP_mat)+ (c_SS * NS_mat)) * SI_mat[j, ]
       
       ###Calculate the R0 before thing changes.
       List_R_effective [[j]] <- calculate_R_effective_discrete_patch(
@@ -254,7 +256,8 @@ discrete_trito_model <- function(ntime,
 
 
   #When the loop has ended- put the matrices into the list
-  return(list(list_abundance,List_R_effective))
+  return(list(list_abundance,
+              List_R_effective))
   
   
 }

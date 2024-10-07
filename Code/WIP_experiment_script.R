@@ -1,8 +1,8 @@
-param <- c(b_H = (1/(50)),
-           b_P = (1.2 + 1e-7), #P.vector birth rate
-           b_S = 1.2,  #S. vector birth rate
-           mu_H =  (1/(50)),  #Human death rate
-           mu_V = 1.2,  #P. vector death rate
+param <- c(b_H = (1/(100)),
+           b_P = (2.1 + 1e-6 +  1e-3), #P.vector birth rate
+           b_S = (2.1 + 1e-5 + 1e-8),  #S. vector birth rate
+           mu_H =  (1/(100)),  #Human death rate
+           mu_V = 5.1,  #P. vector death rate
            f_P = 2.5, #daily biting rate of the p. vector
            f_S = 1.0, #daily biting rate of the s.vector
            theta_P = 0.25, #transmission probability of p. vector
@@ -12,10 +12,10 @@ param <- c(b_H = (1/(50)),
            gamma = 1/56,  #recovery rate of infected human
            #competition coefficient
            c_PS = 1e-4,#competition effect of p.vector on s.vector
-           c_SP = 1e-7,  #competition effect of s.vector on p.vector
-           d = 0.25,
-           k_p = 15000,
-           k_s = 15000
+           c_SP = 1e-6,  #competition effect of s.vector on p.vector
+           c_PP  = 1e-3,
+           c_SS = 1e-8,
+           d = 0.25
 )
 
 
@@ -24,13 +24,13 @@ high_connectance_network <- simulate_spatial_network(24601,30,0.50)
 
 
 
-test_function_L <-discrete_trito_model(200, param,
-                        100, 0.2, 0.7 ,0.25,
-                      low_connectance_network )
+test_function_L <-discrete_trito_model(800, param,
+                       365, 0.50, 0.8 ,0.50,
+                      low_connectance_network)
 
-test_function_H <-discrete_trito_model(200, param,
-                                       100, 0.2, 0.7 ,0.25,
-                                      high_connectance_network )
+test_function_H <-discrete_trito_model(800, param,
+                                       365 ,0.50, 0.8 ,0.50,
+                                      high_connectance_network)
 
 
 plot_list_groups(list = test_function_L[[1]][[1]]) + ggtitle("HS - L")
@@ -52,6 +52,5 @@ plot_list_groups(list = test_function_H [[1]][[7]]) #SI
 
 plot_R0_groups(test_function_L[[2]])
 plot_R0_groups(test_function_H[[2]])
-w
 
 
