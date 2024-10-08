@@ -1,16 +1,19 @@
-
-sweep_sparse <- function(x, margin, stats, fun = "/") {
-       
-         f <- match.fun(fun)
-        if (margin == 1) {
-                idx <- x@i + 1
-        } else {
-                idx <- x@j + 1
-        }
-        x@x <- f(x@x, stats[idx])
-        return(x)
+#All the packages that need to be loaded for the project
+load_packages <- function(){
+library(dplyr)
+library(igraph)
+library(ggplot2)
+library(gganimate)
+library(reshape2) 
+library(readr)
+library(Rcpp)
+library(viridis)
+library(deSolve)
+library(forcats)
+library(patchwork)
+library(parallel)
+library(Matrix)
 }
-
 
 #' Plot the density-dependence dispersal function (miscellaneous, just for 
 #' making schematic figure or curiosity's sake)

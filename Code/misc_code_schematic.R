@@ -1,6 +1,5 @@
 # X-Y coords
 simulated_xy_coord <- simulate_xy_coordinates(24601, 20)
-
 coordinates <- data.frame(simulated_xy_coord [[1]])
 
 ggplot(coordinates, aes(x = x_coord, y = y_coord)) +
@@ -15,9 +14,6 @@ ggplot(coordinates, aes(x = x_coord, y = y_coord)) +
 
 ggsave(here("Figures_Process/Schematic_Figure/xy_coord.pdf"),
        width = 4, height = 3, units = 'in')
-###
-image(simulated_xy_coord[[2]],col = color.brewer(50))
-
 
 
 # Big components
