@@ -28,9 +28,12 @@ plot_R0_groups <- function(list){
 
        full_R0_dataframe <- do.call(rbind,test_dataframe)
        
-       ggplot(full_R0_dataframe, aes(x = time, y= (V1), color = as.factor(patch), 
+       ggplot(subset(full_R0_dataframe,
+                     full_R0_dataframe$time > 250 &
+                             full_R0_dataframe$time < 950),
+                     aes(x = time, y= (V1), color = as.factor(patch), 
                                      group = as.factor(patch)))+
-               geom_point(size =1) +
+               geom_line(size =1) +
                scale_color_viridis(discrete = TRUE,option ='inferno') +
                theme_classic() +
                xlab("Time") + 

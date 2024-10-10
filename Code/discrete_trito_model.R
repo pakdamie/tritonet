@@ -31,10 +31,15 @@ calculate_R_effective_discrete_patch <- function(parameters,
               
                 
           F_mat <- matrix(c(0, (theta_P * f_P * H_P_ratio), (theta_S * f_S * H_S_ratio),
-                          (theta_H * f_P * P_H_ratio), 0, 0,
-                          (theta_H * f_S *  S_H_ratio), 0, 0), 
+                          0, 0, 0,
+                          0, 0, 0), 
                           byrow = TRUE, ncol = 3) 
         
+          #F_mat <- matrix(c(0, (theta_P * f_P * H_P_ratio), (theta_S * f_S * H_S_ratio),
+           #                 (theta_H * f_P * P_H_ratio), 0, 0,
+            #                (theta_H * f_S *  S_H_ratio), 0, 0), 
+             #             byrow = TRUE, ncol = 3) 
+          
 
           F_mat[!(is.finite(F_mat))] <- 0
                 
@@ -43,10 +48,11 @@ calculate_R_effective_discrete_patch <- function(parameters,
                             0, 0, mu_V + (c_PS * NP[k]) + (c_SS * NS[k])),
                             byrow = TRUE, ncol = 3)
                 
-          humanR0_patch[[k]] <- max(eigen(F_mat %*% solve(V_mat))$values)
+print(F_mat)
+          human_R0_patch[[k]] <- max(eigen(F_mat %*% solve(V_mat))$values)
         }
         
-        return(do.call(rbind, humanR0_patch))
+        return(do.call(rbind, human_R0_patch))
         
 }
 
@@ -74,7 +80,8 @@ discrete_trito_model <- function(ntime,
                                  mortality_P,
                                  mortality_S,
                                  coverage, 
-                                 user_network) {
+                                 user_network, 
+                                 delta_T) {
    
   ### Convert the igraph object as an adjacency matrix 
   adjacency_matrix <- as_adjacency_matrix(
@@ -110,10 +117,10 @@ discrete_trito_model <- function(ntime,
   HI_mat[1, ] <- rep(0, patch_num) 
   HR_mat[1, ] <- rep(0, patch_num)
   
-  PS_mat[1, ] <- rep(500, patch_num) 
-  PI_mat[1, ] <- rep(10, patch_num) 
-  SS_mat[1, ] <- rep(500, patch_num)
-  SI_mat[1, ] <- rep(10, patch_num)
+  PS_mat[1, ] <- rep(1000, patch_num) 
+  PI_mat[1, ] <- rep(100, patch_num) 
+  SS_mat[1, ] <- rep(1000, patch_num)
+  SI_mat[1, ] <- rep(100, patch_num)
   
   #Run the parameter values to load
   b_H <- param["b_H"] # Birth rate of humans
@@ -188,16 +195,18 @@ discrete_trito_model <- function(ntime,
         (c_PS * NP_mat) + (c_SS * NS_mat)) * SI_mat[j, ]
              
       # Dispersal of the primary and secondary vectors
-      dispersal_PS <- -(d * PS_mat[j, ]) + 
+      dispersal_PS <- 
+         -(t(adjacency_matrix) %*% (d * PS_mat[j, ]) / rowSums(adjacency_matrix))+
         (adjacency_matrix %*% (d * PS_mat[j, ]) / rowSums(adjacency_matrix))
       
-      dispersal_PI <- -(d * PI_mat[j, ]) + 
+      dispersal_PI <- -(t(adjacency_matrix) %*% (d * PI_mat[j, ]) / rowSums(adjacency_matrix))+
         (adjacency_matrix %*% (d * PI_mat[j, ]) / rowSums(adjacency_matrix))
       
-      dispersal_SS <- -(d * SS_mat[j, ]) + 
+      dispersal_SS <- -(t(adjacency_matrix) %*% (d * SS_mat[j, ]) / rowSums(adjacency_matrix))+
         (adjacency_matrix %*% (d * SS_mat[j, ]) / rowSums(adjacency_matrix))
       
-      dispersal_SI <- -(d * SI_mat[j, ]) + 
+      dispersal_SI <- 
+              -(t(adjacency_matrix) %*% (d * SI_mat[j, ]) / rowSums(adjacency_matrix))+
         (adjacency_matrix %*% (d * SI_mat[j, ]) / rowSums(adjacency_matrix))
       
       ###Calculate the R0 before thing changes.
@@ -220,11 +229,11 @@ discrete_trito_model <- function(ntime,
       total_change_HI <- HI_mat[j, ] + HI_Rates
       total_change_HR <- HR_mat [j, ] + HR_Rates
       
-      total_change_PS <- PS_mat[j, ] + PS_Rates + dispersal_PS
-      total_change_PI <- PI_mat[j, ] + PI_Rates + dispersal_PI
-      total_change_SS <- SS_mat[j, ] + SS_Rates + dispersal_SS
-      total_change_SI <- SI_mat[j, ] + SI_Rates + dispersal_SI
-      
+      total_change_PS <- PS_mat[j, ] + (PS_Rates + dispersal_PS)*delta_T
+      total_change_PI <- PI_mat[j, ] + (PI_Rates + dispersal_PI)*delta_T
+      total_change_SS <- SS_mat[j, ] + (SS_Rates + dispersal_SS)*delta_T
+      total_change_SI <- SI_mat[j, ] + (SI_Rates + dispersal_SI)*delta_T
+
       total_change_HS [total_change_HS  < 0] <- 0
       total_change_HI [total_change_HI  < 0] <- 0
       total_change_HR [total_change_HR  < 0] <- 0

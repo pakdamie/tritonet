@@ -15,6 +15,7 @@ library(parallel)
 library(Matrix)
 }
 
+load_packages()
 #' Plot the density-dependence dispersal function (miscellaneous, just for 
 #' making schematic figure or curiosity's sake)
 #'

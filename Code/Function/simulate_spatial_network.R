@@ -34,6 +34,7 @@ calculate_connectance <- function(nodes, edges){
         return(edges/(nodes^2))
 }
 
+
 #' Simulating the x and y coordinates for the spatial network
 #'
 #'Simulates the xy coordinates of the patches as well as
@@ -79,8 +80,8 @@ retrieve_biggest_component <- function(xy_list){
           V(Adj_graph)$Long <- xy_list[[1]][ ,1]  # x-coordinates
           V(Adj_graph)$Lat <- xy_list[[1]][ ,2]  # y-coordinates
           
-          #The number of edges we need for a connectance of 3%
-          number_of_edges <- (0.03 * (100^2))
+          #The number of edges we need for a connectance of 10%
+          number_of_edges <- (0.10 * (100^2))
          
           # You choose the top number of edges (from above) and delete
           # everything else
