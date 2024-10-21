@@ -29,16 +29,10 @@ calculate_R_effective_discrete_patch <- function(parameters,
           S_H_ratio <- ifelse(is.finite(SS[k]/NH[k]), SS[k]/NH[k], 0)
           
               
-                
           F_mat <- matrix(c(0, (theta_P * f_P * H_P_ratio), (theta_S * f_S * H_S_ratio),
-                          0, 0, 0,
-                          0, 0, 0), 
-                          byrow = TRUE, ncol = 3) 
-        
-          #F_mat <- matrix(c(0, (theta_P * f_P * H_P_ratio), (theta_S * f_S * H_S_ratio),
-           #                 (theta_H * f_P * P_H_ratio), 0, 0,
-            #                (theta_H * f_S *  S_H_ratio), 0, 0), 
-             #             byrow = TRUE, ncol = 3) 
+                          (theta_H * f_P * P_H_ratio), 0, 0,
+                           (theta_H * f_S *  S_H_ratio), 0, 0), 
+                        byrow = TRUE, ncol = 3) 
           
 
           F_mat[!(is.finite(F_mat))] <- 0
@@ -48,7 +42,6 @@ calculate_R_effective_discrete_patch <- function(parameters,
                             0, 0, mu_V + (c_PS * NP[k]) + (c_SS * NS[k])),
                             byrow = TRUE, ncol = 3)
                 
-print(F_mat)
           human_R0_patch[[k]] <- max(eigen(F_mat %*% solve(V_mat))$values)
         }
         

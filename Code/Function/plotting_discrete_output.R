@@ -34,7 +34,7 @@ plot_R0_groups <- function(list){
                      aes(x = time, y= (V1), color = as.factor(patch), 
                                      group = as.factor(patch)))+
                geom_line(size =1) +
-               scale_color_viridis(discrete = TRUE,option ='inferno') +
+               scale_color_viridis(discrete = TRUE,option ='turbo') +
                theme_classic() +
                xlab("Time") + 
                ylab("R effective")+

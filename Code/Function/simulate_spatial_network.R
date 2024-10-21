@@ -1,6 +1,4 @@
 ### Simulating the spatial network 
-### Subroutines for the main function for simulating the spatial
-### network
 
 #' Find the closest values
 #'
