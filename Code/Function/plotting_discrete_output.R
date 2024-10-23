@@ -71,28 +71,3 @@ plot_list_groups <- function(full_list) {
 }
 
 
-plot_R0_groups <- function(list){
-        
-  test_dataframe <- lapply(list, function(x) as.data.frame(x))
-     
-  for(k in seq(1,length(test_dataframe ))){
-    test_dataframe [[k]]$patch <- seq(1,nrow(test_dataframe [[k]]))
-    test_dataframe [[k]]$time <- k
-  }
-
-  full_R0_dataframe <- do.call(rbind,test_dataframe)
-       
-  ggplot(
-    subset(full_R0_dataframe,
-      full_R0_dataframe$time > 250 &
-    full_R0_dataframe$time < 950),
-                     aes(x = time, y= (V1), color = as.factor(patch), 
-                                     group = as.factor(patch)))+
-               geom_line(size =1) +
-               scale_color_viridis(discrete = TRUE,option ='turbo') +
-               theme_classic() +
-               xlab("Time") + 
-               ylab("R effective")+
-               theme(legend.position = 'none')
-}
-
