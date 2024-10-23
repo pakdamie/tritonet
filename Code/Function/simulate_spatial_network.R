@@ -1,22 +1,5 @@
 ### Simulating the spatial network 
 
-#' Find the closest values
-#'
-#' @param vec1_want 
-#' @param vec2_have 
-#'
-#' @return
-#' @examples
-get_closest_values_vecs <- function(vec1_want, vec2_have){
-        index_closest_value <- NULL
-        for (value in 1:length(vec1_want)){
-                index_closest_value [[value]] <- 
-                        which.min(abs(vec1_want[[value]] - vec2_have))
-                
-        }
-        return(do.call(rbind, index_closest_value ))
-}
-
 #' Calculate the connectance of a network given the node and edges
 #'
 #'This calculates the connectance when given a node or edge. To 
@@ -29,7 +12,7 @@ get_closest_values_vecs <- function(vec1_want, vec2_have){
 #' @examples calculate_connectance(nodes = 100, edges = 100)
 #' @examples calculate_connectance(nodes = vcount(igraph), edges = ecount(igraph))
 calculate_connectance <- function(nodes, edges){
-        return(edges/(nodes^2))
+  return(edges/(nodes^2))
 }
 
 
@@ -51,7 +34,7 @@ simulate_xy_coordinates <- function(seed = 24601, max_distance_param){
         x_coord <- sample(xy, 100, replace = TRUE)  # x-coordinate
         y_coord <- sample(xy, 100, replace = TRUE)  # y-coordinate
         xy_coord <- cbind(x_coord, y_coord)  # xy-coordinates combined
-        NegExpDist <- as.matrix(exp(-dist(xy_coord))) # distance matrix with kernel
+        NegExpDist <- as.matrix(exp(2 * -dist(xy_coord))) # distance matrix with kernel
         
         return(list(xy_coord, NegExpDist))
 }
@@ -79,7 +62,7 @@ retrieve_biggest_component <- function(xy_list){
           V(Adj_graph)$Lat <- xy_list[[1]][ ,2]  # y-coordinates
           
           #The number of edges we need for a connectance of 10%
-          number_of_edges <- (0.10 * (100^2))
+          number_of_edges <- (0.05 * (100^2))
          
           # You choose the top number of edges (from above) and delete
           # everything else

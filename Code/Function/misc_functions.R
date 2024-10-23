@@ -34,7 +34,6 @@ plotter_DD_dispersal <- function(a_max,k,N0){
         
 }
 
-#plotter_DD_dispersal(1,1e-2,2500)
 
 #' Labels both the compartment and the patch of interest
 #'
@@ -57,5 +56,20 @@ namer_chosen_compartments <- function(chosen_patch) {
         return(do.call(rbind,result))
 }
 
-
+#' Find the closest values
+#'
+#' @param vec1_want 
+#' @param vec2_have 
+#'
+#' @return
+#' @examples
+get_closest_values_vecs <- function(vec1_want, vec2_have){
+        index_closest_value <- NULL
+        
+        for (value in 1:length(vec1_want)){
+                index_closest_value [[value]] <- 
+                        which.min(abs(vec1_want[[value]] - vec2_have))
+        }
+        return(do.call(rbind, index_closest_value ))
+}
 
