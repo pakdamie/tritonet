@@ -34,7 +34,7 @@ simulate_xy_coordinates <- function(seed = 24601, max_distance_param){
         x_coord <- sample(xy, 100, replace = TRUE)  # x-coordinate
         y_coord <- sample(xy, 100, replace = TRUE)  # y-coordinate
         xy_coord <- cbind(x_coord, y_coord)  # xy-coordinates combined
-        NegExpDist <- as.matrix(exp(2 * -dist(xy_coord))) # distance matrix with kernel
+        NegExpDist <- as.matrix(exp(5 * -dist(xy_coord))) # distance matrix with kernel
         
         return(list(xy_coord, NegExpDist))
 }

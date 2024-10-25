@@ -1,5 +1,5 @@
 calculate_R_effective_discrete_patch <- function(
-  parameters, patch_num, lists, disturbance_time) {
+  parameters, lists, disturbance_time) {
         
   theta_P <- parameters["theta_P"]
   theta_S <- parameters["theta_S"]
@@ -24,12 +24,15 @@ calculate_R_effective_discrete_patch <- function(
   SS <- lists[[6]]
   SI <- lists[[7]]
   
+  
+  patch_num <- ncol(HS)
+  
   NH <- HS + HI + HR
   NP <- PS + PI
   NS <- SS + SI
   
 
-  interest <- seq(disturbance_time -5, disturbance_time + 5)
+  interest <- seq(disturbance_time - 5, disturbance_time + 5)
   
   
 full_time <- NULL  
@@ -80,9 +83,6 @@ for (t in seq_along(interest)){
 }
 
 
-
-
-
 full_time_f <- do.call(rbind.data.frame, full_time)
 maxRE <- full_time_f[which.max(full_time_f$RE),]
 
@@ -90,7 +90,7 @@ max_CV <- max(by(full_time_f, full_time_f$time, function(x)  CV_RE = sd(x$RE)/me
 maxRE$CV <- max_CV
 
 
-return(list(full_time_f,maxRE))
+return(list(maxRE))
 
 }
 

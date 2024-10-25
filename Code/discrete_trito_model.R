@@ -60,7 +60,7 @@ discrete_trito_model <- function(ntime,
   }
   
   #Initial conditions (everyone starts out with the same number)
-  HS_mat[1, ] <- rep(10000, patch_num)
+  HS_mat[1, ] <- rep(1000, patch_num)
   HI_mat[1, ] <- rep(0, patch_num) 
   HR_mat[1, ] <- rep(0, patch_num)
   
