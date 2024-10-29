@@ -71,9 +71,7 @@ for (t in seq_along(interest)){
     FV <- F_mat %*%  solve(V_mat)
     
     patch_R0_time[[k]] <- cbind(RE = max(eigen(FV)$values),
-                                HI_cont = sum(FV[,1]),
-                                PI_cont = sum(FV[,2]),
-                                SI_cont = sum(FV[,3]),
+                          
                                 patch_num = k,
                                 time = interest_time)
         }

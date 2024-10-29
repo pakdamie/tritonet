@@ -156,7 +156,7 @@ discrete_trito_model <- function(ntime,
       
       #Let's look what the new population size will be
       total_change_HS <- HS_mat[j, ] + (HS_Rates * delta_T)
-      total_change_HI <- HI_mat[j, ] + (HI_Rates* delta_T)
+      total_change_HI <- HI_mat[j, ] + (HI_Rates * delta_T)
       total_change_HR <- HR_mat[j, ] + (HR_Rates * delta_T)
       total_change_PS <- PS_mat[j, ] + (PS_Rates + dispersal_PS) * delta_T
       total_change_PI <- PI_mat[j, ] + (PI_Rates + dispersal_PI) * delta_T

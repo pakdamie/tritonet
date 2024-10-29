@@ -106,7 +106,7 @@ recalculate_distance_matrix <- function(network_newcomp) {
                 V(network_newcomp)$Lat)
         
         # Calculate new distance matrices and apply the distance kernal
-        DispMat_interest <- as.matrix(exp(-dist(xy_coord_interest)))
+        DispMat_interest <- as.matrix(exp(5*-dist(xy_coord_interest)))
         
         #We want to ensure that we're not getting multiedges
         DispMat_interest[lower.tri(DispMat_interest)] <- NA
