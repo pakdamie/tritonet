@@ -32,7 +32,7 @@ calculate_R_effective_discrete_patch <- function(
   NS <- SS + SI
   
 
-  interest <- seq(disturbance_time - 5, disturbance_time + 5)
+  interest <- seq(disturbance_time - 5, disturbance_time + 200)
   
   
 full_time <- NULL  
@@ -44,8 +44,8 @@ for (t in seq_along(interest)){
   
   for (k in 1:(patch_num)){
                 
-  H_P_ratio <- ifelse(is.finite(HS[interest_time,k]/NP[interest_time,k]), HS[interest_time,k]/NP[interest_time,k], 0)
-  H_S_ratio <- ifelse(is.finite(HS[interest_time,k]/NS[interest_time,k]), HS[interest_time,k]/NS[interest_time,k], 0)
+  H_P_ratio <- ifelse(is.finite(HS[interest_time,k]/NH[interest_time,k]), HS[interest_time,k]/NH[interest_time,k], 0)
+  H_S_ratio <- ifelse(is.finite(HS[interest_time,k]/NH[interest_time,k]), HS[interest_time,k]/NH[interest_time,k], 0)
   
   
   
@@ -73,7 +73,9 @@ for (t in seq_along(interest)){
     patch_R0_time[[k]] <- cbind(RE = max(eigen(FV)$values),
                           
                                 patch_num = k,
-                                time = interest_time)
+                                time = interest_time,
+                                primary_contrib = sum(FV[1,2]),
+                                secondary_contribut = sum(FV[1,3]))
         }
   full_time[[t]] <- do.call(rbind, patch_R0_time)
   
@@ -88,7 +90,7 @@ max_CV <- max(by(full_time_f, full_time_f$time, function(x)  CV_RE = sd(x$RE)/me
 maxRE$CV <- max_CV
 
 
-return(list(maxRE))
+return(list(full_time_f ,maxRE))
 
 }
 

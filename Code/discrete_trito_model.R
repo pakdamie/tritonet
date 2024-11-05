@@ -2,7 +2,6 @@
 #'
 #' This is the main model that we simulate infections on.
 #'
-#'
 #' @param ntime How long should this run for? (numeric)
 #' @param param The parameter data.frame (data.frame)
 #' @param disturbance_time The time that you disturb the system (numeric)
@@ -11,7 +10,8 @@
 #' @param coverage The proportion of the patches randomly chosen (numeric)
 #' @param user_network The network to run the model on (igraph object)
 #' @param delta_T The time-step
-#' @return A list containing seven lists and R effective
+#' @return A list containing seven lists with HS, HI, HR, PS, PI, SS, and SI 
+#' in that order
 #' @export
 #'
 #' @examples discrete_trito_model(100, param_df, 50, 0.30, 0.70, 0.5, 
@@ -36,8 +36,9 @@ discrete_trito_model <- function(ntime,
     sparse = FALSE
   )
   
+  
   summed_prob <- rowSums(adjacency_matrix)
-    adjacency_matrix_adj <- sweep(adjacency_matrix, MARGIN = 1, summed_prob, `/`)
+  adjacency_matrix_adj <- sweep(adjacency_matrix, MARGIN = 1, summed_prob, `/`)
   
   #How many compartments do we need?
   patch_num <- nrow(adjacency_matrix)
@@ -60,12 +61,12 @@ discrete_trito_model <- function(ntime,
   }
   
   #Initial conditions (everyone starts out with the same number)
-  HS_mat[1, ] <- rep(1000, patch_num)
+  HS_mat[1, ] <- rep(1000, patch_num) 
   HI_mat[1, ] <- rep(0, patch_num) 
   HR_mat[1, ] <- rep(0, patch_num)
   
   PS_mat[1, ] <- rep(1000, patch_num)
-  PI_mat[1, ] <- rep(100, patch_num) 
+  PI_mat[1, ] <- rep(100, patch_num)
   SS_mat[1, ] <- rep(1000, patch_num)
   SI_mat[1, ] <- rep(100, patch_num)
   
@@ -86,7 +87,7 @@ discrete_trito_model <- function(ntime,
   theta_H <- param["theta_H"] # Transmission probability of humans
   gamma <- param["gamma"] # Recovery rate
   d <- param["d"]
-  
+
   for (j in 1:(ntime - 1)) {
           
       ### Retrieve the total populations in patch j
@@ -96,21 +97,22 @@ discrete_trito_model <- function(ntime,
 
       #The if-else statements prevent situations where we divide by 0 
       # Is the equation finite?
-      HS_ratio <- ifelse(!(is.finite(SI_mat[j, ] / NS_mat)),
-        0, #If not finite
-        SI_mat[j, ]/ NS_mat #If finite
-      )
       
       HP_ratio <- ifelse(
-        !is.finite(PI_mat[j, ] / NP_mat), 
+        !is.finite(PI_mat[j, ]/NH_mat), 
         0, #If not finite
-        PI_mat[j, ] / NP_mat #If finite
+        PI_mat[j, ] /  NH_mat #If finite
+      )
+      
+      HS_ratio <- ifelse(!(is.finite(SI_mat[j, ]/NH_mat)),
+        0, #If not finite
+        SI_mat[j, ]/NH_mat #If finite
       )
       
       H_ratio <- ifelse(
-        !is.finite(HI_mat[j, ] / NH_mat),
+        !is.finite(HI_mat[j, ] /NH_mat),
         0, #If not finite
-        HI_mat[j, ] / NH_mat #If finite
+        HI_mat[j, ] /  NH_mat #If finite
       )
       
       # Primary and secondary will infect humans
@@ -126,20 +128,19 @@ discrete_trito_model <- function(ntime,
       HR_Rates <- (gamma * HI_mat[j, ]) - (mu_H * HR_mat[j, ])
 
       #Demographic/infection rates of primary vector
-      PS_Rates <- (b_P * NP_mat) - (infections_P + mu_V + 
+      PS_Rates <- (b_P * NP_mat) - (infections_P + 
         (c_SP * NS_mat) + (c_PP * NP_mat)) * PS_mat[j, ] 
       
-      PI_Rates <- (infections_P * PS_mat[j, ]) - (mu_V  + 
+      PI_Rates <- (infections_P * PS_mat[j, ]) - (
         (c_SP * NS_mat) + (c_PP * NP_mat)) * PI_mat[j, ]
 
       #Demographic/infection of secondary vector
-      SS_Rates <- (b_S * NS_mat) - (infections_S + mu_V + 
+      SS_Rates <- (b_S * NS_mat) - (infections_S +
         (c_PS * NP_mat) + (c_SS * NS_mat)) * SS_mat[j, ] 
       
-      SI_Rates <- (infections_S * SS_mat[j, ]) - (mu_V +  
-        (c_PS * NP_mat) + (c_SS * NS_mat)) * SI_mat[j, ]
+      SI_Rates <- (infections_S * SS_mat[j, ]) - ((c_PS * NP_mat) +
+        (c_SS * NS_mat)) * SI_mat[j, ]
             
-      
       # Dispersal of the primary and secondary vectors
       dispersal_PS <- rowSums(sweep(adjacency_matrix_adj, MARGIN =1, (- d * PS_mat[j, ]),`*`)) + 
        t(adjacency_matrix_adj) %*% (d * PS_mat[j, ]) 
@@ -191,7 +192,7 @@ discrete_trito_model <- function(ntime,
       else if (j == disturbance_time) {
       
       ### Coverage gives you the column indices of the patches 
-      coverage <- sample(1:patch_num, size = floor(coverage *  patch_num ))
+      coverage <- sample(1:patch_num, size = floor(coverage *  patch_num))
                         
       HS_mat[j + 1, ] <- total_change_HS 
       HI_mat[j + 1, ] <- total_change_HI
@@ -209,11 +210,10 @@ discrete_trito_model <- function(ntime,
       }
   }
     
+  # These are the full list 
   list_abundance <- list(HS_mat, HI_mat, HR_mat,
                          PS_mat, PI_mat, 
                          SS_mat, SI_mat)
-  
-  #When the loop has ended- put the matrices into the list
   
   return(list_abundance)
   
