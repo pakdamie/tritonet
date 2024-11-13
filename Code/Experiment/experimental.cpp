@@ -5,37 +5,37 @@
 // [[Rcpp::depends("RcppArmadillo")]]
 // [[Rcpp::export]]
 Rcpp::List discrete_trito_model(
-                arma::mat HS, //Susceptible human matrix
-                arma::mat HI, //Infectious human matrix
-                arma::mat HR, //Recovered human matrix
-                arma::mat PS, //Susceptible p.vector matrix
-                arma::mat PI, // Infectious p.vector matrix
-                arma::mat SS, // Susceptible s.vector matrix
-                arma::mat SI, // Infectious s.vector matrix
-                arma::mat adj, // Adjacency matrix
-                Rcpp::NumericVector param){ //Parameter data.frame 
+  arma::mat HS, //Susceptible human matrix
+  arma::mat HI, //Infectious human matrix
+  arma::mat HR, //Recovered human matrix
+  arma::mat PS, //Susceptible p.vector matrix
+  arma::mat PI, // Infectious p.vector matrix
+  arma::mat SS, // Susceptible s.vector matrix
+  arma::mat SI, // Infectious s.vector matrix
+  arma::mat adj, // Adjacency matrix
+  Rcpp::NumericVector param){ //Parameter data.frame 
         
-        double b_H = param["b_H"]; // Birth rate of human
-        double b_P = param["b_P"]; // Birth rate of p.vector
-        double b_S = param["b_S"]; // Birth rate of s.vector
-        double mu_H = param["mu_H"]; // Death rate of human
-        double theta_H = param["theta_H"]; // Transmission prob of human
-        double theta_P = param["theta_P"]; // Transmission prob of p.vector
-        double theta_S = param["theta_S"]; // Transmission prob of s.vector
-        double f_P = param["f_P"]; //Biterate of p.vector
-        double f_S = param["f_S"];  //Bite rate of s.vector
-        double gamma = param["gamma"]; //Recovery rate for human
-        double c_PP = param["c_PP"]; //Competition coefficient for primary on primary
-        double c_SS = param["c_SS"]; //Competition coefficient for secondary on secondary
-        double c_PS = param["c_PS"];  //Competition coefficient for primary on secondary
-        double c_SP = param["c_SP"]; //Competition coefficient for secondary on primary
-        double d = param["d"]; //Dispersal rate
-        int ntime = param["ntime"]; //How long to simulate for
-        int disturbance_time = param["disturbance_time"]; //When is disturbance time?
-        double delta_T = param["delta_T"]; //Time steps
-        double prop = param["prop"]; //Proportion of patches to be affected
-        double mortality_P = param["mortality_P"]; //Surviviorship of p.vector
-        double  mortality_S = param["mortality_S"]; //Survivorship of s.vector
+  double b_H = param["b_H"]; // Birth rate of human
+  double b_P = param["b_P"]; // Birth rate of p.vector
+  double b_S = param["b_S"]; // Birth rate of s.vector
+  double mu_H = param["mu_H"]; // Death rate of human
+  double theta_H = param["theta_H"]; // Transmission prob of human
+  double theta_P = param["theta_P"]; // Transmission prob of p.vector
+  double theta_S = param["theta_S"]; // Transmission prob of s.vector
+  double f_P = param["f_P"]; //Biterate of p.vector
+  double f_S = param["f_S"];  //Bite rate of s.vector
+  double gamma = param["gamma"]; //Recovery rate for human
+  double c_PP = param["c_PP"]; //Competition coefficient for primary on primary
+  double c_SS = param["c_SS"]; //Competition coefficient for secondary on secondary
+  double c_PS = param["c_PS"];  //Competition coefficient for primary on secondary
+  double c_SP = param["c_SP"]; //Competition coefficient for secondary on primary
+  double d = param["d"]; //Dispersal rate
+  int ntime = param["ntime"]; //How long to simulate for
+  int disturbance_time = param["disturbance_time"]; //When is disturbance time?
+  double delta_T = param["delta_T"]; //Time steps
+  double prop = param["prop"]; //Proportion of patches to be affected
+  double mortality_P = param["mortality_P"]; //Surviviorship of p.vector
+  double  mortality_S = param["mortality_S"]; //Survivorship of s.vector
         
         //The number of patches is dependent on either the column or row (should 
         //be equal)

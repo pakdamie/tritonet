@@ -32,22 +32,18 @@ calculate_R_effective_discrete_patch <- function(
   NS <- SS + SI
   
 
-  interest <- seq(disturbance_time - 5, disturbance_time + 200)
-  
+  interest <- seq(disturbance_time - 4, disturbance_time + 4)
   
 full_time <- NULL  
-for (t in seq_along(interest)){
+for (time in seq_along(interest)){
   
-  interest_time <- interest[t]  
-  
+  interest_time <- interest[time]  
   patch_R0_time <- NULL
   
   for (k in 1:(patch_num)){
                 
   H_P_ratio <- ifelse(is.finite(HS[interest_time,k]/NH[interest_time,k]), HS[interest_time,k]/NH[interest_time,k], 0)
   H_S_ratio <- ifelse(is.finite(HS[interest_time,k]/NH[interest_time,k]), HS[interest_time,k]/NH[interest_time,k], 0)
-  
-  
   
   P_H_ratio <- ifelse(is.finite(PS[interest_time,k]/NH[interest_time,k]), PS[interest_time,k]/NH[interest_time,k], 0)
   S_H_ratio <- ifelse(is.finite(SS[interest_time,k]/NH[interest_time,k]), SS[interest_time,k]/NH[interest_time,k], 0)
@@ -65,19 +61,28 @@ for (t in seq_along(interest)){
     V_mat <- Matrix(c((gamma + mu_H), 0, 0,
             0, mu_V + (c_SP * NS[interest_time,k]) + (c_PP * NP[interest_time,k]), 0,
             0, 0, mu_V + (c_PS * NP[interest_time,k]) + (c_SS * NS[interest_time,k])),
-                 byrow = TRUE, ncol = 3,sparse = TRUE)
+            byrow = TRUE, ncol = 3,sparse = TRUE)
 
            
-    FV <- F_mat %*%  solve(V_mat)
+   if(det(V_mat) == 0){
+           RE = 0
+           primary_contrib = 0
+           secondary_contrib = 0
+   }else{
+            
+    FV <- (F_mat %*%  solve(V_mat))
+    RE = max(eigen(FV)$values)
+    primary_contrib = sum(FV[1,2])
+    secondary_contrib = sum(FV[1,3])
+    }
     
-    patch_R0_time[[k]] <- cbind(RE = max(eigen(FV)$values),
-                          
+    patch_R0_time[[k]] <-  cbind(RE = RE,
                                 patch_num = k,
                                 time = interest_time,
-                                primary_contrib = sum(FV[1,2]),
-                                secondary_contribut = sum(FV[1,3]))
+                                primary_contrib = primary_contrib ,
+                                secondary_contrib = secondary_contrib)
         }
-  full_time[[t]] <- do.call(rbind, patch_R0_time)
+  full_time[[time]] <- do.call(rbind, patch_R0_time)
   
 
 }

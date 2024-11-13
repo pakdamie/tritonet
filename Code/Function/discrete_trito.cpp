@@ -102,13 +102,13 @@ Rcpp::List discrete_trito_model_rcpp(
        arma::rowvec total_change_SS = SS.row(j) + (SS_Rates + dispersal_SS.t()) *  delta_T;
        arma::rowvec total_change_SI = SI.row(j) + (SI_Rates + dispersal_SI.t()) *  delta_T;
                  
-       total_change_HS = arma::clamp(total_change_HS, 0, total_change_HS.max());
-       total_change_HI = arma::clamp(total_change_HI, 0, total_change_HI.max());
-       total_change_HR = arma::clamp(total_change_HR, 0, total_change_HR.max());
-       total_change_PS = arma::clamp(total_change_PS, 0, total_change_PS.max());
-       total_change_PI = arma::clamp(total_change_PI, 0, total_change_PI.max());
-       total_change_SS = arma::clamp(total_change_SS, 0, total_change_SS.max());
-       total_change_SI = arma::clamp(total_change_SI, 0, total_change_SI.max());
+       total_change_HS = arma::clamp(total_change_HS, 0, 1e30);
+       total_change_HI = arma::clamp(total_change_HI, 0, 1e30);
+       total_change_HR = arma::clamp(total_change_HR, 0, 1e30);
+       total_change_PS = arma::clamp(total_change_PS, 0, 1e30);
+       total_change_PI = arma::clamp(total_change_PI, 0, 1e30);
+       total_change_SS = arma::clamp(total_change_SS, 0, 1e30);
+       total_change_SI = arma::clamp(total_change_SI, 0, 1e30);
        
                   
         if (j != disturbance_time) {
@@ -161,7 +161,8 @@ Rcpp::List discrete_trito_model_rcpp(
                             Rcpp::Named("PS") = PS,
                             Rcpp::Named("PI") = PI,
                             Rcpp::Named("SS") = SS,
-                            Rcpp::Named("SI") = SI);
+                            Rcpp::Named("SI") = SI,
+                            Rcpp:Named("Target_Patch") = sampled_coverage);
   
 
  }
