@@ -399,10 +399,10 @@ HS_mat[1, ] <- rep(1000, patch_num)
 HI_mat[1, ] <- rep(0, patch_num) 
 HR_mat[1, ] <- rep(0, patch_num)
 
-PS_mat[1, ] <- rep(2500, patch_num)
-PI_mat[1, ] <- rep(500, patch_num)
-MS_mat[1, ] <- rep(1500, patch_num)
-MI_mat[1, ] <- rep(500, patch_num)
+PS_mat[1, ] <- rep(1000, patch_num)
+PI_mat[1, ] <- rep(10, patch_num)
+SS_mat[1, ] <- rep(1000, patch_num)
+SI_mat[1, ] <- rep(10, patch_num)
 
 
 ```

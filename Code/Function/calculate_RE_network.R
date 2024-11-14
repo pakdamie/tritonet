@@ -31,7 +31,7 @@ calculate_R_effective_discrete_net <- function(parameters, lists, disturbance_ti
         NS <- SS + SI
         
         # Time window of interest
-        interest <- seq(disturbance_time - 5, disturbance_time + 5)
+        interest <- seq(disturbance_time - 100, disturbance_time + 5)
         
         full_time <- list()
         

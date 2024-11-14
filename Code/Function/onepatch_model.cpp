@@ -81,13 +81,13 @@ Rcpp::List discrete_trito_model_rcpp_ONEPATCH(
                 arma::rowvec total_change_MS = MS.row(j) + (MS_Rates *  delta_T);
                 arma::rowvec total_change_MI = MI.row(j) + (MI_Rates *  delta_T);
                 
-                total_change_HS = arma::clamp(total_change_HS, 0, total_change_HS.max());
-                total_change_HI = arma::clamp(total_change_HI, 0, total_change_HI.max());
-                total_change_HR = arma::clamp(total_change_HR, 0, total_change_HR.max());
-                total_change_PS = arma::clamp(total_change_PS, 0, total_change_PS.max());
-                total_change_PI = arma::clamp(total_change_PI, 0, total_change_PI.max());
-                total_change_MS = arma::clamp(total_change_MS, 0, total_change_MS.max());
-                total_change_MI = arma::clamp(total_change_MI, 0, total_change_MI.max());
+                total_change_HS = arma::clamp(total_change_HS, 0, 1e30);
+                total_change_HI = arma::clamp(total_change_HI, 0, 1e30);
+                total_change_HR = arma::clamp(total_change_HR, 0, 1e30);
+                total_change_PS = arma::clamp(total_change_PS, 0, 1e30);
+                total_change_PI = arma::clamp(total_change_PI, 0, 1e30);
+                total_change_MS = arma::clamp(total_change_MS, 0, 1e30);
+                total_change_MI = arma::clamp(total_change_MI, 0, 1e30);
                 
                 
                 if (j != disturbance_time) {
