@@ -1,0 +1,512 @@
+---
+title: "Dynamics in a one patch system"
+output:
+  html_document: default
+  pdf_document: default
+date: "2024-11-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(ggplot2)
+library(viridis)
+library(Matrix)
+library(Rcpp)
+library(RcppArmadillo)
+sourceCpp(here("Code", "Function", "onepatch_model.cpp"))
+```
+## One patch model
+
+We focus on a single patch with no dispersal. We investigate how the relative abundance of the primary ($P$) and secondary (minor) vectors ($M$) influence disease dynamics.
+
+We investigate the change in the total primary and secondary populations: 
+
+$$
+\Delta N_P = B_V N_P - (c_{MP}N_M + c_{PP}N_P) N_P \\
+\Delta N_S = B_V N_M - (c_{PS}N_P + c_{MM}N_S) N_M 
+$$ 
+
+The nullclines of both species will be:
+
+$$
+N_P = \frac{(B_V - c_{MP}N_M)}{c_{PP}}  \\
+N_S = \frac{(B_V - c_{PM}N_P)}{c_{MM}}
+$$
+
+By substituting $N_M$ into $N_P$.The equilibirum of the system will be:
+
+$$
+N_P = \frac{B_V (c_{MM} + c_{MP})}{c_{PP}c_{MM} - c_{MP}c_{PM}}
+$$
+
+$$
+N_M = \frac{B_V (-c_{PP} + c_{PM})}{c_{PP}c_{MM} - c_{MP}c_{PM}}
+$$ 
+
+## Creating a phase diagram
+
+Let us investigate different combinations of vector abundance.
+
+```{r}
+N_P <-  seq(0, 5000, length = 20) #Total primary vector
+N_M <- seq(0, 5000, length = 20) #Total secondary vector
+Expand_N_PM <- expand.grid(N_P = N_P, N_M=N_M) #Different comibinations
+
+```
+
+Here are parameters that we are interested in:
+
+```{r}
+parameters <- c(
+        B_V =  0.01, #Birth rate of both vectors
+        c_PP = 7e-6, # Competitive effects of P on P
+        c_MM = 4e-6, # Competitive effects of M on M
+        c_PM = 5e-6, # Competitive effects of P on M
+        c_MP = 2e-6) # Competitive effect of M on P # Competitive effect of M on P
+```
+
+Let us then calculate the rates of change for both the primary and secondary vector - we can do this with a function
+
+```{r}
+calculate_rate <-  function(N_P_abundance, N_M_abundance, param){
+  B_V = param["B_V"]
+  c_PP = param["c_PP"]
+  c_MM = param["c_MM"]
+  c_MP = param["c_MP"]
+  c_PM = param["c_PM"]
+
+##Calculate the rate of change for both primary and secondary
+P_DT = (B_V * N_P_abundance) - (c_MP * N_M_abundance + c_PP * N_P_abundance) * N_P_abundance
+
+M_DT =(B_V * N_M_abundance) - (c_PM * N_P_abundance + c_MM * N_M_abundance) *
+        N_M_abundance
+
+return(c(N_P_abundance,N_M_abundance,P_DT = P_DT, M_DT = M_DT))
+
+}
+```
+
+We calculate the rates for different combinations of primary and secondary vectors abundance (`Expand_N_PM`).
+
+```{r}
+slopes_P_M_DF <- as.data.frame(t(apply(Expand_N_PM, 1, function(ab) 
+  calculate_rate(
+     ab["N_P"],
+     ab["N_M"],
+     param = parameters)
+  )
+)
+)
+
+colnames(slopes_P_M_DF) <- c("N_P","N_M", "P_DT","M_DT")
+```
+
+```{r}
+head(slopes_P_M_DF)
+```
+
+For visualization, we are going to normalize the vector length by the total magnitude.
+
+```{r}
+slopes_P_M_DF$magnitude = sqrt((slopes_P_M_DF$P_DT)^2 + 
+                                (slopes_P_M_DF$M_DT)^2)
+
+```
+
+```{r echo=FALSE}
+slopefield_GG <- ggplot(slopes_P_M_DF, aes(x = N_P, y = N_M)) + 
+  geom_segment(aes(xend = (N_P + P_DT) ,
+                   yend = (N_M + M_DT)),
+               alpha = 0.8,
+        arrow = arrow(angle = 20,length = unit(0.2, "cm"))) + 
+  xlab("Total primary vectors") + 
+  ylab("Total secondary vectors") + 
+  ggtitle("Phase portrait") + 
+  theme_classic() + 
+  scale_color_viridis();slopefield_GG
+
+```
+
+## Finding the equilibirum points
+
+We calculate the equilibirum
+
+```{r}
+
+calculate_eq <- function(param){
+  B_V = param["B_V"]
+  c_PP = param["c_PP"]
+  c_MM = param["c_MM"]
+  c_MP = param["c_MP"]
+  c_PM = param["c_PM"]
+
+common_denom <- (c_PP * c_MM) - (c_MP * c_PM)  
+  
+N_P_eq = (B_V * (c_MM - c_MP))/common_denom 
+N_M_eq = (B_V * (c_PP - c_PM))/common_denom 
+
+
+return(data.frame(N_P_eq =N_P_eq,
+                  N_M_eq = N_M_eq,
+                  N_ALL_eq = N_P_eq + N_M_eq))
+}
+```
+
+```{r}
+equilibrium_points <- calculate_eq(parameters)
+```
+
+## Adding Nullclines
+
+
+```{r}
+calculate_nullclines <-  function(N_P_abundance, N_M_abundance, param){
+        
+  B_V = param["B_V"]
+  c_PP = param["c_PP"]
+  c_MM = param["c_MM"]
+  c_MP = param["c_MP"]
+  c_PM = param["c_PM"]
+
+N_P_NULL =  (B_V - c_MP * N_M_abundance)/c_PP  
+N_M_NULL =  (B_V - c_PM * N_P_abundance)/c_MM
+
+
+return(data.frame(N_P_abundance,N_M_NULL,N_M_abundance, N_P_NULL))
+
+}
+```
+
+
+```{r}
+nullcline_df <- calculate_nullclines(N_P,N_M, parameters);
+```
+
+The grey line is the total abundance of primary and secondary vectors - we add this to show that the trajectory can cross it.
+
+```{r echo=FALSE}
+slopefield_nullclines_GG  <- slopefield_GG + 
+geom_path(data = nullcline_df,
+  aes(x = N_P_abundance, y = N_M_NULL), col = 'navy') + 
+geom_path(data = nullcline_df,
+  aes(x = N_P_NULL, y = N_M_abundance), col = 'maroon') + 
+geom_point(data = equilibrium_points , aes(x = N_P_eq, y = N_M_eq))+
+geom_hline(data = equilibrium_points, 
+           aes(yintercept = N_ALL_eq),
+           alpha = 0.25)+
+ ylim(0,5000) + 
+ xlim(0,5000) ;slopefield_nullclines_GG 
+```
+
+## Adding trajectories
+
+```{r}
+simulate_trajectory <- function(equib_df, par, perturb){
+        
+ P_M_matrix <- matrix(nrow = 1000, ncol = 2)   
+ P_M_matrix[1,] <- c(equib_df$N_P_eq, equib_df$N_M_eq)
+ 
+ shock_rate <- calculate_rate(
+   P_M_matrix[1,1] * perturb,
+   P_M_matrix[1,2], par) 
+ 
+
+ P_M_matrix[2,] <- c( perturb*P_M_matrix[1,1] + shock_rate[3],
+                     P_M_matrix[1,2] + shock_rate[4])
+         
+ for (j in seq(2,999)){
+         
+  rate <- calculate_rate(P_M_matrix[j,1],P_M_matrix[j,2],par) 
+
+ P_M_matrix[j+1,] <- c(P_M_matrix[j,1] + rate[3],
+                     P_M_matrix[j,2] + rate[4])
+ }
+ dynamics_DF <- cbind.data.frame(seq(1,1000),P_M_matrix,perturb)
+ colnames(dynamics_DF) <- c("time","N_P_traj", "N_M_traj", "perturb")
+ return(dynamics_DF)
+}
+         
+```
+
+```{r}
+dynamics_DF_lowD <- simulate_trajectory (equilibrium_points, parameters, 0.50)
+
+dynamics_DF_highD <- simulate_trajectory (equilibrium_points, parameters, 0.05)
+
+dynamics_DF_highestD <- simulate_trajectory (equilibrium_points, parameters, 0.01)
+```
+
+```{r echo=FALSE}
+slopefield_nullclines_GG + 
+  geom_path(data = dynamics_DF_highD,
+            aes(x = N_P_traj, y = N_M_traj),
+                  arrow = arrow(length = unit(0.2, "cm")))+
+  geom_path(data =dynamics_DF_highestD ,
+            aes(x =N_P_traj, y = N_M_traj),
+                  arrow = arrow(length = unit(0.2, "cm")))+
+  geom_path(data =dynamics_DF_lowD ,
+            aes(x =N_P_traj, y = N_M_traj),
+                  arrow = arrow(length = unit(0.2, "cm")))
+
+```
+
+## Creating an effective reproductive background
+
+```{r}
+calculate_R_effective <- function(N_P_abundance, N_M_abundance, param){
+        
+  theta_P <- param["theta_P"]
+  theta_M <- param["theta_M"]
+  theta_H <- param["theta_H"]
+  gamma <- param["gamma"]
+  mu_H <- param["mu_H"]
+  f_P <- param["f_P"]
+  f_M <- param["f_M"]
+  B_V = param["B_V"]
+  c_PP = param["c_PP"]
+  c_MM = param["c_MM"]
+  c_MP = param["c_MP"]
+  c_PM = param["c_PM"]
+
+  H_ratio <- 100/1000
+  P_ratio <- N_P_abundance/1000
+  M_ratio <- N_M_abundance/1000
+
+  F_mat <- Matrix(
+    c(0, (theta_P * f_P * H_ratio), (theta_M * f_M * H_ratio),
+     (theta_H * f_P * P_ratio), 0, 0,
+     (theta_H * f_M * M_ratio ), 0, 0), 
+     byrow = TRUE, ncol = 3,sparse = TRUE) 
+                 
+  F_mat[!(is.finite(F_mat))] <- 0
+                
+  V_mat <- Matrix(
+    c((gamma + mu_H), 0, 0,
+      0, (c_MP * N_M_abundance) + (c_PP *  N_P_abundance), 0,
+      0, 0, (c_PM *  N_P_abundance) + (c_MM * N_M_abundance)),
+      byrow = TRUE, ncol = 3,sparse = TRUE)
+    
+   FV <- (F_mat %*%  solve(V_mat))
+  
+   
+   RE = max(eigen(FV)$values)
+ 
+   
+   
+   return(c(RE = RE, 
+            N_P = N_P_abundance, 
+            N_M = N_M_abundance
+            ))       
+}
+
+```
+
+
+```{r}
+
+full_parameters <- c(
+ mu_H = 1/5000,
+ B_V =  0.01, #Birth rate of both vectors
+ c_PP = 7e-6, # Competitive effects of P on P
+ c_MM = 4e-6, # Competitive effects of M on M
+ c_PM = 5e-6, # Competitive effects of P on M
+ c_MP = 2e-6,
+ f_P = 0.050, # Biting rate of the p. vector
+ f_M = 0.020, # Biting rate of the s.vector
+ theta_P = 0.90, # Transmission probability of p. vector
+ theta_M = 0.90, # Transmission probability of s. vector
+ theta_H  = 0.50, # Transmission probability of human
+ gamma = 1/100)
+
+
+```
+
+```{r}
+N_P_alt <-  seq(10, 5000, length = 20) #Total primary vector
+N_M_alt <- seq(10, 5000, length = 20) #Total secondary vector
+Expand_N_PM_alt <- expand.grid(N_P = N_P_alt, N_M = N_M_alt) 
+
+RE_P_M_DF <- as.data.frame(t(apply(Expand_N_PM_alt, 1, function(ab) 
+  calculate_R_effective(
+     ab["N_P"],
+     ab["N_M"],
+     param = full_parameters)
+  )
+))
+
+colnames(RE_P_M_DF) <- c("RE", "NP","NM")
+```
+
+
+```{r,error = TRUE}
+ggplot() + 
+ geom_tile(data = RE_P_M_DF , aes ( x= NP, y = NM, fill = RE )) +
+  scale_fill_viridis()  + 
+ scale_x_continuous(expand = c(0,0)) + 
+ scale_y_continuous(expand = c(0,0))
+```
+
+## Calculate R effective for real
+
+```{r}
+full_model_parameters <- c(
+ b_H = 1/5000,
+ mu_H = 1/5000,
+ b_P =  0.01, #Birth rate of both vectors
+ b_M =  0.01, #Birth rate of both vectors
+ c_PP = 7e-6, # Competitive effects of P on P
+ c_MM = 4e-6, # Competitive effects of M on M
+ c_PM = 5e-6, # Competitive effects of P on M
+ c_MP = 1e-6,
+ f_P = 0.050, # Biting rate of the p. vector
+ f_M = 0.020, # Biting rate of the s.vector
+ theta_P = 0.90, # Transmission probability of p. vector
+ theta_M = 0.90, # Transmission probability of s. vector
+ theta_H  = 0.50, # Transmission probability of human
+ gamma = 1/100,
+ ntime = 5000, 
+ delta_T = 1,
+ disturbance_time = 1000,
+ mortality_P = 0.1,
+ mortality_M = 1)
+
+```
+
+
+
+```{r}
+patch_num = 1
+
+compartment_label <- c(
+        "HS_mat", "HI_mat", "HR_mat",  # Humans (sus/inf/rec)
+        "PS_mat", "PI_mat",  # Primary (sus/inf)
+        "MS_mat", "MI_mat"   # Secondary(sus/inf)
+)
+
+# Using the above compartment label, we then create an empty matrix where 
+# the row are the time-steps and the columns are the individual patches
+
+for (i in 1:length(compartment_label)) {
+        assign(
+                compartment_label[i],
+                matrix(0, nrow = full_model_parameters ['ntime'], ncol = patch_num)
+        )
+}
+
+#Initial conditions (everyone starts out with the same number)
+HS_mat[1, ] <- rep(1000, patch_num) 
+HI_mat[1, ] <- rep(0, patch_num) 
+HR_mat[1, ] <- rep(0, patch_num)
+
+PS_mat[1, ] <- rep(1000, patch_num)
+PI_mat[1, ] <- rep(10, patch_num)
+SS_mat[1, ] <- rep(1000, patch_num)
+SI_mat[1, ] <- rep(10, patch_num)
+
+
+```
+
+```{r}
+model_output<- discrete_trito_model_rcpp_ONEPATCH(
+                          HS = HS_mat,
+                          HI = HI_mat,
+                          HR = HR_mat, 
+                          PS = PS_mat,
+                          PI = PI_mat,
+                          MS = MS_mat,
+                          MI = MI_mat,
+                          param =full_model_parameters)    
+```
+
+```{r , include=FALSE}
+calculate_R_effective_modified <- function(full_list, param){
+        
+  theta_P <- param["theta_P"]
+  theta_M <- param["theta_M"]
+  theta_H <- param["theta_H"]
+  gamma <- param["gamma"]
+  mu_H <- param["mu_H"]
+  f_P <- param["f_P"]
+  f_M <- param["f_M"]
+  B_V = param["B_V"]
+  c_PP = param["c_PP"]
+  c_MM = param["c_MM"]
+  c_MP = param["c_MP"]
+  c_PM = param["c_PM"]
+  ntime = param['ntime']
+  
+  HS = full_list[[1]]
+  HI = full_list[[2]]
+  HR = full_list[[3]]
+  PS = full_list[[4]]
+  PI = full_list[[5]]
+  MS = full_list[[6]]
+  MI = full_list[[7]]
+
+  time_RE <- NULL
+  for (j in seq(1,ntime)){
+          
+   
+  NH = HS[j] + HI[j] + HR[j]
+  NP = PS[j] + PI[j]
+  NM = MS[j] + MI[j]
+  
+  HS_ratio <- HS[j]/NH
+  PS_ratio <- PS[j]/NH
+  MS_ratio <- MS[j]/NH
+          
+          
+          
+  F_mat <- Matrix(
+    c(0, (theta_P * f_P * HS_ratio), (theta_M * f_M * HS_ratio),
+     (theta_H * f_P * PS_ratio), 0, 0,
+     (theta_H * f_M * MS_ratio ), 0, 0), 
+     byrow = TRUE, ncol = 3,sparse = TRUE) 
+                 
+  F_mat[!(is.finite(F_mat))] <- 0
+                
+  V_mat <- Matrix(
+    c((gamma + mu_H), 0, 0,
+      0, (c_MP * NM ) + (c_PP * NP), 0,
+      0, 0, (c_PM *  NP) + (c_MM * NM)),
+      byrow = TRUE, ncol = 3,sparse = TRUE)
+    
+   FV <- (F_mat %*%  solve(V_mat))
+  
+   
+   RE = max(eigen(FV)$values)
+ 
+   
+   
+   time_RE[[j]] = data.frame(
+           time = j,
+           RE = RE, 
+            N_P =NP, 
+            N_M = NM
+   )
+  }
+  return(do.call(rbind, time_RE))
+}
+
+```
+
+```{r}
+full_DF<- calculate_R_effective_modified(model_output, full_model_parameters)
+
+print(full_DF[100,])
+
+```
+
+```{r echo=FALSE, warning=FALSE}
+ggplot(subset(full_DF,full_DF$time > 999),
+       aes( x= N_P, y= N_M))  + 
+        geom_path(aes(color = RE),
+                   arrow = arrow(),size = 3)+
+        scale_color_viridis(option = 'viridis') + 
+  geom_point(data= subset(full_DF,full_DF$time == 1000),
+        aes(x = N_P, y= N_M), size =3)+
+        theme_classic() +
+        xlab("Total primary vectors") + 
+        ylab("Total secondary vectors")
+```

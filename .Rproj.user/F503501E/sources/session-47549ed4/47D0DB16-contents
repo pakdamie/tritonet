@@ -1,0 +1,69 @@
+#Analysis script for a one patch system.
+# Phase plane diagram
+N_P =  seq(1, 1000, length = 20)
+N_M =   seq(1, 1000, length = 20)
+
+full_N<- expand.grid(N_P =N_P, N_M=N_M)
+
+
+calculate_rate <-  function(N_P_abundance, N_M_abundance){
+B_V = 0.01
+c_MP = 4e-6
+c_PP = 1e-7
+c_PM = 5e-6
+c_MM = 1e-6
+
+P_dt =(B_V * N_P_abundance) - (c_MP *N_M_abundance + c_PP*N_P_abundance)*N_P_abundance
+M_dt =(B_V * N_M_abundance) - (c_PM *N_P_abundance + c_MM*N_M_abundance)*N_M_abundance
+
+
+
+return(c(P_dt,M_dt))
+}
+
+
+
+
+
+
+
+calculate_R_eff <- function(param, N_P_abundance, N_M_abundance){
+
+        
+        
+        
+}
+F_mat <- Matrix(c(
+        0, (theta_P * f_P * H_P_ratio), (theta_S * f_S * H_S_ratio),
+        (theta_H * f_P * P_H_ratio), 0, 0,
+        (theta_H * f_S *  S_H_ratio), 0, 0), 
+        byrow = TRUE, ncol = 3,sparse = TRUE) 
+
+
+F_mat[!(is.finite(F_mat))] <- 0
+
+V_mat <- Matrix(c((gamma + mu_H), 0, 0,
+                  0, mu_V + (c_SP * NS[interest_time,k]) + (c_PP * NP[interest_time,k]), 0,
+                  0, 0, mu_V + (c_PS * NP[interest_time,k]) + (c_SS * NS[interest_time,k])),
+                byrow = TRUE, ncol = 3,sparse = TRUE)
+
+
+
+slopedf<- t(apply(full_N,1,function(params) 
+        calculate_rate(params["N_P"],params["N_M"])))
+colnames(slopedf) <- c("N_P_slope","N_M_slope")
+
+full_slopedf_df <-cbind(slopedf,full_N)
+full_slopedf_df$slope <- sqrt(full_slopedf_df$N_P_slope^2 + 
+                                      full_slopedf_df$N_M_slope^2)
+
+
+
+
+ggplot(full_slopedf_df, aes(x = N_P, y = N_M)) + 
+        geom_segment(aes(xend = N_P + N_P_slope, 
+                         yend = N_M + N_M_slope),
+                     arrow = arrow(length = unit(0.05, "cm")), size = 0.50)+
+        scale_color_viridis(option = 'turbo') + 
+        theme_classic()
+

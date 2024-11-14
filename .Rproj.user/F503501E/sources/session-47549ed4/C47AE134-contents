@@ -1,0 +1,27 @@
+adjacency_matrix_adj
+d = 0.1
+PS_mat = matrix(runif(1000,min = 100, max = 2000), ncol = 100, nrow =100)
+# Dispersal of the primary and secondary vectors
+dispersal_PS <- rowSums(sweep(adjacency_matrix_adj, MARGIN =1, (- d * PS_mat[1,]),`*`)) + 
+        t(adjacency_matrix_adj) %*% (d * PS_mat[1,])
+
+
+cbind(dispersal_PS,(timesTwo(adjacency_matrix_adj, PS_mat)))
+PS_mat[1,]
+vec = - 0.1 * PS_mat[1,]
+dispersal_PS <-sweep(adjacency_matrix_adj, MARGIN = 1, (vec),`*`) 
+        
+plot(dispersal_PS[1,])
+
+plot(dispersal_PS [,1],type = 'l')
+lines(a[,1],type = 'l',col = 'red')
+
+plot(a[1,],type = 'l')
+lines(dispersal_PS[1,],type = 'l', col = 'red')
+
+dispersing_vec = -d * PS_mat[1,]
+
+##
+sum(adjacency_matrix_adj[1,] * (-d * PS_mat[1,]))
+tail(a[1,])
+tail(dispersal_PS[1,])

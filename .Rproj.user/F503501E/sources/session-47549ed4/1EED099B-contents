@@ -1,0 +1,4 @@
+test_mat <- matrix(10, nrow = 3, ncol = 3)
+testvec = c(1,2,3)
+
+sweep(test_mat,1, testvec, FUN = "*")

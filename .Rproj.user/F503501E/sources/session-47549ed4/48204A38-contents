@@ -1,0 +1,44 @@
+###List of the 
+low_connectance_network <- simulate_spatial_network(24601, 20, 0.05)
+mid_connectance_network <- simulate_spatial_network(24601, 20, 0.50)
+degree(low_connectance_network)
+
+param_ALT<- c(b_H = 1/(500), ##Human mortality rate
+              b_P = 0.01, # P. Vector birth rate
+              b_S = 0.01,  # S. Vector birth rate
+              mu_H =1/(500),  ##Human death rate
+              mu_V = 0,  ##P. vector death rate
+              f_P = 0.050, # Biting rate of the p. vector
+              f_S = 0.030, # Biting rate of the s.vector
+              theta_P = 0.50, # Transmission probability of p. vector
+              theta_S = 0.30, # Transmission probability of s. vector
+              theta_H  = 0.30, # Transmission probability of human
+              gamma = 1/50,  ##Recovery rate of infected human
+              c_PS = 4e-6, ##Competition effect of p.vector on s.vector
+              c_SP = 9e-7,  ##Competition effect of s.vector on p.vector
+              c_PP = 4e-6, ##Competition effect of p.vector on s.vector
+              c_SS = 1e-6,
+              d = 0.01)
+
+#c_PS = 3e-6, ##Competition effect of p.vector on s.vector
+#c_SP = 1e-6,  ##Competition effect of s.vector on p.vector
+#c_PP = 4e-6, ##Competition effect of p.vector on s.vector
+#c_SS = 4e-6
+
+test_function_L_low <- discrete_trito_model(1000, param_ALT,
+                                         5000, 0.01, 0.95 ,1,
+                                         low_connectance_network, 1)
+
+
+plot_list_groups(test_function_L_low)[[1]] 
+plot_list_groups(test)[[1]] 
+
+
+a<-calculate_R_effective_discrete_net(param_ALT,test_function_L_1,10000)
+a<-calculate_R_effective_discrete_patch(param_ALT,test_function_L_low ,4500)
+
+a[[1]]
+
+calculate_R_effective_discrete_net(param_ALT,test_function_L_2,500)
+calculate_R_effective_discrete_patch(param_ALT,test_function_L_2,500)
+
