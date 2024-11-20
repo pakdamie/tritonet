@@ -1,5 +1,15 @@
-#include <Rcpp.h>
-using namespace Rcpp;
+if (secondInclude == 0){
+    arma::mat F_small_mat = F_mat.submat(0, 0, 1, 1);
+    arma::mat V_small_mat = V_mat.submat(0, 0, 1, 1);
+    arma::mat V_small_inv_mat = inv(V_small_mat);
+    arma::mat FV_small_mat = F_small_mat * V_small_inv_mat;
+    arma::cx_vec eigval = arma::eig_gen(FV_small_mat);
+    mat_RE(j) =  arma::abs(eigval).max();
+}else{
+    arma::mat V_inv_mat = inv(V_mat);    
+    arma::mat FV_mat = F_mat * V_inv_mat;
+    arma::cx_vec eigval = arma::eig_gen(FV_mat);
+    mat_RE(j) =  arma::abs(eigval).max();
 
 NumericVector calculate_RE_Patch_cpp(List x, NumericVector param,
                                      int disturbance_time) {
@@ -26,8 +36,6 @@ NumericVector calculate_RE_Patch_cpp(List x, NumericVector param,
     arma::mat SS = x[5];
     arma::mat SI = x[6];
     
-    patch_num = HS.n_cols();
-                
     arma::mat NH = HS + HI + HR;
     arma::mat NP = PS + PI;
     arma::mat NS = SS + SI;

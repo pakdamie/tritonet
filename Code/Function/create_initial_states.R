@@ -27,13 +27,13 @@ create_initial_states <- function(param, patch_num){
 
   #Initial conditions (everyone starts out with the same number)
   HS_mat[1, ] <- rep(1000, patch_num) 
-  HI_mat[1, ] <- rep(0, patch_num) 
+  HI_mat[1, ] <- rep(1, patch_num) 
   HR_mat[1, ] <- rep(0, patch_num)
   
   PS_mat[1, ] <- rep(1000, patch_num)
-  PI_mat[1, ] <- rep(10, patch_num)
+  PI_mat[1, ] <- rep(1, patch_num)
   MS_mat[1, ] <- rep(1000, patch_num)
-  MI_mat[1, ] <- rep(10, patch_num)
+  MI_mat[1, ] <- rep(1, patch_num)
 
   
   return(list(HS_mat, HI_mat, HR_mat, 

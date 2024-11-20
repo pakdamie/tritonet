@@ -4,6 +4,7 @@
 
 // [[Rcpp::depends("RcppArmadillo")]]
 // [[Rcpp::export]]
+
 Rcpp::List discrete_trito_model_rcpp(
     arma::mat HS, //Susceptible human matrix
     arma::mat HI, //Infectious human matrix
@@ -49,9 +50,6 @@ Rcpp::List discrete_trito_model_rcpp(
   
   arma::vec sampled_coverage = Rcpp::RcppArmadillo::sample(patches, sample_size, false);
 
-  
-  
-  
   for(int j = 0; j < ntime; j++){
     
     //Total populations of human, primary, and secondary
@@ -125,7 +123,7 @@ Rcpp::List discrete_trito_model_rcpp(
     if (j != disturbance_time) {
       
       // We then update these row by row
-      HS.row(j + 1) = total_change_HS;
+      HS.row(j + 1) =  total_change_HS;
       HI.row(j + 1) =  total_change_HI;
       HR.row(j + 1) =  total_change_HR;
       PS.row(j + 1) =  total_change_PS;

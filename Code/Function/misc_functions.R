@@ -73,3 +73,25 @@ get_closest_values_vecs <- function(vec1_want, vec2_have){
         return(do.call(rbind, index_closest_value ))
 }
 
+#' Plot the spatial netowrk graph 
+#'
+#' @param seed The random seed generator
+#' @param num_patch  Number of patches that you want to simulate
+#' @param connectance The connectance of the network
+#' @param max_distance The maximum distance 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_networkgraph <- function(seed, num_patch, connectance, max_distance){
+        
+        adjacency_matrix <- simulate_final_adjacency_matrix(seed, num_patch,
+                                                            connectance,max_distance)
+        
+        g9 <- graph_from_adjacency_matrix(adjacency_matrix , weighted=TRUE,
+                                          mode="plus", diag=FALSE)
+        
+        plot(g9)
+}
+
