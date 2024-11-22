@@ -1,0 +1,729 @@
+---
+title: "November 21st Update: A single-patch analysis"
+output:
+  pdf_document:
+    toc: true
+  html_document:
+    df_print: paged
+    toc: true
+editor_options:
+  chunk_output_type: console
+---
+
+```{r include=FALSE}
+library(Rcpp)
+library(ggplot2)
+library(gganimate)
+library(here)
+library(reshape2)
+library(viridis)
+library(patchwork)
+sourceCpp("~/tritonet/Code/Function/onepatch_model.cpp")
+source(here("Code", "Function", "create_initial_states.R"))
+source(here("Code", "Function", "plot_discrete_output.R"))
+sourceCpp(here("Code", "Function", "calculate_RE_onepatch.cpp"))
+```
+
+## UPDATE: Fixed $R_E$ calculation
+
+In the next-generation matrix, the original formulation of the *$V^-1$* looks like this:
+
+\begin{equation}
+   V^{-1}=\begin{bmatrix}
+\frac{1}{\gamma + \mu_H} & 0 & 0 \\
+ 0 & \frac{1}{c_{PP}N_P+c_{MP}N_M} & 0 \\
+ 0 & 0 & \frac{1}{c_{MM}N_M + c_{PM}N_P}
+\end{bmatrix}.
+\end{equation}
+
+As a reminder, this matrix represents the total rates leaving the $H_I$ (infectious humans), $P_I$ (infectious primary vectors), and $M_I$ (infectious secondary vectors) respectively. Here, $\gamma + \mu_H$ represents the rate at which infectious humans exit the system either through recovery ($\gamma$) or background mortality ($\mu$). For the primary vector, we have both intraspecific ($c_{PP}$) and interspecific mortality terms ($c_{MP}$) which are dependent on the total number of primary vectors ($N_P$) and secondary vectors ($N_M$). This is true for the secondary vectors as well. The problem is that while it is fine to keep $N_H$ as a constant (this number is always constant), $N_P$ and $N_M$ are dynamically changing through time. Therefore, I should have accounted for it when writing out the $R_E$.
+
+Specifically, if we look at the original matrix $V$, we write it as:
+
+\begin{equation}
+   V=\begin{bmatrix}
+\gamma + \mu_H \\
+(c_{PP}N_P + c_{MP}N_M) P_I \\
+(c_{MM}N_M + c_{PM}N_P) M_I\\
+\end{bmatrix}.
+\end{equation}
+
+The corrected Jacobian should now account for the fact that $N_P = P_S + P_I$ and $N_M = M_S + M_I$. In other words, the second entry of the above matrix, when fully expanded, is $$c_{PP} P_S P_I + c_{PP} P_I^2 + c_{MP}M_S P_I + c_{MP}M_IP_I, $$ and differentiating by $P_I$ (i.e $\frac{\partial V}{\partial P_I}$), this becomes: $$c_{PP} P_S + c_{PP} 2 P_I + c_{MP M_S} + c_{MP} MI.$$ This can be simplified to: $$c_{PP}(P_S + 2 P_I) + c_{MP} N_M.$$
+
+We can see already that the jacobian of $V$ would not be a diagonal matrix, which makes it harder to get an analytical solution. The corrected $V$ should then be:
+
+\begin{equation}
+   V=\begin{bmatrix}
+\gamma + \mu_H & 0 & 0 \\
+0 & c_{PP}(P_S + 2 P_I) + c_{MP} N_M & c_{MP} P_I \\
+0 & c_{PM} M_I & c_{MM}(M_S + 2 M_I) + c_{PM} N_P\\
+\end{bmatrix}.
+\end{equation}
+
+I corrected the error, and I don't think there's a qualitative difference. I got the symbolic solution of the $R_E$ but it is extremely complex, and difficult to interpret biologically. Womp womp.
+
+## A single patch system
+
+Figuring out the mechanism is difficult on a large network, so I decided to focus on the one-patch system. These are the standard parameters:
+
+```{r}
+param_standard <-
+  c(
+    b_H = 1 / 1000, ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / 1000, ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.02 * 0.75, # Biting rate of the s.vector
+    theta_P = 0.7, # Transmission probability of p. vector
+    theta_M = 0.7 * 0.75, # Transmission probability of s. vector
+    theta_H = 0.5, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50, # How long to run the simulation for
+    disturbance_time = 365 * 25, # When to disturb the system
+    delta_T = 1, # Time-step 1
+    mortality_P = 0.25, # This will change
+    mortality_M = 1
+  )
+```
+
+The initial states are initiated as: $H_S(0) = 1000$, $H_I(0) = 1$, $P_S(0)$ and $M_S(0)$ = 1000, and finally, $P_I(0)$ and $M_I(0) = 1,$ 
+
+```{r include=FALSE}
+Initial_List <- create_initial_states(param_standard, patch_num = 1)
+```
+
+### Graphing out the abundance
+```{r include=FALSE}
+# Damie just make function accept list instead of subsetting for easier
+model_output_mort_P <- discrete_trito_model_rcpp_ONEPATCH(
+  HS = Initial_List[[1]],
+  HI = Initial_List[[2]],
+  HR = Initial_List[[3]],
+  PS = Initial_List[[4]],
+  PI = Initial_List[[5]],
+  MS = Initial_List[[6]],
+  MI = Initial_List[[7]],
+  param = param_standard
+)
+```
+
+```{r echo=FALSE}
+plot_list_groups(model_output_mort_P)
+```
+
+### How does the strength of disturbance (on primary vector) influence $R_E$?
+
+Let us assume that the secondary vector is unaffected. At the disturbance, we use the `mortality_P` as a multiplier of the abundance (0.10 will then be the largest removal)
+
+```{r}
+mortality_P <- seq(0.1, 1, 0.10)
+```
+
+```{r include=FALSE}
+create_param_list <- function(mortality_value, param_base) {
+  param_base_copy <- param_base
+  param_base_copy["mortality_P"] <- mortality_value
+  return(param_base_copy)
+}
+```
+
+```{r}
+standard_param_L <- lapply(mortality_P, function(m) create_param_list(m, param_standard))
+```
+
+```{r include=FALSE}
+## Damie: Need to rewrite function to include LIST instead of subsetting
+model_output_mort_P <- lapply(standard_param_L, function(param) {
+  discrete_trito_model_rcpp_ONEPATCH(
+    HS = Initial_List[[1]],
+    HI = Initial_List[[2]],
+    HR = Initial_List[[3]],
+    PS = Initial_List[[4]],
+    PI = Initial_List[[5]],
+    MS = Initial_List[[6]],
+    MI = Initial_List[[7]],
+    param = param
+  )
+})
+```
+
+```{r warning=TRUE, include=FALSE}
+RE_onepatch_List <- NULL
+## figure out how to simplify this
+for (p in seq(1, length(standard_param_L))) {
+  RE_onepatch_List[[p]] <- cbind.data.frame(
+    calculate_RE_onepatch(
+      model_output_mort_P[[p]], # Model outputs
+      standard_param_L[[p]], 1
+    ),
+    primary_removal = standard_param_L[[p]]["mortality_P"]
+  )
+}
+
+RE_onepatch_DF <- do.call(rbind, RE_onepatch_List)
+colnames(RE_onepatch_DF) <- c(
+  "RE", "N_P", "N_M", "H_S", "P_S", "M_S",
+  "H_I", "P_I", "M_I",
+  "time", "primary_removal"
+)
+```
+
+After we simulate the model, here each line represents the disturbance intensity. The x-axis is the total primary vector abundance, and the y-axis is the total secondary vector abundance. The colors signify the $R_E$.
+
+```{r echo=FALSE}
+standard_output <-
+  ggplot() +
+  geom_path(
+    data =
+      subset(
+        RE_onepatch_DF,
+        RE_onepatch_DF$time > 9123
+      ),
+    aes(
+      x = N_P, y = N_M, color = RE,
+      group = primary_removal
+    ), linewidth = 1.1
+  ) +
+  geom_point(
+    data =
+      subset(
+        RE_onepatch_DF,
+        RE_onepatch_DF$time == 5000
+      ),
+    aes(x = N_P, y = N_M),
+    size = 2.5,
+    color = "black"
+  ) +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  scale_x_continuous(breaks = seq(0, 4000, 500)) +
+  theme_classic() +
+  xlab("Primary vector abundance") +
+  ylab("Secondary vector abundance") +
+  ggtitle("P.vector is the \nmore effective transmitter") +
+  theme(legend.position = "right") +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 13, color = "black")
+  )
+standard_output
+```
+
+For the trajectory, start out at the black point (the equilibrium), and then move to the left, follow the curve back to the equilibrium. Is it just the total vector abundance that is driving $R_E$? The return to the equilibrium is when the total vector abundance is greater than the equilibrium. When we calculate the primary and secondary abundance at the equilibrium
+
+```{r}
+(RE_onepatch_DF[RE_onepatch_DF$time == (365 * 25) - 3, ]$N_P)[1] # 1818.128
+(RE_onepatch_DF[RE_onepatch_DF$time == (365 * 25) - 3, ]$N_M)[1] # 909.1995
+```
+
+At equilibrium, the total vector abundance is 2727.327. What if the increase in $R_E$ is due to the total vector abundance? These are the two plots, one is the zoomed in version of the other.
+
+```{r echo=FALSE, fig.height= 8}
+standard_output_vector_ab_zoomed_in <-
+  ggplot() +
+  geom_path(
+    data =
+      subset(
+        RE_onepatch_DF,
+        RE_onepatch_DF$time > 9123 & RE_onepatch_DF$time < 10000 &
+          RE_onepatch_DF$primary_removal != 1
+      ),
+    aes(
+      x = time, y = N_P + N_M, color = RE,
+      group = primary_removal
+    ), linewidth = 0.9
+  ) +
+  geom_point(
+    data =
+      subset(
+        RE_onepatch_DF,
+        RE_onepatch_DF$time == 9123
+      ),
+    aes(x = time, y = N_P + N_M),
+    size = 2.5,
+    color = "black"
+  ) +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  theme_classic() +
+  xlab("Time") +
+  ylab("Total vector abundance") +
+  theme(legend.position = "right") +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 13, color = "black")
+  )
+
+
+
+standard_output_vector_ab_zoomed_out <-
+  ggplot() +
+  geom_path(
+    data =
+      subset(
+        RE_onepatch_DF,
+        RE_onepatch_DF$time > 9123 & RE_onepatch_DF$time < 15000 &
+          RE_onepatch_DF$primary_removal != 1
+      ),
+    aes(
+      x = time, y = N_P + N_M, color = RE,
+      group = primary_removal
+    ), linewidth = 0.9
+  ) +
+  geom_point(
+    data =
+      subset(
+        RE_onepatch_DF,
+        RE_onepatch_DF$time == 9123
+      ),
+    aes(x = time, y = N_P + N_M),
+    size = 2.5,
+    color = "black"
+  ) +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  theme_classic() +
+  xlab("Time") +
+  ylab("Total vector abundance") +
+  theme(legend.position = "right") +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 13, color = "black")
+  )
+standard_output_vector_ab_zoomed_in / standard_output_vector_ab_zoomed_out
+```
+
+I think there's a visual mishap with the above plot that I need to fix because $R_E$ does eventually return back to 1:
+
+```{r echo=FALSE}
+standard_output_RE_zoomed_out <-
+  ggplot() +
+  geom_path(
+    data =
+      subset(
+        RE_onepatch_DF,
+        RE_onepatch_DF$time > 9123 & RE_onepatch_DF$time < 15000 &
+          RE_onepatch_DF$primary_removal != 1
+      ),
+    aes(
+      x = time, y = RE,
+      group = primary_removal, color = as.factor(primary_removal)
+    ), linewidth = 0.9
+  ) +
+  geom_point(
+    data =
+      subset(
+        RE_onepatch_DF,
+        RE_onepatch_DF$time == 9123
+      ),
+    aes(x = time, y = RE),
+    size = 2.5,
+    color = "black"
+  ) +
+  scale_color_viridis(name = "Disturbance intensity", discrete = TRUE) +
+  theme_classic() +
+  xlab("Time") +
+  ylab("RE") +
+  theme(legend.position = "right") +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 13, color = "black")
+  )
+standard_output_RE_zoomed_out
+```
+
+I'm not sure if it's only the total vector abundance that is explaining the increase in $R_E$. Though vector abundance after the disturbance is the highest with the greatest disturbance. 
+
+### Comparison: what if the secondary vector is the better transmitter?
+
+If it's truly abundance, if we switch the vector identity, we should get the same output right as the original case. Let's look at this new parameter case, I just switched the secondary vector parameters with the primary vector parameter ($f_P$ and $f_M$). BUT the secondary vector is still the weaker competitor. 
+
+```{r}
+param_switch <-
+  c(
+    b_H = 1 / 1000, ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / 1000, ## Human death rate
+    f_M = 0.02, # CHANGED: Biting rate of the p. vector
+    f_P = 0.02 * 0.75, # CHANGED: Biting rate of the s.vector
+    theta_M = 0.7, # CHANGED: Transmission probability of p. vector
+    theta_P = 0.7 * 0.75, # CHANGED: Transmission probability of s. vector
+    theta_H = 0.5, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50, # How long to run the simulation for
+    disturbance_time = 365 * 25, # When to disturb the system
+    delta_T = 1, # Time-step 1
+    mortality_P = 0.25, # This will change
+    mortality_M = 1
+  )
+```
+
+```{r include=FALSE}
+switch_param_L <- lapply(mortality_P, function(m) create_param_list(m, param_switch))
+
+model_output_mort_switch_P <- lapply(switch_param_L, function(param) {
+  discrete_trito_model_rcpp_ONEPATCH(
+    HS = Initial_List[[1]],
+    HI = Initial_List[[2]],
+    HR = Initial_List[[3]],
+    PS = Initial_List[[4]],
+    PI = Initial_List[[5]],
+    MS = Initial_List[[6]],
+    MI = Initial_List[[7]],
+    param = param
+  )
+})
+
+RE_switch_onepatch_List <- NULL
+## figure out how to simplify this
+for (p in seq(1, length(switch_param_L))) {
+  RE_switch_onepatch_List[[p]] <- cbind.data.frame(
+    calculate_RE_onepatch(
+      model_output_mort_switch_P[[p]], # Model outputs
+      switch_param_L[[p]], 1
+    ),
+    primary_removal = switch_param_L[[p]]["mortality_P"]
+  )
+}
+
+RE_onepatch_switch_DF <- do.call(rbind, RE_switch_onepatch_List)
+colnames(RE_onepatch_switch_DF) <- c(
+  "RE", "N_P", "N_M", "H_S", "P_S", "M_S",
+  "H_I", "P_I", "M_I",
+  "time", "primary_removal"
+)
+```
+
+Plotting the secondary and primary vector abundance and coloring it by the $R_E$
+
+```{r echo=FALSE}
+switch_output <-
+  ggplot() +
+  geom_path(
+    data =
+      subset(
+        RE_onepatch_switch_DF,
+        RE_onepatch_switch_DF$time > 9123
+      ),
+    aes(
+      x = N_P, y = N_M, color = RE,
+      group = primary_removal
+    ), linewidth = 1.1
+  ) +
+  geom_point(
+    data =
+      subset(
+        RE_onepatch_switch_DF,
+        RE_onepatch_switch_DF$time == 5000
+      ),
+    aes(x = N_P, y = N_M),
+    size = 2.5,
+    color = "black"
+  ) +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  scale_x_continuous(breaks = seq(0, 4000, 500)) +
+  theme_classic() +
+  xlab("Primary vector abundance") +
+  ylab("Secondary vector abundance") +
+  ggtitle("S.vector is the \nmore effective transmitter") +
+  theme(legend.position = "right") +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 13, color = "black")
+  )
+switch_output
+```
+
+Putting the standard plot on the left and the switched plot on the right: 
+```{r, fig.width = 12}
+standard_output + switch_output
+```
+
+The vector abundance as well as the composition is the same between these two plots, but the $R_E$ is drastically different, doesn't this insinuate that it's not purely the total vector abundance that's driving it?
+
+## One vector, one host system 
+
+Perhaps looking at a single primary vector species will be helpful. I can calculate the $R_E$ by hand atleast: Here are the Jacobian matrices of $F$ and $V$
+
+\[
+\begin{array}{cc}
+   F =
+   \begin{bmatrix}
+      0 & \theta_P f_P \frac{H_S}{N_H} \\
+      \theta_H f_P \frac{P_S}{N_H} & \\
+   \end{bmatrix}
+   &
+   V^{-1} =
+   \begin{bmatrix}
+      \frac{1}{\gamma + \mu_H} & 0 \\
+      0 & c_{PP}(P_S + 2 P_I) \\
+   \end{bmatrix}
+\end{array}
+\]
+
+The $FV^{-1}$ is then: 
+\begin{equation}
+ \begin{bmatrix}
+ FV^{-1}
+0 & \frac{f_P \theta_P}{c_{PP}(P_S + 2 P_I)} \frac{H_S}{N_H}  \\
+ \frac{f_P \theta_H}{\gamma + \mu_H} \frac{P_S}{N_H} & 0 & 
+\end{bmatrix}
+\end{equation}
+
+To calculate the eigenvalues: 
+
+\begin{equation}
+ det(FV^{-1} - \lambda\textbf{I})=\begin{bmatrix}
+-\lambda & \frac{f_P \theta_P}{c_{PP}(P_S + 2 P_I)} \frac{H_S}{N_H}  \\
+ \frac{f_P \theta_H}{\gamma + \mu_H} \frac{P_S}{N_H} & -\lambda & 
+\end{bmatrix} = 0
+\end{equation}
+
+\begin{equation}
+\lambda^2  - \frac{f_P^2 \theta_H \theta_P H_S P_S}{c_{PP}(P_S + 2 PI) (\gamma + \mu_H)N_H^2}
+\end{equation}
+
+\begin{equation}
+\lambda= \sqrt{\frac{f_P^2 \theta_H \theta_P H_S P_S}{c_{PP}(P_S + 2 PI) (\gamma + \mu_H)N_H^2}
+}
+\end{equation}
+
+\begin{equation}
+\lambda= \sqrt{\frac{P_S}{c_{PP} P_S + 2{P_I}}\frac{f_P^2 \theta_H \theta_P H_S}{ (\gamma + \mu_H)N_H^2}
+}
+\end{equation}
+
+We can group the primary vectors, human hosts, and parameters seperately: 
+\begin{equation}
+R_E = \sqrt{\frac{P_S}{c_{PP}( P_S + 2{P_I})}} \frac{\sqrt{H_S}}{N_H} \sqrt{\frac{f_P^2 \theta_H \theta_P}{ (\gamma + \mu_H)} 
+}
+\end{equation}
+
+What this suggests to me is that it's the increase in primary susceptibles that is driving the $R_E$. I think the human dynamics are too slow for the time time-scale.
+
+### Model with no secondary vectors
+
+```{r}
+Initial_List_NoSecondary <- Initial_List
+Initial_List_NoSecondary[[6]][1] <- 0 # susceptible secondary is 0
+Initial_List_NoSecondary[[7]][1] <- 0 # susceptible infectious is 0
+```
+
+```{r include=FALSE}
+model_output_mort_noM_P <- lapply(standard_param_L, function(param) {
+  discrete_trito_model_rcpp_ONEPATCH(
+    HS = Initial_List_NoSecondary[[1]],
+    HI = Initial_List_NoSecondary[[2]],
+    HR = Initial_List_NoSecondary[[3]],
+    PS = Initial_List_NoSecondary[[4]],
+    PI = Initial_List_NoSecondary[[5]],
+    MS = Initial_List_NoSecondary[[6]],
+    MI = Initial_List_NoSecondary[[7]],
+    param = param
+  )
+})
+
+RE_noM_onepatch_List <- NULL
+## figure out how to simplify this
+for (p in seq(1, length(standard_param_L))) {
+  RE_noM_onepatch_List[[p]] <- cbind.data.frame(
+    calculate_RE_onepatch(
+      model_output_mort_noM_P[[p]], # Model outputs
+      standard_param_L[[p]], 0
+    ),
+    primary_removal = standard_param_L[[p]]["mortality_P"]
+  )
+}
+
+
+RE_onepatch_noM_DF <- do.call(rbind, RE_noM_onepatch_List)
+colnames(RE_onepatch_noM_DF) <- c(
+  "RE", "N_P", "N_M", "H_S", "P_S", "M_S",
+  "H_I", "P_I", "M_I",
+  "time", "primary_removal"
+)
+```
+
+You see this effect of greater $R_E$ after a disturbance still even with only the primary vector. For the trajectory of the first figure, move down, and trace the curve.
+
+```{r echo=FALSE, fig.width= 12, warning=FALSE}
+ggplot(
+  subset(
+    RE_onepatch_noM_DF,
+    RE_onepatch_noM_DF$time > 9123 &
+      RE_onepatch_noM_DF$time < 10000
+  ),
+  aes(x = time - 9124, y = P_S, color = RE, group = primary_removal)
+) +
+  geom_path(size = 1) +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  xlab("Time since disturbance") +
+  ylab("Primary vector abundance") +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 15)
+  ) +
+  ggplot(
+    subset(
+      RE_onepatch_noM_DF,
+      RE_onepatch_noM_DF$time > 9123 &
+        RE_onepatch_noM_DF$time < 15000
+    ),
+    aes(x = time - 9123, y = RE, color = primary_removal)
+  ) +
+  geom_path(size = 1) +
+  scale_color_viridis(name = "Primary removal") +
+  xlab("Time since disturbance") +
+  ylab(expression(R[E])) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 14),
+    axis.title = element_text(size = 15)
+  )
+```
+
+An idea to figure out what is driving the change in $R_E$ is by calculating both terms of $R_E$: $\sqrt{\frac{P_S}{c_{PP}( P_S + 2{P_I})}}$ and $\frac{\sqrt{H_S}}{N_H}$. Let's subset the highest intensity scenario
+
+```{r}
+RE_onepatch_noM_DF_01 <- subset(
+  RE_onepatch_noM_DF,
+  RE_onepatch_noM_DF$primary_removal == 0.10 &
+    RE_onepatch_noM_DF$time > 7000 &
+    RE_onepatch_noM_DF$time < 15000
+)
+```
+
+The `Pterm` is the primary vector contribution to $R_E$ and the `Hterm` is the human contributio to $R_E$
+
+```{r}
+RE_onepatch_noM_DF_01$Pterm <-
+  sqrt(RE_onepatch_noM_DF_01$P_S / (param_standard["c_PP"] * (
+    RE_onepatch_noM_DF_01$P_S + 2 * RE_onepatch_noM_DF_01$P_I)))
+
+
+RE_onepatch_noM_DF_01$Hterm <- sqrt(RE_onepatch_noM_DF_01$H_S) / 1000
+```
+
+I think it's clear that it's the primary vectors that are contributing most to $R_E$ and I think it has to do with the drive in the susceptible primary vectors.
+
+```{r echo=FALSE, fig.width = 12}
+ggplot(RE_onepatch_noM_DF_01, aes(x = time - 9124, y = Pterm, color = RE)) +
+  geom_path(linewidth = 2) +
+  xlab("Time till disturbance") +
+  ylab("Primary term of RE") +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  theme_classic() +
+  ggplot(RE_onepatch_noM_DF_01, aes(x = time - 9124, y = Hterm, color = RE)) +
+  geom_path(linewidth = 2) +
+  xlab("Time till disturbance") +
+  ylab("Human term of RE") +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  theme_classic()
+```
+
+I think the drive in $R_E$ is due to the growth in new susceptible (they grow because they are releaesd from intrapsecific competition) which correlates to an increase in new primary infections. We can calculate the new total number of new infections:
+
+
+```{r}
+RE_onepatch_noM_DF_01$P_infection <-
+  param_standard["f_P"] * param_standard["theta_H"] * RE_onepatch_noM_DF_01$P_S * (RE_onepatch_noM_DF_01$H_I / 1000)
+```
+
+I added two vertical lines to help orient.
+
+```{r echo=FALSE, fig.width = 12}
+ggplot(RE_onepatch_noM_DF_01, aes(x = time, y = P_infection, color = RE)) +
+  geom_line(linewidth = 2) +
+  xlab("Time till disturbance") +
+  ylab("New infections of primary vector") +
+  geom_vline(xintercept = c(9124, 10000)) +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  ggtitle("P.vector infections") +
+  theme_classic() +
+  ggplot(RE_onepatch_noM_DF_01, aes(x = time, y = P_S, color = RE)) +
+  geom_line(linewidth = 2) +
+  xlab("Time till disturbance") +
+  ylab("Primary susceptible") +
+  geom_vline(xintercept = c(9124, 10000)) +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  ggtitle("Susceptible P.vector") +
+  theme_classic() +
+  ggplot(RE_onepatch_noM_DF_01, aes(x = time, y = P_I, color = RE)) +
+  geom_line(linewidth = 2) +
+  xlab("Time till disturbance") +
+  ylab("Primary infected") +
+  geom_vline(xintercept = c(9124, 10000)) +
+  scale_colour_gradient2(
+    low = "#007dfa",
+    mid = "#f0f5f7",
+    high = "#ff0d55",
+    midpoint = 1,
+    name = expression(R[E])
+  ) +
+  ggtitle("Infectious P.vector") +
+  theme_classic() +
+  plot_layout(guides = "collect")
+```
+

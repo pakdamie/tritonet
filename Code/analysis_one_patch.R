@@ -1,27 +1,26 @@
 # This is an analysis script for the one patch dynamics.
 
 param_same <-
-  c(
-    b_H = 1/ (6570), ## Human mortality rate
-    b_P = 0.1, # P. Vector birth rate
-    b_M = 0.1, # S. Vector birth rate
-    mu_H = 1/ (6570), ## Human death rate
-    f_P = 0.05, # Biting rate of the p. vector
-    f_M = 0.05, # Biting rate of the s.vector
-    theta_P = 0.90, # Transmission probability of p. vector
-    theta_M = 0.90, # Transmission probability of s. vector
+  c(b_H = 1/ (85 * 365), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1/ (85 * 365), ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.02 , # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70 , # Transmission probability of s. vector
     theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 100, # Recovery rate of infected human
-    c_PM = 2e-5, ## Competition effect of p.vector on s.vector
-    c_MP = 1e-5, ## Competition effect of s.vector on p.vector
-    c_PP = 3e-5, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-5, ## Competition effect of s.vector on s.vector
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
     ntime = 365 * 50,
     disturbance_time = 365 * 25,
     delta_T = 1,
     d = 0, # Dispersal is automatically turned off, but just to make sure
     prop = 1,
-    mortality_P = 0.01, # This will change
+    mortality_P = 0.25, # This will change
     mortality_M = 1
   )
 
@@ -29,51 +28,51 @@ param_same <-
 param_standard <-
   c(
     b_H = 1/ (1000), ## Human mortality rate
-    b_P = 0.1, # P. Vector birth rate
-    b_M = 0.1, # S. Vector birth rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
     mu_H = 1/ (1000), ## Human death rate
-    f_P = 0.05, # Biting rate of the p. vector
-    f_M = 0.030, # Biting rate of the s.vector
-    theta_P = 0.90, # Transmission probability of p. vector
-    theta_M = 0.75, # Transmission probability of s. vector
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.020 *0.75, # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70 * 0.75, # Transmission probability of s. vector
     theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 100, # Recovery rate of infected human
-    c_PM = 2e-5, ## Competition effect of p.vector on s.vector
-    c_MP = 1e-5, ## Competition effect of s.vector on p.vector
-    c_PP = 3e-5, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-5, ## Competition effect of s.vector on s.vector
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
     ntime = 365 * 50,
     disturbance_time = 365 * 25,
     delta_T = 1,
     d = 0, # Dispersal is automatically turned off, but just to make sure
     prop = 1,
-    mortality_P = 0.01, # This will change
+    mortality_P = 0.25, # This will change
     mortality_M = 1
-  ) # This will not change
+  )# This will not change
 
 ### What if M is a better vector BUT it is being repressed?
 param_M_better <-
   c(
-    b_H = 1 / (1000), ## Human mortality rate
-    b_P = 0.1, # P. Vector birth rate
-    b_M = 0.1, # S. Vector birth rate
-    mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.03, # Biting rate of the p. vector
-    f_M = 0.05, # Biting rate of the s. vector
-    theta_P = 0.75, # Transmission probability of p. vector
-    theta_M = 0.90, # Transmission probability of s. vector
+    b_H = 1/ (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1/ (1000), ## Human death rate
+    f_M = 0.02, # Biting rate of the p. vector
+    f_P = 0.020 *0.75, # Biting rate of the s.vector
+    theta_M = 0.70, # Transmission probability of p. vector
+    theta_P = 0.70 * 0.75, # Transmission probability of s. vector
     theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 100, # Recovery rate of infected human
-    c_PM = 2e-5, ## Competition effect of p.vector on s.vector
-    c_MP = 1e-5, ## Competition effect of s.vector on p.vector
-    c_PP = 3e-5, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-5, ## Competition effect of s.vector on s.vector
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
     ntime = 365 * 50,
     disturbance_time = 365 * 25,
     delta_T = 1,
     d = 0, # Dispersal is automatically turned off, but just to make sure
     prop = 1,
-    mortality_P = 0.01, # This will change
+    mortality_P = 0.25, # This will change
     mortality_M = 1
   ) # This will not change
 
@@ -116,6 +115,7 @@ model_output_mort_P <- NULL
 model_output_mort_P_switch <- NULL
 model_output_mort_P_noM <- NULL
 model_output_mort_P_same <- NULL
+
 for (p in seq(1, length(parameter_mortality_P_list))) {
   model_output_mort_P[[p]] <-
     discrete_trito_model_rcpp_ONEPATCH(
@@ -128,6 +128,7 @@ for (p in seq(1, length(parameter_mortality_P_list))) {
       MI = Initial_List[[7]],
       param = parameter_mortality_P_list[[p]]
     )
+
 
   model_output_mort_P_switch[[p]] <-
     discrete_trito_model_rcpp_ONEPATCH(
@@ -165,21 +166,6 @@ for (p in seq(1, length(parameter_mortality_P_list))) {
       param = parameter_mortality_P_list_same[[p]]
     )
 }
-
-
-plot_list_groups(model_output_mort_P[[5]][1:7])
-plot_list_groups(model_output_mort_P_noM[[1]][1:7])
-
-
-
-
-
-
-
-
-
-
-
 
 ## Calculate the RE over time
 
@@ -242,6 +228,7 @@ colnames(RE_onepatch_DF_Switch) <- c("RE", "N_P", "N_M", "H_S","P_S","M_S",
 colnames(RE_onepatch_DF_noM) <-c("RE", "N_P", "N_M", "H_S","P_S","M_S", 
                                  "H_I","P_I","M_I",
                                  "time","primary_removal")
+
 colnames(RE_onepatch_DF_Same) <- c("RE", "N_P", "N_M", "H_S","P_S","M_S", 
                                    "H_I","P_I","M_I",
                                    "time","primary_removal")
@@ -279,7 +266,7 @@ standard_PvsM_GG <-
     high = "#ff0d55",
     midpoint = 1,
     name = expression(R[E]),
-    limit = c(0.8,1.25)
+    limit = c(0.8,1.50)
     
   ) +
   scale_x_continuous(breaks = seq(0,4000,500))+ 
@@ -325,7 +312,7 @@ switch_PvsM_GG <-
     high = "#ff0d55",
     midpoint = 1,
     name = expression(R[E]),
-    limit = c(0.8,1.25)
+    limit = c(0.8,1.5)
     
   ) +
   scale_x_continuous(breaks = seq(0,4000,500))+ 
@@ -365,7 +352,7 @@ same_PvsM_GG <-
     high = "#ff0d55",
     midpoint = 1,
     name = expression(R[E]),
-    limit = c(0.8,1.25)
+    limit = c(0.8,1.5)
   ) +
   scale_x_continuous(breaks = seq(0,4000,500))+ 
   theme_classic() +
@@ -384,14 +371,27 @@ ggsave(here("Figures_Process","Primary_Secondary_Traj_RE.pdf"), units = 'in',
 
 ###What about the primary vector only?
 
+ggplot( subset(
+  RE_onepatch_DF_noM,
+  RE_onepatch_DF_noM$time > 9123 &
+    RE_onepatch_DF_noM$time  < 15000),
+  aes( x= time - 9124, y= RE, color  = primary_removal)) + 
+  geom_path(size = 1) + 
+  scale_color_viridis(name = "Primary removal") + 
+  xlab("Time since disturbance") + 
+  ylab(expression(R[E])) +
+  theme_classic() + 
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 15)) 
+
 
 ### The equilibirum is at 3333 (when you don't have any secondary
 ###vector)
 ggplot( subset(
   RE_onepatch_DF_noM,
   RE_onepatch_DF_noM$time > 9123 &
-  RE_onepatch_DF_noM$time  < 9200),
-  aes( x= time - 9124, y= RE, color = N_P, group  = primary_removal)) + 
+    RE_onepatch_DF_noM$time  < 15000),
+  aes( x= time - 9124, y= RE, color = primary_removal)) + 
   geom_path(size = 1) + 
   scale_color_viridis(name = "Primary vector\nabundance") + 
   xlab("Time since disturbance") + 
@@ -404,7 +404,7 @@ ggplot( subset(
 ggplot(subset(
   RE_onepatch_DF_noM,
   RE_onepatch_DF_noM$time > 9123 &
-    RE_onepatch_DF_noM$time  < 9200),
+    RE_onepatch_DF_noM$time  < 10000),
   aes( x= time - 9124, y= N_P, color = RE, group  = primary_removal)) + 
   geom_path(size = 1) + 
   scale_colour_gradient2(
@@ -413,7 +413,7 @@ ggplot(subset(
     high = "#ff0d55",
     midpoint = 1,
     name = expression(R[E]),
-    limit = c(1,1.05)
+    limit = c(1,1.25)
   )  +
   xlab("Time since disturbance") + 
   ylab("Primary vector abundance") +
@@ -426,11 +426,13 @@ ggsave(here("Figures_Process","Primary_only_plots.pdf"),
 
 ### Is it just the rise of susceptibles as Caitlin suggests?
 
+subset()
+
 
 ggplot(subset(
   RE_onepatch_DF_noM,
   RE_onepatch_DF_noM$time > 9123 &
-    RE_onepatch_DF_noM$time  < 9200),
+    RE_onepatch_DF_noM$time  < 10000),
   aes( x= time - 9124, y= P_S, color = RE, group  = primary_removal)) + 
   geom_path(size = 1) + 
   scale_colour_gradient2(
@@ -439,7 +441,7 @@ ggplot(subset(
     high = "#ff0d55",
     midpoint = 1,
     name = expression(R[E]),
-    limit = c(1,1.05)
+    limit = c(1,1.0)
   )  +
   xlab("Time since disturbance") + 
   ylab("Primary vector abundance") +
@@ -461,16 +463,16 @@ RE_onepatch_DF_noM$new_primary_cases =
 ggplot(subset(
   RE_onepatch_DF_noM,
   RE_onepatch_DF_noM$time > 9123 &
-    RE_onepatch_DF_noM$time  < 9300),
+    RE_onepatch_DF_noM$time  < 10000),
   aes( x= time - 9124, y= new_human_cases, color = RE, group  = primary_removal)) + 
-  geom_path(size = 1) +geom_path(size = 1) + 
+  geom_path(linewidth = 1) +geom_path(size = 1) + 
   scale_colour_gradient2(
     low = "#007dfa",
     mid = "#f0f5f7",
     high = "#ff0d55",
     midpoint = 1,
     name = expression(R[E]),
-    limit = c(1,1.05)
+    limit = c(1,1.50)
   )  +
   xlab("Time since disturbance") + 
   ylab("New human infection cases") +
@@ -482,7 +484,7 @@ ggplot(subset(
 ggplot(subset(
   RE_onepatch_DF_noM,
   RE_onepatch_DF_noM$time > 9123 &
-    RE_onepatch_DF_noM$time  < 9300),
+    RE_onepatch_DF_noM$time  < 15000),
   aes( x= P_S, y= new_primary_cases, color = N_P, group  = primary_removal)) + 
   geom_path(size = 1) +
   geom_path(size = 1)  +
@@ -495,7 +497,92 @@ ggplot(subset(
   facet_wrap(~primary_removal)
 
 
-# RE_onepatch_DF_noM[RE_onepathsearch_db_keywords()# RE_onepatch_DF_noM[RE_onepatch_DF_noM$time ==  (365 * 25)- 1,]$N_P  #3333.333
+
+ggplot(subset(
+  RE_onepatch_DF_noM,
+  RE_onepatch_DF_noM$time > 9123 &
+    RE_onepatch_DF_noM$time  < 15000),
+  aes( x= N_P, y= new_primary_cases, color = RE, group  = primary_removal)) + 
+  geom_path(size = 1) +
+  geom_path(size = 1)  +
+  xlab("New human infection cases") + 
+  ylab("RE") +
+  theme_classic() + 
+  scale_color_viridis() + 
+  theme(axis.text = element_text(size = 14),
+        axis.title = element_text(size = 15)) + 
+  facet_wrap(~primary_removal)
+
+RE_onepatch_noM_01 <- subset(
+  RE_onepatch_DF_noM, RE_onepatch_DF_noM$time > 9123 &
+  RE_onepatch_DF_noM$time  < 10000 &
+    RE_onepatch_DF_noM$primary_removal == 0.10)
+
+RE_P_anim_GG<- ggplot(RE_onepatch_noM_01, aes( x=  N_P,
+                                     y = RE, 
+                                     group = 1)) + 
+  geom_path() + 
+  geom_point() + 
+  theme_classic() + 
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 13)) + 
+  transition_reveal(along = time) + 
+  ease_aes('linear')+
+  xlab("Number of primary vectors") + 
+  ylab(expression(RE)) + 
+  enter_fade()
+  
+
+anim_save("RE_P_anim_GG.gif")
+
+
+RE_onepatch_noM_01$P_only_term <- sqrt((RE_onepatch_noM_01$P_S)/(param_standard["c_PP"]*(
+                            RE_onepatch_noM_01$P_S + (2) *RE_onepatch_noM_01$P_I)))
+
+
+RE_onepatch_noM_01$P_bottom_term <- sqrt(1/(param_standard["c_PP"]*(
+  RE_onepatch_noM_01$P_S + (2) *RE_onepatch_noM_01$P_I)))
+
+RE_onepatch_noM_01$P_top_term <- sqrt((RE_onepatch_noM_01$P_S))
+
+RE_onepatch_noM_01$H_only_term <- 
+  sqrt((RE_onepatch_noM_01$H_S * param_standard["f_P"]^2 *param_standard["theta_H"] * 
+                              param_standard["theta_P"])/ 
+  ((param_standard["gamma"] +  param_standard["mu_H"]) * 1000^2))
+
+RE_onepatch_noM_01$greater  =  RE_onepatch_noM_01$P_bottom_term <  RE_onepatch_noM_01$P_top_term
+
+ggplot(RE_onepatch_noM_01, 
+       aes(x = N_P, 
+           y = P_only_term, color =RE, 
+           group = 1)) + 
+  geom_path(size = 1.2) + 
+  scale_color_viridis(option = 'rocket')  + 
+  transition_reveal(along = time) 
+
+ggplot(RE_onepatch_noM_01, 
+       aes(x = P_bottom_term,y =RE, 
+           group = 1)) + 
+  geom_path(size = 1.2)  + 
+  ggplot(RE_onepatch_noM_01, 
+         aes(x = P_top_term,y =RE, 
+             group = 1)) + 
+  geom_path(size = 1.2) 
+
+
+
+ggplot(RE_onepatch_noM_01, aes(x=P_S, y=P_I,
+                               group = 1, color =P_only_term)) + 
+  geom_path() + 
+  scale_color_viridis(option = 'rocket') + 
+  transition_reveal(along = time) 
+
+RE_onepatch_noM_01$PS_diff <- c(NA,diff(RE_onepatch_noM_01$P_S[2:
+                                              nrow(RE_onepatch_noM_01)]),
+                                NA)
+
+ggplot(RE_onepatch_noM_01, aes(y = RE , x= PS_diff)) +
+  geom_path()
 
 ###Are there any points where the abundance is greater than 4285.714
 RE_onepatch_DF_subset <- subset(

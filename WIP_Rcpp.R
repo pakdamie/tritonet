@@ -1,25 +1,27 @@
+low_connectance_network<- simulate_spatial_network(24601, 20, 0.10)
+
 param_standard <-  
   c(b_H = 1/(1000), ##Human mortality rate
     b_P = 0.1, # P. Vector birth rate
     b_M = 0.1,  # S. Vector birth rate
     mu_H =1/(1000),  ##Human death rate
-    f_P = 0.050, # Biting rate of the p. vector
-    f_M = 0.040, # Biting rate of the s.vector
+    f_P = 0.05, # Biting rate of the p. vector
+    f_M = 0.025, # Biting rate of the s.vector
     theta_P = 0.90, # Transmission probability of p. vector
-    theta_M = 0.90, # Transmission probability of s. vector
+    theta_M = 0.75, # Transmission probability of s. vector
     theta_H  = 0.50, # Transmission probability of human
-    gamma = 1/100,  # Recovery rate of infected human
-    c_PM = 5e-6, ## Competition effect of p.vector on s.vector
-    c_MP = 1e-6, ## Competition effect of s.vector on p.vector
-    c_PP = 7e-6, ## Competition effect of p.vector on s.vector
-    c_MM = 4e-6, ## Competition effect of s.vector on s.vector
-    ntime = 10000,
-    disturbance_time = 8000,
+    gamma = 1/100 ,  # Recovery rate of infected human
+    c_PM = 2e-5, ## Competition effect of p.vector on s.vector
+    c_MP = 1e-5, ## Competition effect of s.vector on p.vector
+    c_PP = 3e-5, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-5, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50,
+    disturbance_time = 365 * 25 ,
     delta_T = 1,
     d = 0.05,
-    prop = 0.50,
+    prop = 0.25,
     mortality_P = 0.25,
-    mortality_M = 0.95)  # Transmission probability of s. vector)
+    mortality_M = 0.95) 
 
 adjacency_matrix <- as_adjacency_matrix(
         low_connectance_network,
@@ -52,6 +54,10 @@ plot_list_groups(model[1:7])
 
 calculated_R_patch <- 
   calculate_R_effective_discrete_patch(param_standard, model, 8000 )[[1]]
+
+
+
+
 
 calculated_R_net <- calculate_R_effective_discrete_net(param_standard, model, 8000)
 

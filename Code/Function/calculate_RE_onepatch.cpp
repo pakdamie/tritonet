@@ -63,9 +63,9 @@ arma::mat calculate_RE_onepatch(Rcpp::List x, Rcpp::NumericVector param,
     arma::mat V_mat = arma::mat(3,3,arma::fill::zeros) ;
        
     double h_out = gamma + mu_H;
-    double p_out_diag = c_PP * (PS[j] + (1/2) * PI[j]) + (c_MP *(NM[j]));
+    double p_out_diag = c_PP * (PS[j] + (2) * PI[j]) + (c_MP *(NM[j]));
     double p_out_nondiag = c_MP * PI[j];
-    double m_out_diag = c_MM * (MS[j] + (1/2) * MI[j]) + (c_PM *(NP[j]));
+    double m_out_diag = c_MM * (MS[j] + (2) * MI[j]) + (c_PM *(NP[j]));
     double m_out_nondiag = c_PM * MI[j];
 
     V_mat(0,0) = h_out; //in R (1,1)
@@ -113,15 +113,3 @@ arma::mat calculate_RE_onepatch(Rcpp::List x, Rcpp::NumericVector param,
         return(mat_RE);
         
 }
-
-
-// You can include R code blocks in C++ files processed with sourceCpp
-// (useful for testing and development). The R code will be automatically 
-// run after the compilation.
-//
-
-/*** R
-list = model_output_mort_P_noM[[1]]
-
-e<- calculate_RE_onepatch(list, param_standard,0)
-*/
