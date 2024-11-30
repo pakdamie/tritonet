@@ -3,21 +3,21 @@
 #' When given the results of discrete_trito_model, this
 #' will plot out 7 facets (one for each class) with
 #' time on the x-axis and the abundance on the y-axis. Each
-#' color reperesents the different patches.
+#' color represents the different patches.
 #'
 #'
 #' @param full_list
 #'
-#' @return list with the first graph being the complete,full one
-#' and the second graph being zoomed in
+#' @return a figure
 #' @export
 #'
 #' @examples
 plot_list_groups <- function(full_list) {
   
-  identifying_class <- c("HS", "HI", "HR", 
-                         "PS", "PI", 
-                         "MS", "MI")
+  compartment_labels <- c(
+    "HS", "HI", "HR", 
+    "PS", "PI", 
+    "MS", "MI")
   
   data_frame_plot <- lapply(full_list, function(x) {
     data.frame(x, time = seq_len(nrow(x)))
@@ -25,7 +25,7 @@ plot_list_groups <- function(full_list) {
 
   # Assigning the classes so we can combine into one big data.frame
   for (i in seq(1, length(data_frame_plot))) {
-    data_frame_plot[[i]]$id <- identifying_class[i]
+    data_frame_plot[[i]]$id <- compartment_labels[i]
   }
 
   final_data_frame <- do.call(rbind, data_frame_plot)
@@ -37,13 +37,8 @@ plot_list_groups <- function(full_list) {
 
   final_melted_frame$id <- factor(
     final_melted_frame$id,
-    levels = c(
-      "HS", "HI", "HR",
-      "PS", "PI", "MS",
-      "MI"
-    )
+    levels = compartment_labels
   )
-
 
   full_plot_GG <- ggplot(
     final_melted_frame,
