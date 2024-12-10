@@ -1,6 +1,7 @@
 #' Calculate the analytical R_effective
 #'
 #' @param param 
+#' @param List_x 
 #'
 #' @return
 #' @export
@@ -34,29 +35,29 @@ Calculate_analytical_REff <- function(List_x, param){
    NH = HS + HI + HR
    NP = PS + PI
    NM = MS + MI
-       
-   Psi_P =  (c_MP * NP) + c_MM * ( MS + (2 * MI))
-   Psi_M =  (c_PM * NM) + c_PP * (PS + (2 * PI))
-   Psi_C =  (c_MP * PI) * (c_PM * MI)
-   wait_time = sqrt(((Psi_P * Psi_M) - Psi_C) * (gamma + mu_H)) * NH
+
+   Psi_P <-  (c_MP * NM) + c_PP * (PS + (2 * PI))
+   Psi_M <-  (c_PM * NP) + c_MM * (MS + (2 * MI))
+   Psi_C <-  (c_MP * PI) * (c_PM * MI)
+   Gamma <- (Psi_P * Psi_M) - Psi_C
+  
+   wait_time <-  sqrt(((Psi_P * Psi_M) - Psi_C) * (gamma + mu_H)) * NH
+ 
+   HtoH_P <-  Psi_M * ((theta_H * f_P * PS) * (theta_P * f_P))
+   HtoH_M <-  Psi_P * ((theta_H * f_M * MS) * (theta_M * f_M))
+
+   MtoP <-  (c_PM * MI) * ((theta_H * f_P * PS) * (theta_M * f_M ))
+   PtoM <-  (c_MP * PI) * ((theta_H * f_M * MS) * (theta_P * f_P))
    
-   HtoH_P = sqrt(Psi_M * ((theta_H * f_P * PS) * (theta_P * f_P * HS)))/wait_time
-   HtoH_M = sqrt(Psi_P * ((theta_H * f_M * MS) * (theta_M * f_M * HS)))/wait_time
-   HtoH = HtoH_P + HtoH_M 
-   
-   MtoP = sqrt((c_PM * MI) * ((theta_H * f_P * PS ) + (theta_M * f_M * HS)))/wait_time
-   PtoM = sqrt((c_MP * PI) * ((theta_H * f_M * MS) + (theta_P * f_P * HS)))/wait_time
-   
-   VtoV = -MtoP - PtoM
-   
-   #This is the total effective reproductive number
-   RE = HtoH + VtoV
-   
-   RE_DF <- cbind.data.frame(time = 
-                    seq(1,ntime),
-                    RE = RE,
-                    HtoH_P, HtoH_M, 
-                    MtoP, PtoM)
+   RE <- (sqrt(HS) * (sqrt(HtoH_M - PtoM +   HtoH_P - MtoP)))/wait_time
+   RE_DF <- cbind.data.frame(
+               time = seq(1,ntime),
+               RE = RE,
+               PtoP = (sqrt(NH) *sqrt(HtoH_P))/wait_time,
+               MtoM =  (sqrt(NH) * sqrt(HtoH_M))/wait_time,
+               MtoP = (sqrt(NH) * sqrt(MtoP))/wait_time,
+               PtoM = (sqrt(NH) * sqrt(PtoM))/wait_time,
+               Gamma)
         
    return(RE_DF)
 }

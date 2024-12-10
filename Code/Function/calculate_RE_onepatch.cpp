@@ -14,7 +14,7 @@ arma::mat calculate_RE_onepatch(
   double theta_P = param["theta_P"]; //transmission probbility of p.vector
   double theta_M = param["theta_M"]; //transmission probbility of s.vector
   double f_P = param["f_P"]; // Biting rate of p.vector
-  double f_M =param["f_M"];  // Biting rate of s.vector
+  double f_M = param["f_M"];  // Biting rate of s.vector
   double gamma = param["gamma"];  // Recovery rate of human
   double mu_H = param["mu_H"]; // Human mortality rate
   double c_MP = param["c_MP"]; //Competition of secondary on primary
