@@ -50,11 +50,14 @@ Calculate_analytical_REff <- function(List_x, param){
    PtoM <-  (c_MP * PI) * ((theta_H * f_M * MS) * (theta_P * f_P))
    
    RE <- (sqrt(HS) * (sqrt(HtoH_M - PtoM +   HtoH_P - MtoP)))/wait_time
+   
    RE_DF <- cbind.data.frame(
                time = seq(1,ntime),
                RE = RE,
+               NP = NP, 
+               NM = NM,
                PtoP = (sqrt(NH) *sqrt(HtoH_P))/wait_time,
-               MtoM =  (sqrt(NH) * sqrt(HtoH_M))/wait_time,
+               MtoM = (sqrt(NH) * sqrt(HtoH_M))/wait_time,
                MtoP = (sqrt(NH) * sqrt(MtoP))/wait_time,
                PtoM = (sqrt(NH) * sqrt(PtoM))/wait_time,
                Gamma)
