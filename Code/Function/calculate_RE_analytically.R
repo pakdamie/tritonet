@@ -39,7 +39,7 @@ Calculate_analytical_REff <- function(List_x, param){
    Psi_P <-  (c_MP * NM) + c_PP * (PS + (2 * PI))
    Psi_M <-  (c_PM * NP) + c_MM * (MS + (2 * MI))
    Psi_C <-  (c_MP * PI) * (c_PM * MI)
-   Gamma <- (Psi_P * Psi_M) - Psi_C
+   Gamma <-  (Psi_P * Psi_M) - Psi_C
   
    wait_time <-  sqrt(((Psi_P * Psi_M) - Psi_C) * (gamma + mu_H)) * NH
  
@@ -49,18 +49,21 @@ Calculate_analytical_REff <- function(List_x, param){
    MtoP <-  (c_PM * MI) * ((theta_H * f_P * PS) * (theta_M * f_M ))
    PtoM <-  (c_MP * PI) * ((theta_H * f_M * MS) * (theta_P * f_P))
    
-   RE <- (sqrt(HS) * (sqrt(HtoH_M - PtoM +   HtoH_P - MtoP)))/wait_time
+   RE <- (sqrt(HS) * (sqrt(HtoH_M - PtoM + HtoH_P - MtoP)))/wait_time
    
    RE_DF <- cbind.data.frame(
-               time = seq(1,ntime),
-               RE = RE,
-               NP = NP, 
-               NM = NM,
-               PtoP = (sqrt(NH) *sqrt(HtoH_P))/wait_time,
-               MtoM = (sqrt(NH) * sqrt(HtoH_M))/wait_time,
-               MtoP = (sqrt(NH) * sqrt(MtoP))/wait_time,
-               PtoM = (sqrt(NH) * sqrt(PtoM))/wait_time,
-               Gamma)
+       time = seq(1,ntime),
+       RE = RE,
+       NP = NP, 
+       NM = NM,
+       PtoP = HtoH_P,
+       MtoM = HtoH_M ,
+       MtoP = MtoP ,
+       PtoM = PtoM,
+       wait_time = wait_time,
+       Gamma,
+       Psi_M,
+       Psi_P)
         
    return(RE_DF)
 }

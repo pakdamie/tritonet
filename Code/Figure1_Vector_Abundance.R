@@ -54,10 +54,11 @@ RE_mortality_P_post <- subset(RE_mortality_P_DF,
 
 
 
-# Plotting ----------------------------------------------------------------
+# Plotting vector abundance and RE----------------------------------------------------------------
 
 
-GG_PtoMabundance_RE <- ggplot(RE_mortality_P_post, 
+GG_PtoMabundance_RE <- 
+  ggplot(RE_mortality_P_post, 
        aes(x = NP, y = NM, color = RE)) +
   geom_path(linewidth = 1.2) +
   geom_point(data = subset(RE_mortality_P_post, 
@@ -73,7 +74,11 @@ GG_PtoMabundance_RE <- ggplot(RE_mortality_P_post,
   ylab(expression("Abundance of secondary vectors " *"(" * N[M] * ")")) +   
   theme_classic() + 
   theme(axis.text = element_text(size = 14, color = 'black'),
-        axis.title = element_text(size = 15, color = 'black'))
+        axis.title = element_text(size = 15, color = 'black'));
+ GG_PtoMabundance_RE 
+
+ggsave(here("Figures_Process", "DEC_10","GG_PtoMabundance_RE.pdf"),
+       width = 6, height = 5, units = 'in' )
 
 
 Maximum_RE_DF <- 
@@ -125,36 +130,71 @@ GG_Totalvectorabundance_RE <- ggplot(Maximum_RE_DF) +
 ggsave(here("Figures_Process", "DEC_10","GG_Totalvectorabundance_RE.pdf"),
   width = 6, height = 5, units = 'in' )
 
-GG_Totalvectorabundance_RE <- ggplot(Maximum_RE_DF) + 
-  geom_line(
-          aes(x = NP + NM, 
-              y = RE), 
-          color = 'grey',
-          linewidth = 0.9) + 
-  geom_point(
-          aes(x = NP + NM, 
-              y = RE, 
-              fill = 1-id, 
-              group = 1), size = 2.5,
-          shape = 21) + 
-  geom_line(data = Maximum_Abundance_DF,
-            aes(x = NP + NM, 
-                y= RE),
-            color = '#A6C1A4',
-            linewidth= 0.9) + 
-  geom_point(data = Maximum_Abundance_DF,
-             aes(x = NP + NM, 
-                 y = RE, 
-                 fill = 1-id), 
-             shape = 22,
-             color = 'black',
-             size = 2.3) + 
-  scale_color_viridis(name = "Primary mortality", limit = c(0,1)) + 
-  scale_fill_viridis(name = "Primary mortality", limit = c(0,1)) + 
-  xlab(expression("Total vector abundance " * "(" * N[P] *"+" * N[M] * ")")) + 
-  ylab(expression(R[E])) + 
-  theme_classic() + 
-  theme(axis.text = element_text(size = 14, color = 'black'),
-        axis.title = element_text(size = 14.5)); GG_Totalvectorabundance_  
 
-   
+
+
+
+
+
+# Plotting RE contributions -----------------------------------------------
+
+extreme_RE_mortality_P_post <-  subset(
+ RE_mortality_P_post, 
+ round(RE_mortality_P_post$id,4) == c(0.01, 0.50))
+
+
+M_contribution_GG <- 
+  ggplot(extreme_RE_mortality_P_post,
+  aes(
+  x = (NM),
+  y = (NP), 
+  group = id,
+  label = id,
+  color = (MtoM)/(PtoP + MtoM - MtoP - PtoM))) + 
+ geom_path(size = 1.2) + 
+ xlab(expression("Abundance of primary vectors " *"(" * N[P] * ")")) + 
+ ylab(expression("Abundance of secondary vectors " *"(" * N[M] * ")")) + 
+ scale_color_viridis(option = 'rocket', name = "Secondary\ncontribution") +
+ theme_classic() + 
+ theme(axis.text = element_text(size = 14, color = 'black'),
+       axis.title = element_text(size = 14.5)); M_contribution_GG 
+
+M_contribution_GG 
+        
+        
+(ggplot(extreme_RE_mortality_P_post,
+ aes(x = time - 9125,
+     y = RE)) + 
+geom_path(size = 1.2) +
+geom_vline(xintercept= 1200) + 
+        
+        facet_wrap(~id)) /
+        
+(ggplot(extreme_RE_mortality_P_post,
+  aes(x = time - 9125, 
+      y = (MtoM )/
+           (PtoP + MtoM - MtoP - PtoM))) + 
+geom_path(size = 1.2) + 
+ geom_vline(xintercept= 1200) + 
+ geom_path (aes(x = time - 9125, 
+                y = (PtoP)/
+          (PtoP + MtoM - MtoP - PtoM))) + 
+ facet_wrap(~id)) 
+        
+
+ggplot(extreme_RE_mortality_P_post,
+       aes(x = NP , 
+           y = wait_time))+
+        geom_path(size = 1.2) + 
+        geom_path(aes(x = NM, 
+                  y =wait_time), color = 'blue')+
+        facet_wrap(~id)
+  
+          
+ xlab(expression("Abundance of primary vectors " *"(" * N[P] * ")")) + 
+ ylab(expression("Abundance of secondary vectors " *"(" * N[M] * ")")) + 
+ scale_color_viridis(discrete = TRUE,
+                     option = 'rocket', name = "Secondary\ncontribution") +
+ theme_classic() + 
+ theme(axis.text = element_text(size = 14, color = 'black'),
+       axis.title = element_text(size = 14.5)); 

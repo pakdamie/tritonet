@@ -48,7 +48,8 @@ param_standard <-
     prop = 1,
     mortality_P = 0.25, # This will change
     mortality_M = 1
-  )# This will not change
+  )
+
 
 ### What if M is a better vector BUT it is being repressed?
 param_M_better <-

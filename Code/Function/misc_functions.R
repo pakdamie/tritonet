@@ -13,6 +13,7 @@ load_packages <- function() {
   library(patchwork)
   library(parallel)
   library(Matrix)
+  library(geomtextpath)
 }
 load_packages()
 
