@@ -1,33 +1,45 @@
 #' Vary a parameter at a time for the parameter list
 #'
-#' Vary the parameter so you can see how the model output would change.
+#' Vary the variable of interest to investigate how the model would change.
+#' For example, the most important variables to be examining is the effect
+#' of the disturbance.
 #'
 #' @param parameter List of parameters used for the model
-#' @param variable_interest What parameter do you want to vary?
-#' @param vector_value What are the different values of that variable you want 
+#' @param variable_interest Character: What parameter do you want to vary?
+#' @param vector_value Data_frame: What are the different values of that variable you want 
 #' to vary?
 #'
-#' @return A list of parameters to simulate model with varying values for 
-#' the variable of interest
+#' @return A list of parameters to simulate model with.
 #' @export
 #'
 #' @examples vary_one_parameter_value(parameter_standard, "mortality_P", seq(0,1,0.01))
 
-vary_one_parameter_value <- function(parameter,variable_interest, vector_value){
+vary_parameter_value <- function(parameter, variable_interest, vector_value){
+  
+  if(class(variable_interest) != "character") 
+    stop("The variable_interest should be a data.frame of characters!")
+  
+  if(class(vector_value) != "data.frame") 
+    stop("The vector_value should be a data.frame of numeric values!")
   
   parameter_list <- NULL      
-  copied_param <- param_standard
+  copied_param <- parameter
   
   #Replacing the old value with vector_value[val]
-  
-  for (val in seq_along(vector_value)){
-    copied_param[variable_interest] <- vector_value[val] 
-    parameter_list[[val]] <- copied_param
+
+    for (val in 1:nrow(vector_value)){
+      
+      for (var in 1:length(variable_interest)){
+        
+      var_interest =  variable_interest[[var]]
+      copied_param[var_interest] <- vector_value[val,var]
+      parameter_list[[val]] <-  copied_param
+    }
   }
   
   return(parameter_list)
-  
 }
+
 
 #' Create initial states to simulate the model
 #'
@@ -37,7 +49,7 @@ vary_one_parameter_value <- function(parameter,variable_interest, vector_value){
 #'
 #' @param param The parameters that you're choosing
 #' @param patch_num The number of patches
-#' @return A list of the necessary matrices
+#' @return A list (with length 7) of the necessary matrices to simulate the model
 #' @export
 #'
 #' @examples create_initial_states(param_standard, 100)
@@ -82,6 +94,7 @@ create_initial_states <- function(param, patch_num = 1, initial_human = 1000,
 
 #' Simulate the model 
 #'
+#' The main function for simulating the outputs of the model.
 #' @param parameter 
 #' @param variable_interest 
 #' @param vector_value 
@@ -92,15 +105,14 @@ create_initial_states <- function(param, patch_num = 1, initial_human = 1000,
 #' @examples
 Simulate_Model_Output <- function(parameter, variable_interest, vector_value){
 
-  parameter_list <- vary_one_parameter_value(
+  parameter_list <- vary_parameter_value(
     parameter, variable_interest, vector_value)
    
-  Initial_List <- create_initial_states(param = parameter)
-  
   model_output_list <- NULL
-  for (param in seq(1:length(vector_value))){
+  for (param in seq(1:nrow(vector_value))){
           
-  model_output_list[[param]] <- discrete_trito_model_rcpp_ONEPATCH(
+  model_output_list[[param]] <- 
+    discrete_trito_model_rcpp_ONEPATCH(
     HS = Initial_List[[1]],
     HI = Initial_List[[2]],
     HR = Initial_List[[3]],
@@ -108,13 +120,8 @@ Simulate_Model_Output <- function(parameter, variable_interest, vector_value){
     PI = Initial_List[[5]],
     MS = Initial_List[[6]],
     MI = Initial_List[[7]],
-   param =   parameter_list[[param]])
-  
+    param = parameter_list[[param]])
   }
-
-  
-  
- return( model_output_list) 
-  
+ return(model_output_list) 
 }
 

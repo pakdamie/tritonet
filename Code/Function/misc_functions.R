@@ -14,125 +14,43 @@ load_packages <- function() {
   library(parallel)
   library(Matrix)
   library(geomtextpath)
-}
-load_packages()
+}; load_packages()
 
-#' Plot the density-dependence dispersal function (miscellaneous, just for
-#' making schematic figure or curiosity's sake)
+#' Get different parameters
 #'
-#' @param a_max The maximum rate of dispersal
-#' @param k The steepness slope
-#' @param N0 The abundance at which there is the inflection point
+#' A collection of different parameters I might have used, "standard" is the
+#' default and is the one I would want
 #'
-#' @return A plot of the DD dispersal over the total vector population
+#' @param type 
+#'
+#' @return A data.frame of parameter values.
 #' @export
 #'
 #' @examples
-plotter_DD_dispersal <- function(a_max, k, N0) {
-  N_V <- seq(1, 1e4)
-  dd_result <- a_max / (1.00 + exp(-k * (N_V - N0)))
-  plot(N_V, dd_result)
-}
-
-
-#' Labels both the compartment and the patch of interest
-#'
-#' @param chosen_patch The patches that are chosen to be targeted
-#'
-#' @return A vector that includes "PS1", "PI1", etc
-#' @examples
-namer_chosen_compartments <- function(chosen_patch) {
-  compartments <- c(
-    "PS", "PI", # primary susceptible and infected
-    "SS", "SI"
-  ) # secondary susceptible and infected
-
-  # Generate the names for each compartment
-  result <- lapply(compartments, function(prefix) {
-    apply(chosen_patch, 2, function(x) paste0(prefix, x),
-      simplify = TRUE
-    )
-  })
-
-
-  return(do.call(rbind, result))
-}
-
-#' Find the closest values
-#'
-#' @param vec1_want
-#' @param vec2_have
-#'
-#' @return
-#' @examples
-get_closest_values_vecs <- function(vec1_want, vec2_have) {
-  index_closest_value <- NULL
-
-  for (value in 1:length(vec1_want)) {
-    index_closest_value[[value]] <- which.min(
-      abs(vec1_want[[value]] - vec2_have)
-    )
+get_parameters<- function(type = "standard"){
+  param_standard <- c(
+    b_H = 1 / (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / (1000), ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.020 * 0.75, # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70 * 0.75, # Transmission probability of s. vector
+    theta_H = 0.50, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50,
+    disturbance_time = 365 * 25,
+    delta_T = 1,
+    prop = 1,
+    mortality_P = 0.25, # This will change
+    mortality_M = 1)
+  
+  if(type == "standard"){
+    return(param_standard )
   }
-  return(do.call(rbind, index_closest_value))
-}
-
-#' Plot the spatial netowrk graph
-#'
-#' @param seed The random seed generator
-#' @param num_patch  Number of patches that you want to simulate
-#' @param connectance The connectance of the network
-#' @param max_distance The maximum distance
-#'
-#' @return
-#' @export
-#'
-#' @examples
-plot_networkgraph <- function(seed, num_patch, connectance, max_distance) {
-  adjacency_matrix <- simulate_final_adjacency_matrix(
-    seed, num_patch, connectance, max_distance
-  )
-
-  g9 <- graph_from_adjacency_matrix(adjacency_matrix,
-    weighted = TRUE,
-    mode = "plus", diag = FALSE
-  )
-
-  plot(g9)
-}
-
-
-#' Calculate the competition effects of P. and S. vectors
-#'
-#' @param list Model output
-#' @param param parameter list
-#'
-#' @return A data.frame of the effects of the competition
-#' @export
-#'
-#' @examples
-calculate_competition_effects <- function(list, param) {
-  c_MP <- param["c_MP"]
-  c_PM <- param["c_PM"]
-  c_MM <- param["c_MM"]
-  c_PP <- param["c_PP"]
-
-  PS <- list[[4]] # Susceptible Primary
-  PI <- list[[5]] # Infectious Primary
-  MS <- list[[6]] # Susceptible Secondary
-  MI <- list[[7]] # Infectious Secondary
-
-  NP <- PS + PI
-  NM <- MS + MI
-
-  comp_P_intra <- c_PP * NP
-  comp_P_inter <- c_MP * NM
-  comp_M_intra <- c_MM * NM
-  comp_M_inter <- c_PM * NP
-
-  return(cbind.data.frame(
-    comp_P_intra, comp_P_inter,
-    comp_M_intra, comp_M_inter,
-    PS, PI, NP,
-    MS, MI, NM
-  ))
 }

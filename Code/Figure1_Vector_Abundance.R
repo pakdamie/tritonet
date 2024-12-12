@@ -1,12 +1,12 @@
-
+###Figure_1_Vector_Abundance
 # Standard Parameter ---------------------------------------------------------------
 param_standard <- c(
-  b_H = 1/ (1000), ## Human mortality rate
+  b_H = 1 / (1000), ## Human mortality rate
   b_P = 0.01, # P. Vector birth rate
   b_M = 0.01, # S. Vector birth rate
-  mu_H = 1/ (1000), ## Human death rate
+  mu_H = 1 / (1000), ## Human death rate
   f_P = 0.02, # Biting rate of the p. vector
-  f_M = 0.020 *0.75, # Biting rate of the s.vector
+  f_M = 0.020 * 0.75, # Biting rate of the s.vector
   theta_P = 0.70, # Transmission probability of p. vector
   theta_M = 0.70 * 0.75, # Transmission probability of s. vector
   theta_H = 0.50, # Transmission probability of human
@@ -22,179 +22,257 @@ param_standard <- c(
   mortality_P = 0.25, # This will change
   mortality_M = 1)
 
-
-
-
-
-
-
 # Running models and cleaning it up ---------------------------------------
-Mortality_P <- seq(0.05,1,0.05)
-Mortality_P[1] <- 0.01
+Mortality_P <- c(0.01, seq(0.05, 1, 0.05))
 
 Model_mortality_P <- Simulate_Model_Output(
-  param_standard, "mortality_P", Mortality_P)
+  param_standard, "mortality_P", Mortality_P
+)
 
-RE_mortality_P <- lapply(Model_mortality_P, 
-                         Calculate_analytical_REff,
-                         param = param_standard)
+###Calculate human RE
+RE_mortality_P <- lapply(
+  Model_mortality_P, Calculate_Human_REff,
+  param = param_standard
+)
 
+# Assign mortality_P value
 
-#Assign mortality_P value
-
-for (i in seq_along(RE_mortality_P)){
-  RE_mortality_P[[i]]$id <- Mortality_P[[i]]        
+for (i in seq_along(RE_mortality_P)) {
+  RE_mortality_P[[i]]$id <- Mortality_P[[i]]
 }
 
 RE_mortality_P_DF <- do.call(rbind, RE_mortality_P)
-RE_mortality_P_post <- subset(RE_mortality_P_DF, 
-                              RE_mortality_P_DF$time > 9120 &
-                              RE_mortality_P_DF$time < 14000)
 
+###Only look slight before the 
 
-
+RE_mortality_P_post <- subset(
+  RE_mortality_P_DF,
+    RE_mortality_P_DF$time > 9120 &
+    RE_mortality_P_DF$time < 14000
+)
 
 # Plotting vector abundance and RE----------------------------------------------------------------
-
-
-GG_PtoMabundance_RE <- 
-  ggplot(RE_mortality_P_post, 
-       aes(x = NP, y = NM, color = RE)) +
-  geom_path(linewidth = 1.2) +
-  geom_point(data = subset(RE_mortality_P_post, 
-                           RE_mortality_P_post$time == 9125),
-             aes(x = NP, y= NM), color= 'black') +
+GG_PtoMabundance_RE <-
+  ggplot(
+    RE_mortality_P_post,
+    aes(x = NP, y = NM, 
+        color =RE)) +
+  geom_path(linewidth = 1.2, 
+            linejoin = "round", 
+            lineend = "round") +
+  geom_point(
+    data = subset(
+      RE_mortality_P_post,
+      RE_mortality_P_post$time == 9125
+    ),
+    aes(x = NP, y = NM), color = "black"
+  ) +
   scale_colour_gradient2(
     low = "#448C81",
     mid = "#EFEAD7",
     high = "#C25D31",
     midpoint = 1,
-    name = expression(R[E])) + 
-  xlab(expression("Abundance of primary vectors " *"(" * N[P] * ")")) + 
-  ylab(expression("Abundance of secondary vectors " *"(" * N[M] * ")")) +   
+    name = expression(R[E])
+  ) +
+  xlab(expression("Abundance of primary vectors " * "(" * N[P] * ")")) +
+  ylab(expression("Abundance of secondary vectors " * "(" * N[M] * ")")) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 14, color = "black"),
+    axis.title = element_text(size = 15, color = "black")
+  ); 
+GG_PtoMabundance_RE
+
+ggsave(here("Figures_Process", "DEC_10", "GG_PtoMabundance_RE.pdf"),
+  width = 6, height = 5, units = "in")
+
+# Dynamics ---------------------------------------------------------------
+
+HI_NP_NM = cbind.data.frame(
+  time = seq(1,nrow(Model_mortality_P[[1]][[2]])),
+  HI = Model_mortality_P[[1]][[2]],
+  NP = Model_mortality_P[[1]][[4]] + 
+       Model_mortality_P[[1]][[5]],
+  NM = Model_mortality_P[[1]][[6]] + 
+       Model_mortality_P[[1]][[7]])
+
+(ggplot(HI_NP_NM, aes( x= time, y= HI)) + 
+  geom_line(size = 1.2) + 
+  geom_vline(xintercept = 9125, linetype = 2) + 
+  xlab("Time") + 
+  ylab(expression("Infected humans " * "(" * H[I] * ")")) +
   theme_classic() + 
-  theme(axis.text = element_text(size = 14, color = 'black'),
-        axis.title = element_text(size = 15, color = 'black'));
- GG_PtoMabundance_RE 
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_text(size = 14))) + 
+(ggplot(HI_NP_NM, aes( x= time, y= NP)) + 
+geom_line(size = 1.2) + 
+geom_vline(xintercept = 9125, linetype = 2) + 
+xlab("Time") + 
+ylab(expression("Primary\nabundance " * "(" * N[P] * ")")) +
+ylim(0,3500) + 
+theme_classic() + 
+theme(axis.text = element_blank(),
+     axis.ticks = element_blank(),
+     axis.title = element_text(size = 14))) +
+(ggplot(HI_NP_NM, aes( x= time, y= NM)) + 
+   geom_line(size = 1.2) +
+   geom_vline(xintercept = 9125,linetype = 2) + 
+   xlab("Time") + 
+   ylab(expression("Secondary\nabundance " * "(" * N[M] * ")")) +
+   ylim(0,3500) + 
+   theme_classic() + 
+   theme(axis.text = element_blank(),
+         axis.ticks = element_blank(),
+         axis.title = element_text(size = 14)))
 
-ggsave(here("Figures_Process", "DEC_10","GG_PtoMabundance_RE.pdf"),
-       width = 6, height = 5, units = 'in' )
+ggsave(
+  here("Figures_Process", 
+        "DEC_10", "GG_schematic.pdf"),
+  width = 6, height = 3, units = "in"
+)
 
 
-Maximum_RE_DF <- 
-  do.call(rbind,by(RE_mortality_P_post, 
-  RE_mortality_P_post$id, 
-  function(x) 
-  x[which.max(x$RE),],
-  simplify = TRUE))
+# Maximum RE -------------------------------------------------------------
 
-Maximum_Abundance_DF <- 
-  do.call(rbind, by(RE_mortality_P_post, 
-  RE_mortality_P_post$id, 
-  function(x) 
-  x[which.max(x$NP + x$NM),],
-  simplify = TRUE))
+Maximum_RE_DF <- do.call(
+  rbind,
+  by(RE_mortality_P_post,
+    RE_mortality_P_post$id,
+    function(x) {
+      x[which.max(x$RE), ]
+    },
+    simplify = TRUE
+  )
+)
 
-GG_Totalvectorabundance_RE <- ggplot(Maximum_RE_DF) + 
-  geom_line(
-    aes(x = NP + NM, 
-    y = RE), 
-    color = 'grey',
-    linewidth = 0.9) + 
+Maximum_Abundance_DF <- do.call(
+  rbind,
+  by(RE_mortality_P_post,
+    RE_mortality_P_post$id,
+    function(x) {
+      x[which.max(x$NP + x$NM), ]
+    },
+    simplify = TRUE
+  )
+)
+
+GG_Subvectorabundance_RE <-
+  ggplot(Maximum_RE_DF) +
   geom_point(
-    aes(x = NP + NM, 
-        y = RE, 
-        fill = 1-id, 
-        group = 1), size = 2.5,
-    shape = 21) + 
-  geom_line(data = Maximum_Abundance_DF,
-    aes(x = NP + NM, 
-        y= RE),
-        color = '#A6C1A4',
-        linewidth= 0.9) + 
-  geom_point(data = Maximum_Abundance_DF,
-    aes(x = NP + NM, 
-        y = RE, 
-        fill = 1-id), 
-        shape = 22,
-        color = 'black',
-        size = 2.3) + 
- scale_color_viridis(name = "Primary mortality", limit = c(0,1)) + 
- scale_fill_viridis(name = "Primary mortality", limit = c(0,1)) + 
- xlab(expression("Total vector abundance " * "(" * N[P] *"+" * N[M] * ")")) + 
- ylab(expression(R[E])) + 
- theme_classic() + 
- theme(axis.text = element_text(size = 14, color = 'black'),
-       axis.title = element_text(size = 14.5)); GG_Totalvectorabundance_RE
+    aes(
+      x = NP + NM,
+      y = RE,
+      group = 1
+    ),
+    size = 2.5,
+  ) +
+  xlab(expression("Total vector abundance " * "(" * N[P] * "+" * N[M] * ")")) +
+  ylab(expression(R[E])) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 14, color = "black"),
+    axis.title = element_text(size = 14.5)
+  );GG_Subvectorabundance_RE 
 
-ggsave(here("Figures_Process", "DEC_10","GG_Totalvectorabundance_RE.pdf"),
-  width = 6, height = 5, units = 'in' )
+ggsave(here("Figures_Process", "DEC_10", "GG_Subvectorabundance_RE.pdf"),
+       width = 6, height = 5, units = "in"
+)
 
 
+GG_Totalvectorabundance_RE <-
+  ggplot(Maximum_RE_DF) +
+  geom_line(
+    aes(
+      x = NP + NM,
+      y = RE
+    ),
+    color = "grey",
+    linewidth = 0.9
+  ) +
+  geom_point(
+    aes(
+      x = NP + NM,
+      y = RE,
+      fill = 1 - id,
+      group = 1
+    ),
+    size = 2.5,
+    shape = 21
+  ) +
+  geom_line(
+    data = Maximum_Abundance_DF,
+    aes(
+      x = NP + NM,
+      y = RE
+    ),
+    color = "#A6C1A4",
+    linewidth = 0.9
+  ) +
+  geom_point(
+    data = Maximum_Abundance_DF,
+    aes(
+      x = NP + NM,
+      y = RE,
+      fill = 1 - id
+    ),
+    shape = 22,
+    color = "black",
+    size = 2.3
+  ) +
+  scale_color_viridis(name = "Primary mortality", limit = c(0, 1)) +
+  scale_fill_viridis(name = "Primary mortality", limit = c(0, 1)) +
+  xlab(expression("Total vector abundance " * "(" * N[P] * "+" * N[M] * ")")) +
+  ylab(expression(R[E])) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 14, color = "black"),
+    axis.title = element_text(size = 14.5)
+  ) 
+GG_Totalvectorabundance_RE
 
-
-
-
+ggsave(here("Figures_Process", "DEC_10", 
+            "GG_Totalvectorabundance_RE.pdf"),
+            width = 6,
+            height = 5, 
+            units = "in")
 
 # Plotting RE contributions -----------------------------------------------
 
-extreme_RE_mortality_P_post <-  subset(
- RE_mortality_P_post, 
- round(RE_mortality_P_post$id,4) == c(0.01, 0.50))
+extreme_RE_mortality_P_post <- 
+  subset(RE_mortality_P_post,
+  round(RE_mortality_P_post$id, 4) == c(0.01, 0.50))
 
+M_contribution_GG <-
+  ggplot(
+    extreme_RE_mortality_P_post,
+      aes(
+        x = time - 9125,
+        y = MtoH/RE,
+        group = id)) +
+  geom_path(linetype = 2) + 
+  geom_path(
+    data = extreme_RE_mortality_P_post,
+    aes(
+      x = time - 9125,
+      y = PtoH/RE,
+      group = id,
+    )
+  ) + 
+  facet_wrap(~id) + 
+  xlab(expression("Time")) +
+  ylab(expression("Contribution to" *  R[E])) +
+  scale_color_viridis(option = "rocket", name = "Secondary\ncontribution") +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 14, color = "black"),
+    axis.title = element_text(size = 14.5),
+    strip.background = element_blank()) 
 
-M_contribution_GG <- 
-  ggplot(extreme_RE_mortality_P_post,
-  aes(
-  x = (NM),
-  y = (NP), 
-  group = id,
-  label = id,
-  color = (MtoM)/(PtoP + MtoM - MtoP - PtoM))) + 
- geom_path(size = 1.2) + 
- xlab(expression("Abundance of primary vectors " *"(" * N[P] * ")")) + 
- ylab(expression("Abundance of secondary vectors " *"(" * N[M] * ")")) + 
- scale_color_viridis(option = 'rocket', name = "Secondary\ncontribution") +
- theme_classic() + 
- theme(axis.text = element_text(size = 14, color = 'black'),
-       axis.title = element_text(size = 14.5)); M_contribution_GG 
+M_contribution_GG
 
-M_contribution_GG 
-        
-        
-(ggplot(extreme_RE_mortality_P_post,
- aes(x = time - 9125,
-     y = RE)) + 
-geom_path(size = 1.2) +
-geom_vline(xintercept= 1200) + 
-        
-        facet_wrap(~id)) /
-        
-(ggplot(extreme_RE_mortality_P_post,
-  aes(x = time - 9125, 
-      y = (MtoM )/
-           (PtoP + MtoM - MtoP - PtoM))) + 
-geom_path(size = 1.2) + 
- geom_vline(xintercept= 1200) + 
- geom_path (aes(x = time - 9125, 
-                y = (PtoP)/
-          (PtoP + MtoM - MtoP - PtoM))) + 
- facet_wrap(~id)) 
-        
-
-ggplot(extreme_RE_mortality_P_post,
-       aes(x = NP , 
-           y = wait_time))+
-        geom_path(size = 1.2) + 
-        geom_path(aes(x = NM, 
-                  y =wait_time), color = 'blue')+
-        facet_wrap(~id)
-  
-          
- xlab(expression("Abundance of primary vectors " *"(" * N[P] * ")")) + 
- ylab(expression("Abundance of secondary vectors " *"(" * N[M] * ")")) + 
- scale_color_viridis(discrete = TRUE,
-                     option = 'rocket', name = "Secondary\ncontribution") +
- theme_classic() + 
- theme(axis.text = element_text(size = 14, color = 'black'),
-       axis.title = element_text(size = 14.5)); 
+ggsave(here("Figures_Process", 
+            "DEC_10", 
+            "extreme_contribution_post.pdf"), 
+             width = 8, 
+             height = 4, units = "in")
