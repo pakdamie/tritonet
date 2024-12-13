@@ -1,55 +1,27 @@
 ###Figure_1_Vector_Abundance
-# Standard Parameter ---------------------------------------------------------------
-param_standard <- c(
-  b_H = 1 / (1000), ## Human mortality rate
-  b_P = 0.01, # P. Vector birth rate
-  b_M = 0.01, # S. Vector birth rate
-  mu_H = 1 / (1000), ## Human death rate
-  f_P = 0.02, # Biting rate of the p. vector
-  f_M = 0.020 * 0.75, # Biting rate of the s.vector
-  theta_P = 0.70, # Transmission probability of p. vector
-  theta_M = 0.70 * 0.75, # Transmission probability of s. vector
-  theta_H = 0.50, # Transmission probability of human
-  gamma = 1 / 90, # Recovery rate of infected human
-  c_PM = 4e-6, ## Competition effect of p.vector on s.vector
-  c_MP = 2e-6, ## Competition effect of s.vector on p.vector
-  c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
-  c_MM = 3e-6, ## Competition effect of s.vector on s.vector
-  ntime = 365 * 50,
-  disturbance_time = 365 * 25,
-  delta_T = 1,
-  prop = 1,
-  mortality_P = 0.25, # This will change
-  mortality_M = 1)
 
 # Running models and cleaning it up ---------------------------------------
+param_standard<- get_parameters()
 Mortality_P <- c(0.01, seq(0.05, 1, 0.05))
 
-Model_mortality_P <- Simulate_Model_Output(
-  param_standard, "mortality_P", Mortality_P
-)
+###Simulate model output
+Mod_Mort_P <- Simulate_Model_Output(param_standard, "mortality_P", Mortality_P)
 
 ###Calculate human RE
-RE_mortality_P <- lapply(
-  Model_mortality_P, Calculate_Human_REff,
-  param = param_standard
-)
+RE_mortality_P <- lapply(Mod_Mort_P, Calculate_Human_REff,param = param_standard)
 
 # Assign mortality_P value
-
 for (i in seq_along(RE_mortality_P)) {
   RE_mortality_P[[i]]$id <- Mortality_P[[i]]
 }
 
 RE_mortality_P_DF <- do.call(rbind, RE_mortality_P)
 
-###Only look slight before the 
-
+###Subset time period of interest
 RE_mortality_P_post <- subset(
   RE_mortality_P_DF,
-    RE_mortality_P_DF$time > 9120 &
-    RE_mortality_P_DF$time < 14000
-)
+  RE_mortality_P_DF$time > 9120 &
+  RE_mortality_P_DF$time < 14000)
 
 # Plotting vector abundance and RE----------------------------------------------------------------
 GG_PtoMabundance_RE <-
@@ -80,8 +52,7 @@ GG_PtoMabundance_RE <-
   theme(
     axis.text = element_text(size = 14, color = "black"),
     axis.title = element_text(size = 15, color = "black")
-  ); 
-GG_PtoMabundance_RE
+  );GG_PtoMabundance_RE
 
 ggsave(here("Figures_Process", "DEC_10", "GG_PtoMabundance_RE.pdf"),
   width = 6, height = 5, units = "in")
