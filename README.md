@@ -1,8 +1,7 @@
-Here is the full mathematical model as well as the simulation anad analysis code for `tritonet` that is maintained by 
+Here is the full mathematical model as well as the simulation anad analysis code for `tritopatch` that is maintained by 
 Damie Pak (postdoc at Tad Dallas Lab at the University of South Carolina).
 
-## Simulating spatial network
-We simulate random spatial network. 
+
 
 ## Mathematical model
 If you are solely interested in the mathematical formulation - 
