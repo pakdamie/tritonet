@@ -1,3 +1,124 @@
+#' Retrieve different data.frame of parameters for the model simulation.
+#'
+#' A collection of different parameters I might have used, "standard" is the
+#' default. Other analyses may require two set of parameters. 
+#'
+#' @param type The type of parameters to get. The default is "standard", but other
+#' types could include: no_disturb, post_disturb, post_disturb, and no_diff.
+#'
+#' @return A data.frame of parameter values.   
+#' @export
+#'
+#' @examples
+get_parameters <- function(type = "standard"){
+  
+  if(!(type %in% c("standard","no_disturb","post_disturb", "no_diff"))) 
+    stop("The type should either be `standard`, `no_disturb`, `post_disturb`,
+         `no_diff`")
+  
+  param_standard <- c(
+    b_H = 1 / (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / (1000), ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.020 * 0.75, # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70 * 0.75, # Transmission probability of s. vector
+    theta_H = 0.50, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50,
+    disturbance_time = 365 * 25,
+    delta_T = 1,
+    prop = 1,
+    mortality_P = 0.25, # This will change
+    mortality_M = 1)
+  
+  param_nodiff <- c(
+    b_H = 1 / (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / (1000), ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.020, # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70, # Transmission probability of s. vector
+    theta_H = 0.50, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50,
+    disturbance_time = 365 * 25,
+    delta_T = 1,
+    prop = 1,
+    mortality_P = 0.25, # This will change
+    mortality_M = 1)
+  
+  param_no_disturb <- c(
+    b_H = 1 / (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / (1000), ## Human death rate
+    f_P = 0.020, # Biting rate of the p. vector
+    f_M = 0.020 * 0.75, # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70 * 0.75, # Transmission probability of s. vector
+    theta_H = 0.50, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = ((365 * 25)) ,
+    disturbance_time = 1e30,
+    delta_T = 1,
+    prop = 1,
+    mortality_P = 0.25, # This will change
+    mortality_M = 1)
+  
+  param_post_distub <-  c(
+    b_H = 1 / (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / (1000), ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.02 , # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70, # Transmission probability of s. vector
+    theta_H = 0.50, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = (365 * 10) ,
+    disturbance_time = 1,
+    delta_T = 1,
+    prop = 1,
+    mortality_P = 0.25, # This will change
+    mortality_M = 1
+  )
+  
+  if(type == "standard"){
+    return(param_standard)
+  }
+  else if(type == "no_disturb"){
+    return(param_no_disturb)
+  }
+  else if(type == "post_disturb"){
+    return(param_post_distub)
+  }
+  else if(type == "no_diff"){
+    return(param_nodiff)
+  }
+}
+
 #' Vary a parameter at a time for the parameter list
 #'
 #' Vary the variable of interest to investigate how the model would change.
@@ -6,8 +127,7 @@
 #'
 #' @param parameter List of parameters used for the model
 #' @param variable_interest Character: What parameter do you want to vary?
-#' @param vector_value Data_frame: What are the different values of that variable you want 
-#' to vary?
+#' @param vector_value Data_frame: What are the different values of that variable you want to vary?
 #'
 #' @return A list of parameters to simulate model with.
 #' @export
@@ -40,7 +160,6 @@ vary_parameter_value <- function(parameter, variable_interest, vector_value){
   return(parameter_list)
 }
 
-
 #' Create initial states to simulate the model
 #'
 #' Create the seven matrices for each of the seven compartments. The seven
@@ -54,15 +173,19 @@ vary_parameter_value <- function(parameter, variable_interest, vector_value){
 #'
 #' @examples create_initial_states(param_standard, 100)
 
-create_initial_states <- function(param, patch_num = 1, initial_human = 1000,
-  initial_vector_s = 1000, initial_vector_i = 10) {
+create_initial_states <- function(param, 
+                                  patch_num = 1, 
+                                  initial_human = 1000, 
+                                  initial_vector_s = 1000, 
+                                  initial_vector_i = 10) {
         
   compartment_labels <- c(
-    "HS_mat", "HI_mat", "HR_mat", # Humans (sus/inf/rec)
-    "PS_mat", "PI_mat", # Primary (sus/inf)
-    "MS_mat", "MI_mat") # Secondary(sus/inf))
+    "HS_mat", "HI_mat", "HR_mat", # Humans (Sus/Inf/Rec)
+    "PS_mat", "PI_mat", # Primary (Sus/inf)
+    "MS_mat", "MI_mat") # Secondary(Sus/inf))
         
-  # Using the above compartment label, we then create an empty matrix where
+  # Using the above compartment label,
+  # we then create an empty matrix where
   # the row are the time-steps and the columns are the individual patches
         
   for (i in 1:length(compartment_labels)) {
@@ -91,20 +214,57 @@ create_initial_states <- function(param, patch_num = 1, initial_human = 1000,
    )
 }
 
+#' Calculate the equilibrium states of the
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+calculate_predisturb_initial_list <- function(){
+  
+  param_no_disturb <- get_parameters("no_disturb")
+  Initial_List<- create_initial_states(get_parameters("standard"))
+  Mod_Predisturb <- discrete_trito_model_rcpp_ONEPATCH(
+    HS = Initial_List[[1]],
+    HI = Initial_List[[2]],
+    HR = Initial_List[[3]],
+    PS = Initial_List[[4]],
+    PI = Initial_List[[5]],
+    MS = Initial_List[[6]],
+    MI = Initial_List[[7]],
+    param = param_no_disturb)
+  
+  Predisturb_EqStates<- lapply(Mod_Predisturb,
+                               function(x) x[((365 * 25)),])
+  
+  eq_initial_list<- create_initial_states(get_parameters("post_disturb"))
+  eq_initial_list[[1]][1] <- Predisturb_EqStates[[1]]
+  eq_initial_list[[2]][1] <- Predisturb_EqStates[[2]]
+  eq_initial_list[[3]][1] <- Predisturb_EqStates[[3]]
+  eq_initial_list[[4]][1] <- Predisturb_EqStates[[4]]
+  eq_initial_list[[5]][1] <- Predisturb_EqStates[[5]]
+  eq_initial_list[[6]][1] <- Predisturb_EqStates[[6]]
+  eq_initial_list[[7]][1] <- Predisturb_EqStates[[7]]
+  
+  return(eq_initial_list)
+}
 
-#' Simulate the model 
+#' Simulate the main model
 #'
-#' The main function for simulating the outputs of the model.
-#' @param parameter 
-#' @param variable_interest 
-#' @param vector_value 
+#' The main function for simulating the one-patch, two vector, one host model. 
+#' @param parameter The data.frame of parameters (retrieved from `get_parameters`)
+#' @param variable_interest The variables that you are interested in manipulating (character)
+#' @param vector_value The data.frame of values that you are interested in 
 #'
-#' @return
+#' @return A list with seven elements. Each element includes a matrix with the
+#' rows being the time of simulation
 #' @export
 #'
 #' @examples
 Simulate_Model_Output <- function(parameter, variable_interest, vector_value){
 
+  Initial_List <- create_initial_states(parameter)
+  
   parameter_list <- vary_parameter_value(
     parameter, variable_interest, vector_value)
    

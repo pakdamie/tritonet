@@ -41,23 +41,6 @@ Maximum_RE_Mort_PM <- do.call(
 )
    
 
-# Figure ------------------------------------------------------------------
-
-GG_Disturbance_Heatmap_RE <- 
-  ggplot(Maximum_RE_Mort_PM,  
-   aes(x = as.factor(Mort_P), 
-       y = as.factor(Mort_M), 
-       fill = RE)) + 
-  geom_raster() + 
-  scale_fill_viridis(option = 'rocket', name = expression(R[E])) +
-  scale_x_discrete(expand = c(0,0)) +
-  scale_y_discrete(expand = c(0,0)) + 
-  xlab(expression("Disturbance intensity of primary vector " * "(" *mu[P]* ")")) + 
-  ylab(expression("Disturbance intensity of secondary vector " * "(" *mu[M]* ")")) + 
-  coord_equal() + 
-  theme(axis.text = element_text(color = 'black',size = 13),
-        axis.title = element_text(color = 'black', size = 14));GG_Disturbance_Heatmap_RE
-
 ggsave(here("Figures_Process", "Dec_10", "GG_Disturbance_Heatmap_RE.pdf"),
        width = 10, height = 10, units = 'in')
 
