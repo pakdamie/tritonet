@@ -1,14 +1,8 @@
-library(makepipe)
-library(here)
-library(dplyr)
-library(ggplot2)
-library(reshape2)
-library(Rcpp)
-library(viridis)
-library(patchwork)
-source(here("Code", "Function", "simulate_model_Functions.R"))
-source(here("Code", "Function", "calculations.R"))
+source(here("Code", "Function", "packages.R"))
 sourceCpp(here("Code", "Function", "onepatch_model.cpp"))
+source(here("Code", "Function", "simulate_functions.R"))
+source(here("Code", "Function", "calculate_functions.R"))
+source(here("Code", "Function", "plot_functions.R"))
 
 make_with_source(
   note = "Simulate model with different disturbance intensity for primary vector",
@@ -20,10 +14,11 @@ make_with_recipe(
   label = "plot_NP_NM_RE",
   recipe = {
     RE_mortality_P_post <- readRDS("Output/RE_mortality_P_post.rds")
+    
     plot_NP_NM_RE(RE_mortality_P_post)
+    
     ggsave(here("Figures_Process", "NP_NM_RE.pdf"),
-      width = 7, height = 6, units = "in"
-    )
+      width = 7, height = 6, units = "in")
   },
   targets = "Figures_Process/NP_NM_RE.pdf",
   dependencies = "Output/RE_mortality_P_post.rds",
