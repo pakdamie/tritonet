@@ -1,15 +1,19 @@
 #' Calculate R_effective (human) analytically
 #'
-#' Calculate R_effective with the assumption that any new infection
-#' is ONLY from the human (check the supplementary material)
+#' Calculate the effective reproductive number with the assumption that any 
+#' new infection is ONLY from the human (check the supplementary material).
+#' 
+#' @param List_x A list that come from the model output. Should have length
+#' of 7
+#' @param param A data.frame of parameters to be used for calculating the model
 #'
-#' @param List_x Give
-#' @param param 
-#'
-#' @return
+#' @return A data.frame that includes the RE, the total number of primary (NP)
+#' and secondary vectors (NM)
+#' 
 #' @export
 #'
-#' @examples
+#' @examples Calculate_Human_REff(model_output, param_standard)
+#' 
 Calculate_Human_REff <- function(List_x, param) {
         
   # Parameters        
@@ -57,16 +61,16 @@ Calculate_Human_REff <- function(List_x, param) {
   RE <- (Primary / wait_time) + (Secondary / wait_time) 
   
   RE_DF <- cbind.data.frame(
-          time = seq(1, ntime),
-          RE = RE,
-          NP = NP,
-          NM = NM,
-          PS = PS,
-          MS = MS,
-          HS = HS,
-          PtoH = Primary/wait_time,
-          MtoH = Secondary/wait_time,
-          wait_time = wait_time)
+    time = seq(1, ntime),
+    RE = RE,
+    NP = NP,
+    NM = NM,
+    PS = PS,
+    MS = MS,
+    HS = HS,
+    PtoH = Primary/wait_time,
+    MtoH = Secondary/wait_time,
+    wait_time = wait_time)
   
   return(RE_DF)
 }

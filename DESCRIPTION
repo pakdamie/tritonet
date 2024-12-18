@@ -1,0 +1,6 @@
+Package: tritopatch
+Title: Tritopatch
+Version: 0.1.0
+Description: This project contains custom functions with roxygen2-generated documentation.
+RoxygenNote: 7.3.2
+Encoding: UTF-8

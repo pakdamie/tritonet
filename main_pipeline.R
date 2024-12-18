@@ -6,17 +6,14 @@ library(reshape2)
 library(Rcpp)
 library(viridis)
 library(patchwork)
-
 source(here("Code", "Function", "simulate_model_Functions.R"))
 source(here("Code", "Function", "calculations.R"))
 sourceCpp(here("Code", "Function", "onepatch_model.cpp"))
 
 make_with_source(
-  note = "Simulate model with different disturbance intensity for primary
-  vector",
+  note = "Simulate model with different disturbance intensity for primary vector",
   source = "Code/Simulate_MortP.R",
-  targets = "Output/RE_mortality_P_post.rds"
-)
+  targets = "Output/RE_mortality_P_post.rds")
 
 make_with_recipe(
   note = "Plot the RE the different disturbance intensity for primary vector",
@@ -86,6 +83,26 @@ make_with_recipe(
   envir = environment()
 )
 
+make_with_source(
+  note = "Calculate RE (or R0) for different disturbance intensity",
+  source = "Code/Simulate_Intensity_PM.R",
+  targets = "Output/Maximum_RE_Mort_PM.rds"
+)
+
+make_with_recipe(
+  note = "Plot RE for different disturbance intensities",
+  label = "plot_heatmap_disturbance_intensities",
+  recipe = {
+    df_expand_RE <- readRDS("Output/Maximum_RE_Mort_PM.rds")
+    plot_heatmapR0(df_expand_RE)
+    ggsave(here("Figures_Process", "R0_heatmap.pdf"),
+      width = 9, height = 7, units = "in"
+    )
+  },
+  targets = "Figures_Process/Maximum_RE_Mort_PM.pdf",
+  dependencies = "Output/df_expand_RE.rds",
+  envir = environment()
+)
 
 
 ###Supplementary Material
