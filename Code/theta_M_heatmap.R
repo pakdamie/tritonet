@@ -18,27 +18,26 @@ RE_theta_M_P_List <- NULL
 
 for (param in seq(1:nrow(theta_M_disturbance))){
         
-        param_changed <- get_parameters("post_disturb")
-        param_changed["theta_M"] <- theta_M_disturbance[param,]$theta_M
-        param_changed["mortality_P"] <- theta_M_disturbance[param,]$mortality_P   
-        
-        Model_output<-
-                discrete_trito_model_rcpp_ONEPATCH(
-                        HS = empty_initial_list[[1]],
-                        HI = empty_initial_list[[2]],
-                        HR = empty_initial_list[[3]],
-                        PS = empty_initial_list[[4]],
-                        PI = empty_initial_list[[5]],
-                        MS = empty_initial_list[[6]],
-                        MI = empty_initial_list[[7]],
-                        param =  param_changed)
-        
-        model_RE <- Calculate_Human_REff(Model_output, param_changed)
-        
-        model_RE$theta_M <- theta_M_disturbance[param,]$theta_M  
-        model_RE$mortality_P <- theta_M_disturbance[param,]$mortality_P  
-        
-        RE_theta_M_P_List[[param]] = model_RE
+  param_changed <- get_parameters("post_disturb")
+  param_changed["theta_M"] <- theta_M_disturbance[param,]$theta_M
+  param_changed["mortality_P"] <- theta_M_disturbance[param,]$mortality_P   
+  
+  Model_output<- discrete_trito_model_rcpp_ONEPATCH(
+                  HS = empty_initial_list[[1]],
+                  HI = empty_initial_list[[2]],
+                  HR = empty_initial_list[[3]],
+                  PS = empty_initial_list[[4]],
+                  PI = empty_initial_list[[5]],
+                  MS = empty_initial_list[[6]],
+                  MI = empty_initial_list[[7]],
+                  param =  param_changed)
+  
+  model_RE <- Calculate_Human_REff(Model_output, param_changed)
+  
+  model_RE$theta_M <- theta_M_disturbance[param,]$theta_M  
+  model_RE$mortality_P <- theta_M_disturbance[param,]$mortality_P  
+  
+  RE_theta_M_P_List[[param]] = model_RE
         
 }
 

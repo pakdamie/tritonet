@@ -148,6 +148,8 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
     PtoH = Primary / wait_time,
     MtoH = Secondary / wait_time
   )
+  
+  colnames(RE_DF) <- c("RE", "NP", "NM", "PS", "MS", "HS","PtoH", "MtoH")
 
   return(RE_DF)
 }

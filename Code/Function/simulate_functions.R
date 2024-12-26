@@ -6,13 +6,13 @@
 #' @param type The type of parameters to get. The default is "standard", but other
 #' types could include: no_disturb, post_disturb, post_disturb, and no_diff.
 #'
-#' @return A data.frame of parameter values.   
+#' @return (data.frame) A data.frame of parameter values to.  
 #' @export
 #'
 #' @examples
 get_parameters <- function(type = "standard"){
   
-  if(!(type %in% c("standard","no_disturb","post_disturb", "no_diff"))) 
+  if(!(type %in% c("standard","no_disturb","post_disturb", "no_diff","worse_M"))) 
     stop("The type should either be `standard`, `no_disturb`, `post_disturb`,
          `no_diff`")
   
@@ -105,6 +105,29 @@ get_parameters <- function(type = "standard"){
     mortality_M = 1
   )
   
+  
+  param_worst_m<-  c(
+    b_H = 1 / (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / (1000), ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.020 * 0.10, # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70 * 0.10, # Transmission probability of s. vector
+    theta_H = 0.50, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50,
+    disturbance_time = 365 * 25,
+    delta_T = 1,
+    prop = 1,
+    mortality_P = 0.25, # This will change
+    mortality_M = 1)
+  
   if(type == "standard"){
     return(param_standard)
   }
@@ -172,7 +195,6 @@ vary_parameter_value <- function(parameter, variable_interest, vector_value){
 #' @export
 #'
 #' @examples create_initial_states(param_standard, 100)
-
 create_initial_states <- function(param, 
                                   patch_num = 1, 
                                   initial_human = 1000, 
@@ -214,13 +236,13 @@ create_initial_states <- function(param,
    )
 }
 
-#' Calculate the equilibrium states of the
+#' Calculate the equilibrium states prior to the disturbance 
 #'
 #' @returns
 #' @export
 #'
 #' @examples
-calculate_predisturb_initial_list <- function(){
+simulate_predisturb_initial_list <- function(){
   
   param_no_disturb <- get_parameters("no_disturb")
   Initial_List<- create_initial_states(get_parameters("standard"))
@@ -268,6 +290,33 @@ Simulate_Model_Output <- function(parameter, variable_interest, vector_value){
   parameter_list <- vary_parameter_value(
     parameter, variable_interest, vector_value)
    
+  model_output_list <- NULL
+  for (param in seq(1:nrow(vector_value))){
+          
+  model_output_list[[param]] <- 
+    discrete_trito_model_rcpp_ONEPATCH(
+    HS = Initial_List[[1]],
+    HI = Initial_List[[2]],
+    HR = Initial_List[[3]],
+    PS = Initial_List[[4]],
+    PI = Initial_List[[5]],
+    MS = Initial_List[[6]],
+    MI = Initial_List[[7]],
+    param = parameter_list[[param]])
+  }
+ return(model_output_list) 
+}
+
+#' Simulate with different parameters post-disturbance
+
+Simulate_Model_Output_PostD <- function(variable_interest, vector_value){
+  
+  param_changed <- get_parameters("post_disturb")
+  
+  parameter_list <- vary_parameter_value(param_changed, variable_interest, vector_value)
+  
+  Initial_List <- simulate_predisturb_initial_list()
+  
   model_output_list <- NULL
   for (param in seq(1:nrow(vector_value))){
           
