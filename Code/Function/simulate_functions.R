@@ -12,9 +12,32 @@
 #' @examples
 get_parameters <- function(type = "standard"){
   
-  if(!(type %in% c("standard","no_disturb","post_disturb", "no_diff","worse_M"))) 
+  if(!(type %in% c("standard","no_disturb","post_disturb", "no_diff","worse_m","nonesec",
+                   "better_m"))) 
     stop("The type should either be `standard`, `no_disturb`, `post_disturb`,
          `no_diff`")
+  
+  param_nonesec <- c(
+    b_H = 1 / (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / (1000), ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0, # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0 , # Transmission probability of s. vector
+    theta_H = 0.50, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50,
+    disturbance_time = 365 * 25,
+    delta_T = 1,
+    prop = 1,
+    mortality_P = 0.25, # This will change
+    mortality_M = 1)
   
   param_standard <- c(
     b_H = 1 / (1000), ## Human mortality rate
@@ -43,7 +66,7 @@ get_parameters <- function(type = "standard"){
     b_P = 0.01, # P. Vector birth rate
     b_M = 0.01, # S. Vector birth rate
     mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.02, # Biting rate of the p. vector
+    f_P = 0.020, # Biting rate of the p. vector
     f_M = 0.020, # Biting rate of the s.vector
     theta_P = 0.70, # Transmission probability of p. vector
     theta_M = 0.70, # Transmission probability of s. vector
@@ -128,6 +151,28 @@ get_parameters <- function(type = "standard"){
     mortality_P = 0.25, # This will change
     mortality_M = 1)
   
+  param_better_m<-  c(
+    b_H = 1 / (1000), ## Human mortality rate
+    b_P = 0.01, # P. Vector birth rate
+    b_M = 0.01, # S. Vector birth rate
+    mu_H = 1 / (1000), ## Human death rate
+    f_P = 0.02, # Biting rate of the p. vector
+    f_M = 0.020 * 1.10, # Biting rate of the s.vector
+    theta_P = 0.70, # Transmission probability of p. vector
+    theta_M = 0.70 * 1.10, # Transmission probability of s. vector
+    theta_H = 0.50, # Transmission probability of human
+    gamma = 1 / 90, # Recovery rate of infected human
+    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
+    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
+    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
+    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
+    ntime = 365 * 50,
+    disturbance_time = 365 * 25,
+    delta_T = 1,
+    prop = 1,
+    mortality_P = 0.25, # This will change
+    mortality_M = 1)
+  
   if(type == "standard"){
     return(param_standard)
   }
@@ -139,6 +184,15 @@ get_parameters <- function(type = "standard"){
   }
   else if(type == "no_diff"){
     return(param_nodiff)
+  }
+  else if (type == "better_m"){
+    return( param_better_m)
+  }
+  else if (type == "worse_m"){
+    return( param_worse_m)
+  }
+  else if(type == "nonesec"){
+    return(param_nonesec)
   }
 }
 
@@ -256,7 +310,7 @@ simulate_predisturb_initial_list <- function(){
     MI = Initial_List[[7]],
     param = param_no_disturb)
   
-  Predisturb_EqStates<- lapply(Mod_Predisturb,
+  Predisturb_EqStates <- lapply(Mod_Predisturb,
                                function(x) x[((365 * 25)),])
   
   eq_initial_list<- create_initial_states(get_parameters("post_disturb"))
@@ -278,7 +332,7 @@ simulate_predisturb_initial_list <- function(){
 #' @param variable_interest The variables that you are interested in manipulating (character)
 #' @param vector_value The data.frame of values that you are interested in 
 #'
-#' @return A list with seven elements. Each element includes a matrix with the
+#' @return (list) A list with seven elements. Each element includes a matrix with the
 #' rows being the time of simulation
 #' @export
 #'
@@ -308,13 +362,18 @@ Simulate_Model_Output <- function(parameter, variable_interest, vector_value){
 }
 
 #' Simulate with different parameters post-disturbance
+#'
+#' When we want to see how parameters change RE, it is important that
+#' we are doing the correct comparison. For this, we initialize with the 
+#' same equilibrium. 
+#'
+#' @param variable_interest 
+#' @param vector_value 
 
 Simulate_Model_Output_PostD <- function(variable_interest, vector_value){
   
   param_changed <- get_parameters("post_disturb")
-  
   parameter_list <- vary_parameter_value(param_changed, variable_interest, vector_value)
-  
   Initial_List <- simulate_predisturb_initial_list()
   
   model_output_list <- NULL

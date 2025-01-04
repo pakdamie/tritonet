@@ -5,22 +5,39 @@ source(here("Code", "Function", "calculate_functions.R"))
 source(here("Code", "Function", "plot_functions.R"))
 
 make_with_source(
-  note = "Simulate model with different disturbance intensity for primary vector",
+  note = "Simulate model with different disturbance intensity for p. vector",
   source = "Code/Simulate_MortP.R",
   targets = "Output/RE_mortality_P_post.rds")
 
 make_with_recipe(
-  note = "Plot the RE the different disturbance intensity for primary vector",
+  note = "Plot the composite three-panel Figure 1",
   label = "plot_NP_NM_RE",
   recipe = {
     RE_mortality_P_post <- readRDS("Output/RE_mortality_P_post.rds")
     
-    plot_NP_NM_RE(RE_mortality_P_post)
+    #Plot total vector abundance over time with the RE As color
+    Panel_A <- plot_NV_RE(RE_mortality_P_post)
     
-    ggsave(here("Figures_Process", "NP_NM_RE.pdf"),
-      width = 7, height = 6, units = "in")
+    #Remove the situation where 100% of the primary vector is removed,
+    #not interesting (dynamically, and a little bug that occurs in Panel B! 
+    #If you do it individually, it works :/)
+    removed_0 <- subset(RE_mortality_P_post, RE_mortality_P_post$id != 0)
+
+    #Plot the secondary versus primary vector with the RE as color
+    Panel_B <- plot_NP_NM_RE(removed_0 , postdisturb = "No");
+    
+    #Plot the secondary contribution to RE
+    Panel_C <- plot_NM_REff(removed_0, postdisturb = "No");
+    
+    #Full composite figure with all
+    Panel_A + (Panel_B/Panel_C) + 
+      plot_layout(guides='collect')  &
+      theme(legend.position='right') 
+
+    ggsave(here("Figures_Process", "Figure_1.pdf"),
+      width = 12, height = 6, units = "in")
   },
-  targets = "Figures_Process/NP_NM_RE.pdf",
+  targets = "Figures_Process/Figure_1.pdf",
   dependencies = "Output/RE_mortality_P_post.rds",
   envir = environment()
 )
@@ -126,7 +143,7 @@ make_with_recipe(
     plot_state_dynamics(RE_mortality_P_same, mortality_P = 0.01)
     
     
-    plot_NV_RE(RE_mortality_P_same) + scale_color_viridis()
+    plot_NV_RE(RE_mortality_P_same, "Yes") + scale_color_viridis()
     plot_comparison_RE(RE_mortality_P_same, "id")
     ggsave(here("Figures_Process", "plot_totalV_maxRE_same.pdf"),
            width = 9, height = 7, units = "in")

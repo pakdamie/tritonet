@@ -20,7 +20,7 @@
 #' @examples Calculate_Human_REff(model_output, param_standard)
 Calculate_Human_REff <- function(List_x, param) {
   if (length(List_x) != 7 | class(List_x) != "list") {
-    stop("This is not the correct format- are you sure this is the model output?")
+    stop("This is not the correct format: x`are you sure this is the model output?")
   }
 
   # Parameters
@@ -98,6 +98,7 @@ Calculate_Human_REff <- function(List_x, param) {
 #'
 #' @examples
 Calculate_Human_Reff_Expanded <- function(df_expand, param) {
+  
   # Parameters
   theta_H <- param["theta_H"] # Transmission probability of human
   theta_P <- param["theta_P"] # Transmission probability of primary vector
