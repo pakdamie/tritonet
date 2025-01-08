@@ -19,6 +19,7 @@
 #'
 #' @examples Calculate_Human_REff(model_output, param_standard)
 Calculate_Human_REff <- function(List_x, param) {
+  
   if (length(List_x) != 7 | class(List_x) != "list") {
     stop("This is not the correct format: x`are you sure this is the model output?")
   }
@@ -76,8 +77,8 @@ Calculate_Human_REff <- function(List_x, param) {
     PS = PS,
     MS = MS,
     HS = HS,
-    PtoH = Primary / wait_time,
-    MtoH = Secondary / wait_time,
+    PtoH =  (Primary / wait_time),
+    MtoH =  (Secondary / wait_time),
     wait_time = wait_time
   )
 
@@ -103,10 +104,14 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
   theta_H <- param["theta_H"] # Transmission probability of human
   theta_P <- param["theta_P"] # Transmission probability of primary vector
   theta_M <- param["theta_M"] # Transmission probability of secondary vector
+  
   f_P <- param["f_P"] # Primary biting rate
   f_M <- param["f_M"] # Secondary biting rate
+  
   gamma <- param["gamma"] # Recovery rate
+  
   mu_H <- param["mu_H"] # Human mortality rate
+  
   c_MP <- param["c_MP"] # Competition of secondary on primary
   c_PM <- param["c_PM"] # Competition of primary on secondary
   c_MM <- param["c_MM"] # Competition of secondary on secondary
@@ -116,13 +121,14 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
   NH <- 1000
 
   NP <- df_expand["NP"]
-  PI <- NP * 0.10
+  PI <- NP * 0.01
   PS <- NP - PI
 
   NM <- df_expand["NM"]
-  MI <- NM * 0.10
+  MI <- NM * 0.01
   MS <- NM - MI
 
+  
   #Related to the average dwell time 
   Psi_P <- (c_MP * NM) + c_PP * (PS + (2 * PI))
   Psi_M <- (c_PM * NP) + c_MM * (MS + (2 * MI))
@@ -137,7 +143,7 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
     (c_MP * PI * (theta_P * f_P))))
 
 
-  RE <- (Primary / wait_time) + (Secondary / wait_time)
+  RE <- (Primary/wait_time) + (Secondary /wait_time)
 
   RE_DF <- cbind.data.frame(
     RE = RE,
@@ -185,3 +191,7 @@ Calculate_max_RE_DF <- function(df, splitting_factor) {
 
   return(list(max_RE_DF, max_Vab_DF))
 }
+
+
+
+

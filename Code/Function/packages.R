@@ -1,8 +1,16 @@
+
+#Pipe-line
 library(makepipe)
-library(here)
+
+#Simulation
+library(Rcpp) #C++ 
+
+#Wrangling
 library(dplyr)
-library(ggplot2)
 library(reshape2)
-library(Rcpp)
-library(viridis)
-library(patchwork)
+
+#Plotting
+library(ggplot2) # Figure making
+library(patchwork) # Put figures together
+library(viridis) # Color scheme
+library(colorspace) # Color scheme 2

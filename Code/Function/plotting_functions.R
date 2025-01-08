@@ -11,6 +11,7 @@
 #' @export
 #' @examples
 plot_list_groups <- function(full_list) {
+  
   compartment_labels <- c(
     "HS", "HI", "HR",
     "PS", "PI",
@@ -71,15 +72,14 @@ plot_list_groups <- function(full_list) {
 #' @export
 #'
 #' @examples
-plot_NP_NM_RE <- function(df, postdisturb) {
+plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
+  
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
   }
-
   if (any((colnames(df) %in% c("RE"))) == FALSE) {
     stop("No RE, check column names ")
   }
-
 
   if (postdisturb == "No") {
     subset_df <- df
@@ -113,11 +113,13 @@ plot_NP_NM_RE <- function(df, postdisturb) {
     ) +
     scale_colour_continuous_divergingx(
       name = expression(R[E]),
-      mid = 1, n_interp = 7, palette = "Roma", rev = TRUE, limits = c(0.8, 1.25)
-    ) + 
+      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE, 
+      limits =  RE_limit
+    ) +
     scale_fill_continuous_divergingx(
       name = expression(R[E]),
-      mid = 1, n_interp = 7, palette = "Roma", rev = TRUE, limits = c(0.8, 1.25)
+      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE, 
+      limits =  RE_limit
     ) +
     xlab(expression("Abundance of primary vectors " * "(" * N[P] * ")")) +
     ylab(expression("Abundance of secondary vectors " * "(" * N[M] * ")")) +
@@ -127,54 +129,28 @@ plot_NP_NM_RE <- function(df, postdisturb) {
       axis.title = element_text(size = 15, color = "black")
     )
 
- Inset_GG <-
-   ggplot(subset_df) +
-   geom_textpath(aes(x = NP, y = NM, label = id, group = id), 
-                  linewidth = 0.9) +
-   
-   geom_point(
-     data = subset(
-       subset_df,
-       subset_df$time == 0
-     ),
-     aes(x = NP, y = NM), color = "black"
-   ) +
-   
-   xlab(expression(N[P])) +
-   ylab(expression(N[M])) +
-   theme_classic() +
-   theme(
-     axis.text = element_blank(),
-     axis.title = element_text(size = 15, color = "black"),
-     axis.ticks = element_blank()
-   ) + 
-   coord_equal()
-
-  full_GG <- NP_NM_RE_GG + inset_element(Inset_GG,  0.70, 0.70, 1, 1)
-
-
-  return(full_GG)
+  return(NP_NM_RE_GG)
 }
 
-#' Plot the secondary contribution of RE to time 
+#' Plot the secondary contribution of RE to time
 #'
-#' @param df 
-#' @param postdisturb 
+#' @param df
+#' @param postdisturb
 #'
 #' @returns
 #' @export
 #'
 #' @examples
-plot_NM_REff <- function(df, postdisturb){
+plot_NM_REff <- function(df, postdisturb) {
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
-}
+  }
 
   if (any((colnames(df) %in% c("RE"))) == FALSE) {
     stop("No RE, check column names ")
-}
+  }
 
-  
+
   if (postdisturb == "No") {
     subset_df <- df
     subset_df$time <- subset_df$time - 9125
@@ -183,18 +159,22 @@ plot_NM_REff <- function(df, postdisturb){
     subset_df <- df
     maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
   }
+
+
   
   
   NM_Reff_GG <- ggplot(
-    subset_df, aes(x = time, y = MtoH/RE, group = id)
+    subset_df, aes(x = time, y = MtoH / RE, group = id)
   ) +
     geom_line(
       linewidth = 0.9,
       linejoin = "round",
       lineend = "round"
     ) +
-    geom_point(data = maximum_RE,
-               aes(x = time, y= MtoH/RE, group = id)) +
+    geom_point(
+      data = maximum_RE,
+      aes(x = time, y = MtoH / RE, group = id)
+    ) +
     xlab("Time since disturbance") +
     ylab("Secondary vector contribution to RE") +
     theme_classic() +
@@ -202,9 +182,8 @@ plot_NM_REff <- function(df, postdisturb){
       axis.text = element_text(size = 14, color = "black"),
       axis.title = element_text(size = 15, color = "black")
     )
-  
+
   return(NM_Reff_GG)
-  
 }
 
 
@@ -221,7 +200,8 @@ plot_NM_REff <- function(df, postdisturb){
 #' @export
 #'
 #' @examples
-plot_NV_RE <- function(df, postdisturb = "No") {
+plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
+  
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
   }
@@ -239,10 +219,14 @@ plot_NV_RE <- function(df, postdisturb = "No") {
     maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
   }
 
+  RE_limits <- c(
+   round(min(df$RE),1),
+   round(max(df$RE),1) + 0.1
+  )
 
   NV_RE_GG <-
     ggplot(subset_df, aes(x = time)) +
-    geom_path(aes(y = (NP + NM), color = RE, group = id), linewidth = 0.9) +
+    geom_path(aes(y = (NP + NM), color = RE, group = id), linewidth = 0.8) +
     geom_point(
       data = maximum_RE,
       aes(x = time, y = (NP + NM), group = id, fill = RE),
@@ -250,17 +234,19 @@ plot_NV_RE <- function(df, postdisturb = "No") {
     ) +
     geom_hline(
       data = subset(subset_df, subset_df$time == 0),
-      aes(yintercept = NP + NM), color = 'grey', alpha = 0.7, linetype = 2)+ 
-    
+      aes(yintercept = NP + NM), color = "grey", alpha = 0.7, linetype = 2
+    ) +
     xlab("Time since disturbance") +
     ylab("Total vector abundance") +
     scale_colour_continuous_divergingx(
       name = expression(R[E]),
-      mid = 1, n_interp = 7, palette = "Roma", rev = TRUE, limits = c(0.8, 1.25)
+      mid = 1, n_interp = 11, palette = "Roma", 
+      rev = TRUE, limits = RE_limit
     ) +
     scale_fill_continuous_divergingx(
       name = expression(R[E]),
-      mid = 1, n_interp = 7, palette = "Roma", rev = TRUE, limits = c(0.8, 1.25)
+      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE, 
+      limits =  RE_limit
     ) +
     theme_classic() +
     theme(
@@ -268,7 +254,6 @@ plot_NV_RE <- function(df, postdisturb = "No") {
       axis.title = element_text(size = 15, color = "black"),
       legend.position = "top"
     )
-
   return(NV_RE_GG)
 }
 
@@ -404,7 +389,7 @@ plot_comparison_RE <- function(df, split_variable) {
 #' @export
 #'
 #' @examples
-plot_heatmapR0 <- function(df) {
+plot_heatmapR0 <- function(df, facet) {
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
   }
@@ -412,28 +397,33 @@ plot_heatmapR0 <- function(df) {
   if (any((colnames(df) %in% c("RE"))) == FALSE) {
     stop("No RE, check column names ")
   }
+  df$id <- factor(df$id, levels = c("worse_m", "standard", "no_diff", "better_m"))
+
+  situation_names <- c(
+    `worse_m` = "Significantly \n worse",
+    `standard` = "Slightly worse \n (Standard)",
+    `no_diff` = "Same",
+    `better_m` = "Better"
+  )
 
   heatmap_GG <- ggplot(
     df,
-    aes(x = NP, y = NM, fill = RE, color = RE)
+    aes(x = NP, y = NM, fill = RE/max_RE, group = id)
   ) +
+    geom_tile(color = NA) +
+    scale_fill_viridis(option = 'mako', name = "Proportion of max R0") +
+    xlab(expression("Abundance of primary vectors " * "(" * N[P] * ")")) +
+    ylab(expression("Abundance of \n secondary vectors " * "(" * N[M] * ")")) +
+    facet_wrap(vars(id), ncol = 4, labeller = as_labeller(situation_names)) +
     scale_x_continuous(expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
-    geom_tile() +
-    xlab(expression("Abundance of primary vectors " * "(" * N[P] * ")")) +
-    ylab(expression("Abundance of secondary vectors " * "(" * N[M] * ")")) +
-    scale_fill_viridis(
-      option = "rocket",
-      name = expression(R[E])
-    ) +
-    scale_color_viridis(
-      option = "rocket",
-      name = expression(R[E])
-    ) +
     theme(
       axis.text = element_text(size = 12.5, color = "black"),
-      axis.title = element_text(size = 14)
-    )
+      axis.title = element_text(size = 14),
+      strip.background = element_blank(),
+      strip.text = element_text(size = 14)
+    ) +
+    coord_equal()
 
 
   return(heatmap_GG)

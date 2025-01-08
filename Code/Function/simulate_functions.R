@@ -17,39 +17,17 @@ get_parameters <- function(type = "standard"){
     stop("The type should either be `standard`, `no_disturb`, `post_disturb`,
          `no_diff`")
   
-  param_nonesec <- c(
-    b_H = 1 / (1000), ## Human mortality rate
-    b_P = 0.01, # P. Vector birth rate
-    b_M = 0.01, # S. Vector birth rate
-    mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.02, # Biting rate of the p. vector
-    f_M = 0, # Biting rate of the s.vector
-    theta_P = 0.70, # Transmission probability of p. vector
-    theta_M = 0 , # Transmission probability of s. vector
-    theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 90, # Recovery rate of infected human
-    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
-    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
-    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
-    ntime = 365 * 50,
-    disturbance_time = 365 * 25,
-    delta_T = 1,
-    prop = 1,
-    mortality_P = 0.25, # This will change
-    mortality_M = 1)
-  
   param_standard <- c(
-    b_H = 1 / (1000), ## Human mortality rate
+    b_H = 1 /(365 * 70), ## Human mortality rate
     b_P = 0.01, # P. Vector birth rate
     b_M = 0.01, # S. Vector birth rate
-    mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.02, # Biting rate of the p. vector
-    f_M = 0.020 * 0.75, # Biting rate of the s.vector
-    theta_P = 0.70, # Transmission probability of p. vector
-    theta_M = 0.70 * 0.75, # Transmission probability of s. vector
+    mu_H = 1 /(365 * 70), ## Human death rate
+    f_P = 0.25, # Biting rate of the p. vector
+    f_M = 0.25 * 0.75, # Biting rate of the s.vector
+    theta_P = 0.20, # Transmission probability of p. vector
+    theta_M = 0.20 * 0.75, # Transmission probability of s. vector
     theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 90, # Recovery rate of infected human
+    gamma = 1 / 100, # Recovery rate of infected human
     c_PM = 4e-6, ## Competition effect of p.vector on s.vector
     c_MP = 2e-6, ## Competition effect of s.vector on p.vector
     c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
@@ -61,126 +39,34 @@ get_parameters <- function(type = "standard"){
     mortality_P = 0.25, # This will change
     mortality_M = 1)
   
-  param_nodiff <- c(
-    b_H = 1 / (1000), ## Human mortality rate
-    b_P = 0.01, # P. Vector birth rate
-    b_M = 0.01, # S. Vector birth rate
-    mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.020, # Biting rate of the p. vector
-    f_M = 0.020, # Biting rate of the s.vector
-    theta_P = 0.70, # Transmission probability of p. vector
-    theta_M = 0.70, # Transmission probability of s. vector
-    theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 90, # Recovery rate of infected human
-    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
-    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
-    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
-    ntime = 365 * 50,
-    disturbance_time = 365 * 25,
-    delta_T = 1,
-    prop = 1,
-    mortality_P = 0.25, # This will change
-    mortality_M = 1)
   
-  param_no_disturb <- c(
-    b_H = 1 / (1000), ## Human mortality rate
-    b_P = 0.01, # P. Vector birth rate
-    b_M = 0.01, # S. Vector birth rate
-    mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.020, # Biting rate of the p. vector
-    f_M = 0.020 * 0.75, # Biting rate of the s.vector
-    theta_P = 0.70, # Transmission probability of p. vector
-    theta_M = 0.70 * 0.75, # Transmission probability of s. vector
-    theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 90, # Recovery rate of infected human
-    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
-    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
-    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
-    ntime = ((365 * 25)) ,
-    disturbance_time = 1e30,
-    delta_T = 1,
-    prop = 1,
-    mortality_P = 0.25, # This will change
-    mortality_M = 1)
-  
-  param_post_distub <-  c(
-    b_H = 1 / (1000), ## Human mortality rate
-    b_P = 0.01, # P. Vector birth rate
-    b_M = 0.01, # S. Vector birth rate
-    mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.02, # Biting rate of the p. vector
-    f_M = 0.02 , # Biting rate of the s.vector
-    theta_P = 0.70, # Transmission probability of p. vector
-    theta_M = 0.70, # Transmission probability of s. vector
-    theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 90, # Recovery rate of infected human
-    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
-    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
-    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
-    ntime = (365 * 10) ,
-    disturbance_time = 1,
-    delta_T = 1,
-    prop = 1,
-    mortality_P = 0.25, # This will change
-    mortality_M = 1
-  )
+  ###Secondary vectors exist (and compete), but does not contribute
+  #to the RE in anyway 
+  param_nonesec <- param_standard 
+  param_nonesec[c("f_M", "theta_M")]<- 0
   
   
-  param_worst_m<-  c(
-    b_H = 1 / (1000), ## Human mortality rate
-    b_P = 0.01, # P. Vector birth rate
-    b_M = 0.01, # S. Vector birth rate
-    mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.02, # Biting rate of the p. vector
-    f_M = 0.020 * 0.10, # Biting rate of the s.vector
-    theta_P = 0.70, # Transmission probability of p. vector
-    theta_M = 0.70 * 0.10, # Transmission probability of s. vector
-    theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 90, # Recovery rate of infected human
-    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
-    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
-    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
-    ntime = 365 * 50,
-    disturbance_time = 365 * 25,
-    delta_T = 1,
-    prop = 1,
-    mortality_P = 0.25, # This will change
-    mortality_M = 1)
+  ###Secondary vectors have the same competence in transmission, but
+  ## still worse competitor
+  param_nodiff <- param_standard 
+  param_nodiff[c("f_M")]<- param_standard[c("f_P")]
+  param_nodiff[c("theta_M")]<- param_standard[c("theta_P")]
   
-  param_better_m<-  c(
-    b_H = 1 / (1000), ## Human mortality rate
-    b_P = 0.01, # P. Vector birth rate
-    b_M = 0.01, # S. Vector birth rate
-    mu_H = 1 / (1000), ## Human death rate
-    f_P = 0.02, # Biting rate of the p. vector
-    f_M = 0.020 * 1.10, # Biting rate of the s.vector
-    theta_P = 0.70, # Transmission probability of p. vector
-    theta_M = 0.70 * 1.10, # Transmission probability of s. vector
-    theta_H = 0.50, # Transmission probability of human
-    gamma = 1 / 90, # Recovery rate of infected human
-    c_PM = 4e-6, ## Competition effect of p.vector on s.vector
-    c_MP = 2e-6, ## Competition effect of s.vector on p.vector
-    c_PP = 4.5e-6, ## Competition effect of p.vector on s.vector
-    c_MM = 3e-6, ## Competition effect of s.vector on s.vector
-    ntime = 365 * 50,
-    disturbance_time = 365 * 25,
-    delta_T = 1,
-    prop = 1,
-    mortality_P = 0.25, # This will change
-    mortality_M = 1)
+  ###Secondary vectors are the worst 
+  param_worse_m<- param_standard 
+  param_worse_m["f_M"] <- param_standard["f_M"] * 0.10
+  param_worse_m["theta_M"] <- param_standard["theta_M"] * 0.10
+  
+  ##Secondary vectors better but they are weaker competitors 
+  param_better_m <-   param_standard 
+  param_better_m["f_M"] <- param_standard["f_M"] * 1.10
+  param_better_m["theta_M"] <- param_standard["theta_M"] * 1.10
   
   if(type == "standard"){
     return(param_standard)
   }
   else if(type == "no_disturb"){
     return(param_no_disturb)
-  }
-  else if(type == "post_disturb"){
-    return(param_post_distub)
   }
   else if(type == "no_diff"){
     return(param_nodiff)
@@ -189,7 +75,7 @@ get_parameters <- function(type = "standard"){
     return( param_better_m)
   }
   else if (type == "worse_m"){
-    return( param_worse_m)
+    return(param_worse_m)
   }
   else if(type == "nonesec"){
     return(param_nonesec)
@@ -252,7 +138,7 @@ vary_parameter_value <- function(parameter, variable_interest, vector_value){
 create_initial_states <- function(param, 
                                   patch_num = 1, 
                                   initial_human = 1000, 
-                                  initial_vector_s = 1000, 
+                                  initial_vector_s = 2490, 
                                   initial_vector_i = 10) {
         
   compartment_labels <- c(

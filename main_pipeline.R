@@ -1,8 +1,11 @@
+#This is the pipeline for the entirety of the manuscript.
+# Maintained by Damie Pak
+library(here)
 source(here("Code", "Function", "packages.R"))
 sourceCpp(here("Code", "Function", "onepatch_model.cpp"))
 source(here("Code", "Function", "simulate_functions.R"))
 source(here("Code", "Function", "calculate_functions.R"))
-source(here("Code", "Function", "plot_functions.R"))
+source(here("Code", "Function", "plotting_functions.R"))
 
 make_with_source(
   note = "Simulate model with different disturbance intensity for p. vector",
@@ -10,13 +13,16 @@ make_with_source(
   targets = "Output/RE_mortality_P_post.rds")
 
 make_with_recipe(
-  note = "Plot the composite three-panel Figure 1",
+  note = "Plot the composite three-panel Figure 1.",
   label = "plot_NP_NM_RE",
   recipe = {
     RE_mortality_P_post <- readRDS("Output/RE_mortality_P_post.rds")
     
+    RE_limits <- c(round(min(RE_mortality_P_post$RE),1), 
+                   round(max(RE_mortality_P_post$RE),1) + 0.1)
+    
     #Plot total vector abundance over time with the RE As color
-    Panel_A <- plot_NV_RE(RE_mortality_P_post)
+    Panel_A <- plot_NV_RE(RE_mortality_P_post,"No", RE_limits)
     
     #Remove the situation where 100% of the primary vector is removed,
     #not interesting (dynamically, and a little bug that occurs in Panel B! 
@@ -24,7 +30,7 @@ make_with_recipe(
     removed_0 <- subset(RE_mortality_P_post, RE_mortality_P_post$id != 0)
 
     #Plot the secondary versus primary vector with the RE as color
-    Panel_B <- plot_NP_NM_RE(removed_0 , postdisturb = "No");
+    Panel_B <- plot_NP_NM_RE(removed_0 , postdisturb = "No",RE_limits);
     
     #Plot the secondary contribution to RE
     Panel_C <- plot_NM_REff(removed_0, postdisturb = "No");
@@ -35,28 +41,12 @@ make_with_recipe(
       theme(legend.position='right') 
 
     ggsave(here("Figures_Process", "Figure_1.pdf"),
-      width = 12, height = 6, units = "in")
-  },
-  targets = "Figures_Process/Figure_1.pdf",
-  dependencies = "Output/RE_mortality_P_post.rds",
-  envir = environment()
+      width = 12, height = 8, units = "in")
+    },
+   targets = "Figures_Process/Figure_1.pdf",
+   dependencies = "Output/RE_mortality_P_post.rds",
+   envir = environment()
 )
-
-make_with_recipe(
-  note = "Plot the dynamics of the states for when disturbance intensity is 25% ",
-  label = "plot_state_dynamics",
-  recipe = {
-    RE_mortality_P_post <- readRDS("Output/RE_mortality_P_post.rds")
-    plot_state_dynamics(RE_mortality_P_post)
-    ggsave(here("Figures_Process", "states_dynamics_GG.pdf"),
-      width = 4, height = 8, units = "in"
-    )
-  },
-  targets = "Figures_Process/states_dynamics_GG.pdf",
-  dependencies = "Output/RE_mortality_P_post.rds",
-  envir = environment()
-)
-
 
 make_with_source(
   note = "Calculate RE (or R0) for different vector abundance",
@@ -65,16 +55,17 @@ make_with_source(
 )
 
 make_with_recipe(
-  note = "Plot R0 for different vector abundance",
+  note = "Plot R0 for different vector abundance using different
+  parameters",
   label = "plot_heatmap_R0",
   recipe = {
     df_expand_RE <- readRDS("Output/df_expand_RE.rds")
     plot_heatmapR0(df_expand_RE)
-    ggsave(here("Figures_Process", "R0_heatmap.pdf"),
-      width = 9, height = 7, units = "in"
+    ggsave(here("Figures", "R0_heatmap.pdf"),
+      width = 13, height = 5, units = "in"
     )
   },
-  targets = "Figures_Process/R0_heatmap.pdf",
+  targets = "Figures/R0_heatmap.pdf",
   dependencies = "Output/df_expand_RE.rds",
   envir = environment()
 )
