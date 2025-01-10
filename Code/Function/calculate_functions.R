@@ -18,6 +18,7 @@
 #' @export
 #'
 #' @examples Calculate_Human_REff(model_output, param_standard)
+
 Calculate_Human_REff <- function(List_x, param) {
   
   if (length(List_x) != 7 | class(List_x) != "list") {
@@ -53,7 +54,7 @@ Calculate_Human_REff <- function(List_x, param) {
   NP <- PS + PI # Total primary vectors
   NM <- MS + MI # Total secondary vectors
 
-  #Related to the average dwell time 
+  # Related to the average dwell time 
   Psi_P <- (c_MP * NM) + c_PP * (PS + (2 * PI))
   Psi_M <- (c_PM * NP) + c_MM * (MS + (2 * MI))
   Psi_C <- (c_MP * PI) * (c_PM * MI)
@@ -63,9 +64,10 @@ Calculate_Human_REff <- function(List_x, param) {
   wait_time <- Gamma * (gamma + mu_H) * NH^2
 
   Primary <- HS * (theta_H * f_P * PS) *
-    ((Psi_M * (theta_P * f_P) - (c_PM * MI * (theta_M * f_M))))
+    ((Psi_M * (theta_P * f_P) - (c_PM * MI * (theta_M * f_M))));
+  
   Secondary <- HS * (theta_H * f_M * MS) *
-    ((Psi_P * (theta_M * f_M) - (c_MP * PI * (theta_P * f_P))))
+    ((Psi_P * (theta_M * f_M) - (c_MP * PI * (theta_P * f_P))));
 
   RE <- (Primary / wait_time) + (Secondary / wait_time)
 
@@ -77,11 +79,9 @@ Calculate_Human_REff <- function(List_x, param) {
     PS = PS,
     MS = MS,
     HS = HS,
-    PtoH =  (Primary / wait_time),
-    MtoH =  (Secondary / wait_time),
-    wait_time = wait_time
-  )
-
+    PtoH = (Primary / wait_time),
+    MtoH = (Secondary / wait_time),
+    wait_time = wait_time)
   return(RE_DF)
 }
 
@@ -139,11 +139,12 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
 
   Primary <- HS * (theta_H * f_P * PS) * ((Psi_M * (theta_P * f_P) -
     (c_PM * MI * (theta_M * f_M))))
+  
   Secondary <- HS * (theta_H * f_M * MS) * ((Psi_P * (theta_M * f_M) -
     (c_MP * PI * (theta_P * f_P))))
 
 
-  RE <- (Primary/wait_time) + (Secondary /wait_time)
+  RE <- (Primary / wait_time) + (Secondary / wait_time)
 
   RE_DF <- cbind.data.frame(
     RE = RE,

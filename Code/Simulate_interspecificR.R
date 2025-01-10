@@ -14,7 +14,7 @@ colnames(inter_competition) <- c("c_PM", "c_MP", "mortality_P")
 
 param_standard_list <- NULL
 for (i in seq(1:nrow(inter_competition))) {
-  param_copy <- param_standard
+  param_copy <- get_parameters("standard")
 
   param_copy["c_PM"] <- inter_competition[i, "c_PM"]
   param_copy["c_MP"] <- inter_competition[i, "c_MP"]
@@ -26,7 +26,7 @@ for (i in seq(1:nrow(inter_competition))) {
 
 RE_CM <-
   Simulate_Model_Output(
-    param_standard, c("c_PM", "c_MP", "mortality_P"),
+    get_parameters("standard"), c("c_PM", "c_MP", "mortality_P"),
     inter_competition
   )
 

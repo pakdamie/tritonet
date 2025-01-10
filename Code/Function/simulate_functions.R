@@ -45,12 +45,17 @@ get_parameters <- function(type = "standard"){
   param_nonesec <- param_standard 
   param_nonesec[c("f_M", "theta_M")]<- 0
   
-  
   ###Secondary vectors have the same competence in transmission, but
   ## still worse competitor
   param_nodiff <- param_standard 
   param_nodiff[c("f_M")]<- param_standard[c("f_P")]
   param_nodiff[c("theta_M")]<- param_standard[c("theta_P")]
+  
+  ###
+  param_post_disturb <- param_nodiff 
+  param_post_disturb[" disturbance_time"] <- 1
+  
+  
   
   ###Secondary vectors are the worst 
   param_worse_m<- param_standard 
@@ -65,8 +70,8 @@ get_parameters <- function(type = "standard"){
   if(type == "standard"){
     return(param_standard)
   }
-  else if(type == "no_disturb"){
-    return(param_no_disturb)
+  else if(type == "post_disturb"){
+    return(param_post_disturb)
   }
   else if(type == "no_diff"){
     return(param_nodiff)
@@ -184,7 +189,8 @@ create_initial_states <- function(param,
 #' @examples
 simulate_predisturb_initial_list <- function(){
   
-  param_no_disturb <- get_parameters("no_disturb")
+  param_no_disturb <- get_parameters("standard")
+  param_no_disturb["disturbance_time"] <- 1e30
   Initial_List<- create_initial_states(get_parameters("standard"))
   Mod_Predisturb <- discrete_trito_model_rcpp_ONEPATCH(
     HS = Initial_List[[1]],

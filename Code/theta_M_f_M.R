@@ -1,17 +1,18 @@
-eq_initial_list <- calculate_predisturb_initial_list()
+
+f_m_standard <- get_parameters("no_diff")["f_M"]
+theta_m_standard <- get_parameters("no_diff")["theta_M"]
+
 
 # Running models and cleaning it up ---------------------------------------
 modifier_values <- seq(0.05, 2.5, 0.10)
-modified_theta_M <- as.numeric(modifier * get_parameters("no_diff")[["theta_M"]])
-modified_f_M <- as.numeric(modifier * get_parameters("no_diff")[["f_M"]])
-Mortality_P <- 0.10
+modified_theta_M <- as.numeric(modifier_values * get_parameters("no_diff")[["theta_M"]])
+modified_f_M <- as.numeric(modifier_values * get_parameters("no_diff")[["f_M"]])
+Mortality_P <- 0.01
 thetaf_M_disturbance <- expand.grid(theta_M = modified_theta_M, 
                                    f_M = modified_f_M,
                                    mortality_P = Mortality_P)
 
-
-Mod_MortP_thetafM <- Simulate_Model_Output(
-        get_parameters("post_disturb"), 
+Mod_MortP_thetafM <- Simulate_Model_Output_PostD (
         c("theta_M", "f_M", "mortality_P"), 
         thetaf_M_disturbance)
 
@@ -25,28 +26,23 @@ for (param in seq(1:nrow(thetaf_M_disturbance))){
   param_changed["f_M"] <- thetaf_M_disturbance[param,]$f_M
   param_changed["mortality_P"] <- thetaf_M_disturbance[param,]$mortality_P   
   
-  Model_output<-
-                discrete_trito_model_rcpp_ONEPATCH(
-                        HS = empty_initial_list[[1]],
-                        HI = empty_initial_list[[2]],
-                        HR = empty_initial_list[[3]],
-                        PS = empty_initial_list[[4]],
-                        PI = empty_initial_list[[5]],
-                        MS = empty_initial_list[[6]],
-                        MI = empty_initial_list[[7]],
-                        param =  param_changed)
-        
-        model_RE <- Calculate_Human_REff(Model_output, param_changed)
-        
-        model_RE$f_M <- thetaf_M_disturbance[param,]$f_M  
-        model_RE$theta_M <- thetaf_M_disturbance[param,]$theta_M  
-        model_RE$mortality_P <- thetaf_M_disturbance[param,]$mortality_P  
-        
-        RE_thetaf_M_P_List[[param]] = model_RE
+ 
+  model_RE <- Calculate_Human_REff(Mod_MortP_thetafM[[param]], param_changed)
+  
+  model_RE$f_M <- thetaf_M_disturbance[param,]$f_M  
+  model_RE$theta_M <- thetaf_M_disturbance[param,]$theta_M  
+  model_RE$mortality_P <- thetaf_M_disturbance[param,]$mortality_P  
+  
+  RE_thetaf_M_P_List[[param]] = model_RE
         
 }
 
 RE_thetaf_M_P_DF <- do.call(rbind, RE_thetaf_M_P_List)
+
+
+
+
+
 
 
 RE_THETAF_M_MAX_RE <- 
@@ -57,8 +53,9 @@ RE_THETAF_M_MAX_RE <-
                                            x[which.max(x$RE),]))
 thetaF_M_contribution_to_RE_GG <- 
         ggplot(RE_THETAF_M_MAX_RE, 
-      aes(x = as.factor(theta_M/0.7), y= as.factor(f_M/0.02), 
-          fill = MtoH/RE)) + 
+      aes(x = as.factor(theta_M/theta_m_standard), 
+          y= as.factor(f_M/f_m_standard ), 
+          fill =RE)) + 
         geom_raster() + 
         xlab(expression("Multiplier of transmission probability " * "(" *theta[M]* ")")) + 
         ylab(expression("Multiplier of biting rate" * "(" *f[M]* ")")) + 
@@ -67,3 +64,5 @@ thetaF_M_contribution_to_RE_GG <-
         scale_x_discrete(expand = c(0,0)) + 
         theme(axis.text = element_text(size = 14),
               axis.title = element_text(size = 15)); thetaF_M_contribution_to_RE_GG
+
+x[which.max(x$RE),]))
