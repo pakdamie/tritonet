@@ -23,23 +23,4 @@ RE_mortality_P_post <- subset(
 )
 
 
-ggplot(RE_mortality_P_post, aes(x= time - 9125, y= HS/1000, group= as.factor(id),
-       color = RE)) +  scale_color_viridis() + 
-  geom_path()  
-
-  
-  ggplot(RE_mortality_P_post, aes(x= time - 9125, y= NP, group= as.factor(id),
-                                  color = RE)) +  scale_color_viridis() + 
-  geom_path()  
-  
-  ggplot(RE_mortality_P_post, aes(x= time - 9125, y= MS, group= as.factor(id),
-                                  color = RE)) +  scale_color_viridis() + 
-    geom_path()  
-  
-  
-  ggplot(RE_mortality_P_post, aes(x= NP+NM, y = wait_time, group= as.factor(id),
-                                  color = wait_time)) +  scale_color_viridis() + 
-    geom_path()  
-  
-saveRDS(RE_mortality_P_post, file = here("Output", "RE_mortality_P_post.rds"))
 

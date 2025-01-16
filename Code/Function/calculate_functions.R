@@ -18,9 +18,7 @@
 #' @export
 #'
 #' @examples Calculate_Human_REff(model_output, param_standard)
-
 Calculate_Human_REff <- function(List_x, param) {
-  
   if (length(List_x) != 7 | class(List_x) != "list") {
     stop("This is not the correct format: x`are you sure this is the model output?")
   }
@@ -40,21 +38,21 @@ Calculate_Human_REff <- function(List_x, param) {
   ntime <- param["ntime"] # How long does the simulation run for?
 
   # States
-  HS <- List_x[[1]] #human susceptible 
-  HI <- List_x[[2]] #human infected
-  HR <- List_x[[3]] #human recovered
+  HS <- List_x[[1]] # human susceptible
+  HI <- List_x[[2]] # human infected
+  HR <- List_x[[3]] # human recovered
 
-  PS <- List_x[[4]] #primary susceptible
-  PI <- List_x[[5]] #primary infected
+  PS <- List_x[[4]] # primary susceptible
+  PI <- List_x[[5]] # primary infected
 
-  MS <- List_x[[6]] #secondary susceptible
-  MI <- List_x[[7]] #secondary infected
+  MS <- List_x[[6]] # secondary susceptible
+  MI <- List_x[[7]] # secondary infected
 
   NH <- HS + HI + HR # Total humans
   NP <- PS + PI # Total primary vectors
   NM <- MS + MI # Total secondary vectors
 
-  # Related to the average dwell time 
+  # Related to the average dwell time
   Psi_P <- (c_MP * NM) + c_PP * (PS + (2 * PI))
   Psi_M <- (c_PM * NP) + c_MM * (MS + (2 * MI))
   Psi_C <- (c_MP * PI) * (c_PM * MI)
@@ -64,10 +62,10 @@ Calculate_Human_REff <- function(List_x, param) {
   wait_time <- Gamma * (gamma + mu_H) * NH^2
 
   Primary <- HS * (theta_H * f_P * PS) *
-    ((Psi_M * (theta_P * f_P) - (c_PM * MI * (theta_M * f_M))));
-  
+    ((Psi_M * (theta_P * f_P) - (c_PM * MI * (theta_M * f_M))))
+
   Secondary <- HS * (theta_H * f_M * MS) *
-    ((Psi_P * (theta_M * f_M) - (c_MP * PI * (theta_P * f_P))));
+    ((Psi_P * (theta_M * f_M) - (c_MP * PI * (theta_P * f_P))))
 
   RE <- (Primary / wait_time) + (Secondary / wait_time)
 
@@ -81,7 +79,8 @@ Calculate_Human_REff <- function(List_x, param) {
     HS = HS,
     PtoH = (Primary / wait_time),
     MtoH = (Secondary / wait_time),
-    wait_time = wait_time)
+    wait_time = wait_time
+  )
   return(RE_DF)
 }
 
@@ -99,19 +98,18 @@ Calculate_Human_REff <- function(List_x, param) {
 #'
 #' @examples
 Calculate_Human_Reff_Expanded <- function(df_expand, param) {
-  
   # Parameters
   theta_H <- param["theta_H"] # Transmission probability of human
   theta_P <- param["theta_P"] # Transmission probability of primary vector
   theta_M <- param["theta_M"] # Transmission probability of secondary vector
-  
+
   f_P <- param["f_P"] # Primary biting rate
   f_M <- param["f_M"] # Secondary biting rate
-  
+
   gamma <- param["gamma"] # Recovery rate
-  
+
   mu_H <- param["mu_H"] # Human mortality rate
-  
+
   c_MP <- param["c_MP"] # Competition of secondary on primary
   c_PM <- param["c_PM"] # Competition of primary on secondary
   c_MM <- param["c_MM"] # Competition of secondary on secondary
@@ -128,8 +126,8 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
   MI <- NM * 0.01
   MS <- NM - MI
 
-  
-  #Related to the average dwell time 
+
+  # Related to the average dwell time
   Psi_P <- (c_MP * NM) + c_PP * (PS + (2 * PI))
   Psi_M <- (c_PM * NP) + c_MM * (MS + (2 * MI))
   Psi_C <- (c_MP * PI) * (c_PM * MI)
@@ -139,7 +137,7 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
 
   Primary <- HS * (theta_H * f_P * PS) * ((Psi_M * (theta_P * f_P) -
     (c_PM * MI * (theta_M * f_M))))
-  
+
   Secondary <- HS * (theta_H * f_M * MS) * ((Psi_P * (theta_M * f_M) -
     (c_MP * PI * (theta_P * f_P))))
 
@@ -156,8 +154,8 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
     PtoH = Primary / wait_time,
     MtoH = Secondary / wait_time
   )
-  
-  colnames(RE_DF) <- c("RE", "NP", "NM", "PS", "MS", "HS","PtoH", "MtoH")
+
+  colnames(RE_DF) <- c("RE", "NP", "NM", "PS", "MS", "HS", "PtoH", "MtoH")
 
   return(RE_DF)
 }
@@ -180,19 +178,49 @@ Calculate_Human_Reff_Expanded <- function(df_expand, param) {
 #'
 #' @examples
 Calculate_max_RE_DF <- function(df, splitting_factor) {
-  
   split_df <- split(df, df[, splitting_factor])
 
-  #Maximum RE and the corresponding vector abundance
-  max_RE_DF <- do.call(rbind, 
-                       lapply(split_df, function(x) x[which.max(x$RE), ]))
-  #Maximum vector abundance and corresponding RE
-  max_Vab_DF <- do.call(rbind, 
-                        lapply(split_df, function(x) x[which.max(x$NP + x$NM), ]))
+  # Maximum RE and the corresponding vector abundance
+  max_RE_DF <- do.call(
+    rbind,
+    lapply(split_df, function(x) x[which.max(x$RE), ])
+  )
 
-  return(list(max_RE_DF, max_Vab_DF))
+  min_RE_DF <- do.call(
+    rbind,
+    lapply(split_df, function(x) x[which.min(x$RE), ])
+  )
+
+  # Maximum vector abundance and corresponding RE
+  max_Vab_DF <- do.call(
+    rbind,
+    lapply(split_df, function(x) x[which.max(x$NP + x$NM), ])
+  )
+
+  return(list(max_RE_DF, min_RE_DF, max_Vab_DF))
 }
 
 
 
-
+#' Calculate steady state (Caitlin Lienkaemper wrote this)
+#'
+#'Calculates when the system should reach the steady state
+#'(If it doesn't work- blame her)
+#'
+#' @param v
+#' @param max_diff
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+Calculate_steady_state <- function(v, max_diff = 10^(-6)) {
+  diffs <- diff(v)
+  n <- length(diffs)
+  for (i in seq_len(n)) {
+    if (max(abs(diffs[i:n])) < max_diff) {
+      return(c(i, v[i]))
+    }
+  }
+  return("that aint it chief")
+}

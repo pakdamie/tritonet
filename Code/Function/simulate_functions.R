@@ -52,8 +52,8 @@ get_parameters <- function(type = "standard"){
   param_nodiff[c("theta_M")]<- param_standard[c("theta_P")]
   
   ###
-  param_post_disturb <- param_nodiff 
-  param_post_disturb[" disturbance_time"] <- 1
+  param_post_disturb <-param_standard
+  param_post_disturb["disturbance_time"] <- 1
   
   
   

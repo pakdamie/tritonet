@@ -85,7 +85,7 @@ mtoH_inter_GG <- ggplot(
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   ggtitle("A. Interspecific competition") + 
-  scale_fill_viridis() +
+  scale_fill_viridis(option = 'mako') +
   xlab(expression("Modifier of primary on secondary competition"~(italic(c[PM])))) +
   ylab(expression("Modifier of secondary on primary competition"~(italic(c[MP])))) + 
   theme(axis.text = element_text(size = 14, color = 'black'),

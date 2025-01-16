@@ -48,6 +48,23 @@ make_with_recipe(
    envir = environment()
 )
 
+make_with_recipe(
+  note = "Plot the composite two panel Figure 1.",
+  label = "plot_RE_dynamic",
+  recipe = {
+    RE_mortality_P_post <- readRDS("Output/RE_mortality_P_post.rds")
+    
+    plot_RE_dynamics( RE_mortality_P_post,"No",NA)
+
+    ggsave(here("Figures_Process", "Figure_1_RE_dynamics.pdf"),
+           width = 12, height = 5, units = "in")
+  },
+  targets = "Figures_Process/Figure_1_RE_dynamics.pd",
+  dependencies = "Output/RE_mortality_P_post.rds",
+  envir = environment()
+)
+
+
 make_with_source(
   note = "Calculate RE (or R0) for different vector abundance",
   source = "Code/Simulate_R0.R",
@@ -64,32 +81,21 @@ make_with_recipe(
     ggsave(here("Figures", "R0_heatmap.pdf"),
       width = 13, height = 5, units = "in"
     )
+    
   },
   targets = "Figures/R0_heatmap.pdf",
   dependencies = "Output/df_expand_RE.rds",
   envir = environment()
 )
 
-make_with_source(
-  note = "Calculate RE (or R0) for different disturbance intensity",
-  source = "Code/Simulate_Intensity_PM.R",
-  targets = "Output/Maximum_RE_Mort_PM.rds"
-)
 
-make_with_recipe(
-  note = "Plot RE for different disturbance intensities",
-  label = "plot_heatmap_disturbance_intensities",
-  recipe = {
-    df_expand_RE <- readRDS("Output/Maximum_RE_Mort_PM.rds")
-    plot_heatmapR0(df_expand_RE)
-    ggsave(here("Figures_Process", "R0_heatmap.pdf"),
-      width = 9, height = 7, units = "in"
-    )
-  },
-  targets = "Figures_Process/Maximum_RE_Mort_PM.pdf",
-  dependencies = "Output/df_expand_RE.rds",
-  envir = environment()
-)
+
+
+
+
+
+
+
 
 
 ###Supplementary Material
@@ -102,28 +108,13 @@ make_with_recipe(
     plot_comparison_RE(RE_mortality_P_post, "id")
 
     ggsave(here("Figures_Process", "Supp1.pdf"),
-      width = 9, height = 7, units = "in")
+      width = 7, height = 6, units = "in")
   },
   targets = "Figures_Process/Supp1.pdf",
   dependencies = "Output/RE_mortality_P_post.rds",
   envir = environment()
 )
 
-make_with_recipe(
-  note = "Plot total vector abundance over time and highlight when 
-  the maximum RE is reached",
-  label = "plot_totalV_maxRE",
-  recipe = {
-    RE_mortality_P_post <- readRDS("Output/RE_mortality_P_post.rds")
-    plot_NV_RE(RE_mortality_P_post)
-    
-    ggsave(here("Figures_Process", "plot_totalV_maxRE.pdf"),
-           width = 9, height = 7, units = "in")
-  },
-  targets = "Figures_Process/plot_totalV_maxRE.pdf",
-  dependencies = "Output/RE_mortality_P_post.rds",
-  envir = environment()
-)
 
 make_with_recipe(
   note = "Plot total vector abundance over time and highlight when 
@@ -144,6 +135,27 @@ make_with_recipe(
   envir = environment()
 )
 
+
+make_with_source(
+  note = "Calculate RE (or R0) for different disturbance intensity",
+  source = "Code/Simulate_Intensity_PM.R",
+  targets = "Output/Maximum_RE_Mort_PM.rds"
+)
+
+make_with_recipe(
+  note = "Plot RE for different disturbance intensities",
+  label = "plot_heatmap_disturbance_intensities",
+  recipe = {
+    df_expand_RE <- readRDS("Output/Maximum_RE_Mort_PM.rds")
+    plot_heatmapR0(df_expand_RE)
+    ggsave(here("Figures_Process", "R0_heatmap.pdf"),
+           width = 9, height = 7, units = "in"
+    )
+  },
+  targets = "Figures_Process/Maximum_RE_Mort_PM.pdf",
+  dependencies = "Output/df_expand_RE.rds",
+  envir = environment()
+)
 
 
 show_pipeline()

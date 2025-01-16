@@ -11,7 +11,6 @@
 #' @export
 #' @examples
 plot_list_groups <- function(full_list) {
-  
   compartment_labels <- c(
     "HS", "HI", "HR",
     "PS", "PI",
@@ -73,7 +72,6 @@ plot_list_groups <- function(full_list) {
 #'
 #' @examples
 plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
-  
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
   }
@@ -113,13 +111,13 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
     ) +
     scale_colour_continuous_divergingx(
       name = expression(R[E]),
-      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE, 
-      limits =  RE_limit
+      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE,
+      limits = RE_limit
     ) +
     scale_fill_continuous_divergingx(
       name = expression(R[E]),
-      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE, 
-      limits =  RE_limit
+      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE,
+      limits = RE_limit
     ) +
     xlab(expression("Abundance of primary vectors " * "(" * N[P] * ")")) +
     ylab(expression("Abundance of secondary vectors " * "(" * N[M] * ")")) +
@@ -161,8 +159,6 @@ plot_NM_REff <- function(df, postdisturb) {
   }
 
 
-  
-  
   NM_Reff_GG <- ggplot(
     subset_df, aes(x = time, y = MtoH / RE, group = id)
   ) +
@@ -201,7 +197,6 @@ plot_NM_REff <- function(df, postdisturb) {
 #'
 #' @examples
 plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
-  
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
   }
@@ -220,8 +215,8 @@ plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
   }
 
   RE_limits <- c(
-   round(min(df$RE),1),
-   round(max(df$RE),1) + 0.1
+    round(min(df$RE), 1),
+    round(max(df$RE), 1) + 0.1
   )
 
   NV_RE_GG <-
@@ -240,13 +235,13 @@ plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
     ylab("Total vector abundance") +
     scale_colour_continuous_divergingx(
       name = expression(R[E]),
-      mid = 1, n_interp = 11, palette = "Roma", 
+      mid = 1, n_interp = 11, palette = "Roma",
       rev = TRUE, limits = RE_limit
     ) +
     scale_fill_continuous_divergingx(
       name = expression(R[E]),
-      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE, 
-      limits =  RE_limit
+      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE,
+      limits = RE_limit
     ) +
     theme_classic() +
     theme(
@@ -256,6 +251,96 @@ plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
     )
   return(NV_RE_GG)
 }
+
+#' Plot the RE over time as well as side panels,
+#' showing the minimum and maximum RE achieved.
+#'
+#' Shows how the RE changes (both primary and secondary) changes
+#' over time as well as the RE. Points indicate the maximum RE reached and is
+#' used to show how the maximum vector abundance does not correspond to the maximum
+#' RE. The x-axis is time, the y-axis is the total vector abundance.
+
+#' @param df
+#'
+#' @returns A ggplot item
+#' @export
+#'
+#' @examples
+plot_RE_dynamics <- function(df, postdisturb = "No", RE_limit) {
+  if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
+    stop("You are missing NP and/or NM, check column names")
+  }
+
+  if (any((colnames(df) %in% c("RE"))) == FALSE) {
+    stop("No RE, check column names ")
+  }
+
+  if (postdisturb == "No") {
+    subset_df <- df
+    subset_df$time <- subset_df$time - 9125
+    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
+    minimum_RE <- Calculate_max_RE_DF(subset_df, "id")[[2]]
+  } else if (postdisturb == "Yes") {
+    subset_df <- df
+    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
+  }
+
+
+  time_RE_GG <-
+    ggplot(subset_df, aes(x = time)) +
+    geom_path(aes(y = RE, group = as.factor(1 - id), color = as.factor(1 - id)), linewidth = 0.8) +
+    geom_hline(
+      data = subset(subset_df, subset_df$time == 0),
+      aes(yintercept = RE), color = "grey", alpha = 0.7, linetype = 2
+    ) +
+    scale_color_viridis(discrete = TRUE) +
+    xlab("Time since disturbance") +
+    ylab(expression("Effective reproductive number (" * R[E] * ")")) +
+    theme_classic() +
+    theme(
+      axis.text = element_text(size = 14, color = "black"),
+      axis.title = element_text(size = 15, color = "black"),
+      legend.position = "none"
+    )
+
+  min_max_RE_df <- rbind(minimum_RE, maximum_RE)
+
+  min_max_RE_GG <-
+    ggplot(min_max_RE_df, aes(x = as.factor(1 - id))) +
+    geom_point(aes(y = RE, fill = as.factor(1 - id)), size = 3, shape = 21) +
+    geom_hline(
+      data = subset(subset_df, subset_df$time == 0),
+      aes(yintercept = RE), color = "grey", alpha = 0.7, linetype = 2
+    ) +
+    scale_fill_viridis(discrete = TRUE, name = "Disturbance \n intensity ") +
+    xlab("Disturbance intensity \nof primary vector") +
+    ylab(expression("Effective reproductive number (" * R[E] * ")")) +
+    theme_classic() +
+    theme(
+      axis.text = element_text(size = 14, color = "black"),
+      axis.title = element_text(size = 15, color = "black"),
+      legend.position = "right"
+    )
+
+
+  return(time_RE_GG + min_max_RE_GG)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #' Plot primary vectors, secondary vectors, and human infections
@@ -349,29 +434,33 @@ plot_comparison_RE <- function(df, split_variable) {
 
   max_RE_ab_GG <- ggplot(
     max_RE_ab_list[[1]],
-    aes(x = 1 - id, y = NP + NM, fill = RE)
+    aes(x = as.factor(1 - id), y = NP + NM, fill = RE)
   ) +
     geom_point(
       shape = 21,
       size = 3
     ) +
     geom_point(
-      data = max_RE_ab_list[[2]],
+      data = max_RE_ab_list[[3]],
       aes(
-        x = 1 - id,
+        x = as.factor(1 - id),
         y = NP + NM,
         fill = RE
       ),
       shape = 22,
       size = 3
     ) +
-    xlab("Mortality of primary vector") +
+    xlab("Disturbance intensity on primary vector") +
     ylab("Total vector abundance") +
-    scale_fill_viridis() +
+    scale_fill_continuous_divergingx(
+      name = expression(R[E]),
+      mid = 1, n_interp = 11, palette = "Roma",
+      rev = TRUE, limits = c(0.8,1.6)
+    ) +
     theme_classic() +
     theme(
-      axis.text = element_text(size = 14),
-      axis.title = element_text(size = 15)
+      axis.text = element_text(size = 14, color = 'black'),
+      axis.title = element_text(size = 15,color = 'black')
     )
 
 
@@ -397,24 +486,27 @@ plot_heatmapR0 <- function(df, facet) {
   if (any((colnames(df) %in% c("RE"))) == FALSE) {
     stop("No RE, check column names ")
   }
-  df$id <- factor(df$id, levels = c("worse_m", "standard", "no_diff", "better_m"))
-
-  situation_names <- c(
-    `worse_m` = "Significantly \n worse",
-    `standard` = "Slightly worse \n (Standard)",
-    `no_diff` = "Same",
-    `better_m` = "Better"
+  df$id <- factor(df$id,
+    levels = c("worse_m", "standard", "no_diff", "better_m"),
+    labels = c(
+      expression(lambda[P] * ">>" * lambda[M]),
+      expression(lambda[P] * ">" * lambda[M]),
+      expression(lambda[P] * "=" * lambda[M]),
+      expression(lambda[P] * "<" * lambda[M])
+    )
   )
+
+
 
   heatmap_GG <- ggplot(
     df,
-    aes(x = NP, y = NM, fill = RE/max_RE, group = id)
+    aes(x = NP, y = NM, fill = RE / max_RE, group = id)
   ) +
     geom_tile(color = NA) +
-    scale_fill_viridis(option = 'mako', name = "Proportion of max R0") +
+    scale_fill_viridis(option = "mako", name = "Proportion of\nmax R0") +
     xlab(expression("Abundance of primary vectors " * "(" * N[P] * ")")) +
     ylab(expression("Abundance of \n secondary vectors " * "(" * N[M] * ")")) +
-    facet_wrap(vars(id), ncol = 4, labeller = as_labeller(situation_names)) +
+    facet_wrap(vars(id), ncol = 4, labeller = label_parsed) +
     scale_x_continuous(expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     theme(
@@ -424,7 +516,6 @@ plot_heatmapR0 <- function(df, facet) {
       strip.text = element_text(size = 14)
     ) +
     coord_equal()
-
 
   return(heatmap_GG)
 }
