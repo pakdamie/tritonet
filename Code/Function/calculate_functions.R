@@ -31,6 +31,7 @@ Calculate_Human_REff <- function(List_x, param) {
   f_M <- param["f_M"] # Secondary biting rate
   gamma <- param["gamma"] # Recovery rate
   mu_H <- param["mu_H"] # Human mortality rate
+  mu_V <- param["mu_V"]
   c_MP <- param["c_MP"] # Competition of secondary on primary
   c_PM <- param["c_PM"] # Competition of primary on secondary
   c_MM <- param["c_MM"] # Competition of secondary on secondary
@@ -53,21 +54,18 @@ Calculate_Human_REff <- function(List_x, param) {
   NM <- MS + MI # Total secondary vectors
 
   # Related to the average dwell time
-  Psi_P <- (c_MP * NM) + c_PP * (PS + (2 * PI))
-  Psi_M <- (c_PM * NP) + c_MM * (MS + (2 * MI))
-  Psi_C <- (c_MP * PI) * (c_PM * MI)
-  Gamma <- (Psi_P * Psi_M) - Psi_C
-
   ### Waiting time denominator
-  wait_time <- Gamma * (gamma + mu_H) * NH^2
+  human_wait_time <- gamma + mu_H
 
-  Primary <- HS * (theta_H * f_P * PS) *
-    ((Psi_M * (theta_P * f_P) - (c_PM * MI * (theta_M * f_M))))
+  Primary_HP <- (theta_H * f_P * (PS/NH)) * (1/ human_wait_time) 
+  Primary_PH <- (theta_P * f_P * (HS/NH)) * (1/mu_V) 
+  
+  Secondary_HM <- (theta_H * f_M * (MS/NH)) * (1/ human_wait_time) 
+  Secondary_MH <- (theta_M * f_M * (HS/NH)) * (1/mu_V) 
+  
 
-  Secondary <- HS * (theta_H * f_M * MS) *
-    ((Psi_P * (theta_M * f_M) - (c_MP * PI * (theta_P * f_P))))
 
-  RE <- (Primary / wait_time) + (Secondary / wait_time)
+  RE <-   (Primary_HP * Primary_PH) + (Secondary_HM * Secondary_MH)
 
   RE_DF <- cbind.data.frame(
     time = seq(1, ntime),
@@ -77,12 +75,20 @@ Calculate_Human_REff <- function(List_x, param) {
     PS = PS,
     MS = MS,
     HS = HS,
-    PtoH = (Primary / wait_time),
-    MtoH = (Secondary / wait_time),
-    wait_time = wait_time
+    HI = HI,
+    PtoH =   (Primary_HP * Primary_PH) ,
+    MtoH = (Secondary_HM * Secondary_MH),
+    Primary_HP = Primary_HP,
+    Primary_PH  = Primary_PH,
+    Secondary_HM = Secondary_HM,
+    Secondary_MH  = Secondary_MH
   )
   return(RE_DF)
 }
+
+
+
+
 
 
 #' Calculate the reproductive number (human) derived analytically

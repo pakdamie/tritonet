@@ -2,7 +2,7 @@
 # Standard case
 # Retrieve "standard" parameters and set the different values of disturbances
 param_standard <- get_parameters("standard")
-Mortality_P <- data.frame(Mort_P = c(0.01, 0.25, 0.5, 0.75))
+Mortality_P <- data.frame(Mort_P = c( 0.25, 0.5, 0.75))
 
 #Simulate model output and calculate the RE
 RE_mortality_P <-
@@ -22,5 +22,19 @@ RE_mortality_P_post <- subset(
   RE_mortality_P_DF$time <  9125 + 2000
 )
 
+ggplot(RE_mortality_P_post , aes( x= time, y = HI, color= 1-id)) + 
+  geom_path(size = 2)  + 
+  scale_color_viridis() + 
+
+ggplot(RE_mortality_P_post , aes( x= time, y = RE, group= 1-id, color = 1-id)) + 
+  geom_line(size = 2)  + 
+  scale_color_viridis()
 
 
+ggplot(RE_mortality_P_post , aes( x= time, y = HS, group= 1-id, color = 1-id)) + 
+  geom_line(size = 2)  + 
+  scale_color_viridis()
+
+ggplot(RE_mortality_P_post , aes( x= time, y = PS, group= 1-id, color = 1-id)) + 
+  geom_line(size = 2)  + 
+  scale_color_viridis()

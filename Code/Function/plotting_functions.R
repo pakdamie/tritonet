@@ -40,7 +40,7 @@ plot_list_groups <- function(full_list) {
 
   full_plot_GG <- ggplot(
     final_melted_frame,
-    aes(x = time, y = (value), color = variable)
+    aes(x = time, y = log10(value + 1), color = variable)
   ) +
     geom_line() +
     facet_wrap(~id, scales = "free_y") +
