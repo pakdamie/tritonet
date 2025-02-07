@@ -1,17 +1,18 @@
 ### Simulate varying intensity of disturbances for both primary and secondary
 
-param_standard <- get_parameters()
-Mortality_P <- c(0.01, seq(0.05, 1, 0.05))
-Mortality_M <- c(0.01, seq(0.05, 1, 0.05))
+param_standard <- get_parameters("standard")
+Mortality_P <- c(seq(0, 1, 0.1))
+Mortality_M <- c(seq(0, 1, 0.1))
 Mortality_PM_Grid <- expand.grid(Mortality_P, Mortality_M)
 
 ### Simulate model output
 Mod_Mort_PM <- Simulate_Model_Output(
-  param_standard, c("mortality_P", "mortality_M"), Mortality_PM_Grid
+  param_standard,infection_start = "No", c("mortality_P", "mortality_M"), 
+  Mortality_PM_Grid
 )
 
 ### Calculate human RE
-RE_Mort_PM <- lapply(Mod_Mort_PM, Calculate_Human_REff, param = param_standard)
+RE_Mort_PM <- lapply(Mod_Mort_PM, Calculate_Human_Reff_Expanded, param = param_standard)
 
 # Assign mortality_P value
 for (i in 1:nrow(Mortality_PM_Grid)) {
@@ -37,5 +38,12 @@ Maximum_RE_Mort_PM <- do.call(
     simplify = TRUE
   )
 )
+
+
+ggplot(Maximum_RE_Mort_PM, aes(x = (1-Mort_P), y= (1-Mort_M), fill = RE)) + 
+  geom_tile() + 
+  scale_fill_viridis()
+
+
 
 save(Maximum_RE_Mort_PM, file = "Output/Maximum_RE_Mort_PM.rds")

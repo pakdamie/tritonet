@@ -1,94 +1,116 @@
-# Interspecific competition
-c_PM_standard <- 4e-6 ## Competition effect of p.vector on s.vector
-c_MP_standard <- 2e-6 ## Competition effect of s.vector on p.vector
+# Interspecific and intraspecific competition ratio
 
-modifier <- seq(0.5, 1.5, by = 0.1)
-c_PM <- c_PM_standard * modifier
-c_MP <- c_MP_standard * modifier
+prop_B <- seq(0.01, 2, length = 10)
+c_PP_standard <- 4.5e-4 ## Competition effect of p.vector on s.vector
+c_MM_standard <- 4.5e-4 ## Competition effect of s.vector on p.vector
+C_MP <- prop_B * c_PP_standard
+C_PM <- prop_B * c_MM_standard
+
 Mortality_P <- c(0.01)
 
-inter_competition <- data.frame(expand.grid(c_PM, c_MP, Mortality_P))
-colnames(inter_competition) <- c("c_PM", "c_MP", "mortality_P")
+
+competition_param <-
+  data.frame(expand.grid(
+    c_PP = c_PP_standard,
+    c_MM = c_MM_standard,
+    c_MP = C_MP,
+    c_PM = C_PM,
+    mortality_P = Mortality_P
+  ))
+
 
 # stupid way that i'm gonna fix
 
 param_standard_list <- NULL
-for (i in seq(1:nrow(inter_competition))) {
+for (i in seq(1:nrow(competition_param))) {
   param_copy <- get_parameters("standard")
-
-  param_copy["c_PM"] <- inter_competition[i, "c_PM"]
-  param_copy["c_MP"] <- inter_competition[i, "c_MP"]
-  param_copy["mortality_P"] <- inter_competition[i, "mortality_P"]
-
+  param_copy["c_PP"] <- competition_param[i, "c_PP"]
+  param_copy["c_MM"] <- competition_param[i, "c_MM"]
+  param_copy["c_PM"] <- competition_param[i, "c_PM"]
+  param_copy["c_MP"] <- competition_param[i, "c_MP"]
+  param_copy["mortality_P"] <- competition_param[i, "mortality_P"]
   param_standard_list[[i]] <- param_copy
 }
 
 
 RE_CM <-
   Simulate_Model_Output(
-    get_parameters("standard"), c("c_PM", "c_MP", "mortality_P"),
-    inter_competition
+    parameter = get_parameters("standard"),
+    infection_start = "No",
+    variable_interest = c("c_PP", "C_MM", "c_MP", "c_PM", "mortality_P"),
+    vector_value = competition_param
   )
+
+
 
 
 
 RE_DF_inter <- NULL
 for (k in 1:length(RE_CM)) {
-  RE_tmp <- Calculate_Human_REff(RE_CM[[k]], param_standard_list[[k]])
+  RE_tmp <- Calculate_Human_Reff_Expanded(RE_CM[[k]], param_standard_list[[k]])
+
+  eq_RE <- RE_tmp[9124, ]$RE
+  eq_NM <- RE_tmp[9124, ]$NM
+  eq_NP <- RE_tmp[9124,]$NP
+  
   post_df <- na.omit(subset(RE_tmp, RE_tmp$time > 9124))
 
-  if (nrow(post_df) == 0) {
-    RE_max <- cbind(inter_competition[k, ], RE = NA, MtoH = NA)
-  } else {
-    RE_max <- cbind(inter_competition[k, ], RE = max(post_df$RE),  
-                   MtoH = post_df[which.max(post_df$MtoH),]$MtoH/
-                          post_df[which.max(post_df$MtoH),]$RE)
-  }
+  RE_max <- cbind(competition_param[k, ],
+    max_NP = max(post_df$NP),
+    max_NM = max(post_df$NM) - eq_NM,
+    min_NP = max(post_df$NP) - eq_NP,
+    min_NM = max(post_df$NM),
+    max_NV = max(post_df$NM + post_df$NP),
+    RE = max(post_df$RE) - eq_RE,
+    min_RE = min(post_df$RE)
+  )
+
   RE_DF_inter[[k]] <- RE_max
 }
 
 RE_DF_inter <- do.call(rbind, RE_DF_inter)
 
-inter_GG <- ggplot(
+RE_DF_inter$ext_NP <- ifelse(RE_DF_inter$min_NP < 1, "Extinct", "Not")
+RE_DF_inter$ext_NM <- ifelse(RE_DF_inter$min_NM < 1, "Extinct", "Not")
+RE_DF_inter$coexistence <- ifelse(RE_DF_inter$ext_NP ==
+  RE_DF_inter$ext_NM, "coexistence", "Not")
+
+
+ggplot(
   RE_DF_inter,
-  aes(
-    x = as.factor(c_PM / c_PM_standard),
-    y = as.factor(c_MP / c_MP_standard),
-    fill = RE
-  )
+  aes(x = c_MP / c_PP, y = c_PM / c_MM, fill = max_NM)
 ) +
-  geom_tile() +
-  scale_x_discrete(expand = c(0, 0)) +
-  scale_y_discrete(expand = c(0, 0)) +
-  ggtitle("A. Interspecific competition") + 
-  scale_fill_continuous_divergingx(
-    name = expression(R[E]),
-    mid = 1, n_interp = 11,
-    palette = "Roma", rev = TRUE, limits = c(0.95, 5.25)
-  ) +
-  xlab(expression("Modifier of primary on secondary competition"~(italic(c[PM])))) +
-  ylab(expression("Modifier of secondary on primary competition"~(italic(c[MP])))) + 
-  theme(axis.text = element_text(size = 14, color = 'black'),
-        axis.title = element_text(size = 14, color = 'black')) 
+  geom_tile(color = NA) +
+  scale_fill_viridis() +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  xlab(expression(c[MP] / c[PP])) +
+  ylab(expression(c[PM] / c[MM])) +
+  coord_equal() +
+  theme(
+    axis.text = element_text(size = 14, color = "black"),
+    axis.title = element_text(size = 15, color = "black")
+  )+
 
-
-
-mtoH_inter_GG <- ggplot(
+ggplot(
   RE_DF_inter,
-  aes(
-    x = as.factor(c_PM / c_PM_standard),
-    y = as.factor(c_MP / c_MP_standard),
-    fill = MtoH
-  )
+  aes(x = c_MP / c_PP, y = c_PM / c_MM, fill = max_NP)
 ) +
-  geom_tile() +
-  scale_x_discrete(expand = c(0, 0)) +
-  scale_y_discrete(expand = c(0, 0)) +
-  ggtitle("A. Interspecific competition") + 
-  scale_fill_viridis(option = 'mako') +
-  xlab(expression("Modifier of primary on secondary competition"~(italic(c[PM])))) +
-  ylab(expression("Modifier of secondary on primary competition"~(italic(c[MP])))) + 
-  theme(axis.text = element_text(size = 14, color = 'black'),
-        axis.title = element_text(size = 14, color = 'black')) 
+  geom_tile(color = NA) +
+  scale_fill_viridis() +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  xlab(expression(c[MP] / c[PP])) +
+  ylab(expression(c[PM] / c[MM])) +
+  coord_equal() +
+  theme(
+    axis.text = element_text(size = 14, color = "black"),
+    axis.title = element_text(size = 15, color = "black")
+  )
 
-                                 
+
+
+
+ggsave(here("Figures", "RE_DF_inter.pdf"),
+  width = 8, height = 6, units = "in"
+)

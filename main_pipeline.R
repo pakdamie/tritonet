@@ -16,53 +16,65 @@ make_with_recipe(
   note = "Plot the composite three-panel Figure 1.",
   label = "plot_NP_NM_RE",
   recipe = {
-    RE_mortality_P_post <- readRDS("Output/RE_mortality_P_post.rds")
-    
-    RE_limits <- c(round(min(RE_mortality_P_post$RE),1), 
-                   round(max(RE_mortality_P_post$RE),1) + 0.1)
-    
-    #Plot total vector abundance over time with the RE As color
-    Panel_A <- plot_NV_RE(RE_mortality_P_post,"No", RE_limits)
-    
-    #Remove the situation where 100% of the primary vector is removed,
-    #not interesting (dynamically, and a little bug that occurs in Panel B! 
-    #If you do it individually, it works :/)
+    RE_mortality_P_post <- readRDS("Output/df_RE_mortality_P_R0.rds")
+
+    ### Makes it easyy
+    RE_limits <- c(
+      round(min(RE_mortality_P_post$RE), 1),
+      round(max(RE_mortality_P_post$RE), 1) + 0.1
+    )
+
+    Panel_RE_Time <- plot_RE_dynamics(RE_mortality_P_post, "No", NA)
+
+    # Plot total vector abundance over time with the RE As color
+    Panel_A <- plot_NV_RE(RE_mortality_P_post, "No", RE_limits)
+
+    # Remove the situation where 100% of the primary vector is removed,
+    # not interesting (dynamically, and a little bug that occurs in Panel B!
+    # If you do it individually, it works :/)
     removed_0 <- subset(RE_mortality_P_post, RE_mortality_P_post$id != 0)
 
-    #Plot the secondary versus primary vector with the RE as color
-    Panel_B <- plot_NP_NM_RE(removed_0 , postdisturb = "No",RE_limits);
-    
-    #Plot the secondary contribution to RE
-    Panel_C <- plot_NM_REff(removed_0, postdisturb = "No");
-    
-    #Full composite figure with all
-    Panel_A + (Panel_B/Panel_C) + 
-      plot_layout(guides='collect')  &
-      theme(legend.position='right') 
+    # Plot the secondary versus primary vector with the RE as color
+    Panel_B <- plot_NP_NM_RE(removed_0, postdisturb = "No", RE_limits)
+
+    layout <- c(
+      area(1, 1, 2, 2),
+      area(1, 3, 1),
+      area(2, 3, 2, 3)
+    )
+
+
+    # Full composite figure with all
+    Panel_RE_Time + Panel_A + theme(aspect.ratio = 1) + 
+      Panel_B + theme(aspect.ratio = 1) +
+      plot_layout(guides = "collect", design = layout) +
+      plot_annotation(
+        tag_levels = c("A", "1"),
+        tag_sep = ".", tag_suffix = "."
+      )
 
     ggsave(here("Figures_Process", "Figure_1.pdf"),
-      width = 12, height = 8, units = "in")
-    },
-   targets = "Figures_Process/Figure_1.pdf",
-   dependencies = "Output/RE_mortality_P_post.rds",
-   envir = environment()
-)
-
-make_with_recipe(
-  note = "Plot the composite two panel Figure 1.",
-  label = "plot_RE_dynamic",
-  recipe = {
-    RE_mortality_P_post <- readRDS("Output/RE_mortality_P_post.rds")
-    
-    plot_RE_dynamics( RE_mortality_P_post,"No",NA)
-
-    ggsave(here("Figures_Process", "Figure_1_RE_dynamics.pdf"),
-           width = 12, height = 5, units = "in")
+      width = 10, height = 8, units = "in"
+    )
   },
-  targets = "Figures_Process/Figure_1_RE_dynamics.pd",
+  targets = "Figures_Process/Figure_1.pdf",
   dependencies = "Output/RE_mortality_P_post.rds",
   envir = environment()
 )
+
+
+make_with_recipe(
+  note = "Plot the composite three-panel Figure 1.",
+  label = "plot_NP_NM_RE",
+  recipe = {
+# Remove the situation where 100% of the primary vector is removed,
+# not interesting (dynamically, and a little bug that occurs in Panel B!
+# If you do it individually, it works :/)
+removed_0 <- subset(RE_mortality_P_post, RE_mortality_P_post$id != 0)
+
+plot_NM_REff(removed_0,"No") + 
+
+}
 
 
 make_with_source(

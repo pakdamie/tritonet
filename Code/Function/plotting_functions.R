@@ -93,7 +93,7 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
   ) +
     geom_path(
       aes(color = RE),
-      linewidth = 0.9,
+      linewidth = 0.7,
       linejoin = "round",
       lineend = "round"
     ) +
@@ -106,24 +106,15 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
     ) +
     geom_point(
       data = maximum_RE,
-      aes(x = NP, y = NM, group = id, fill = RE),
-      size = 2, shape = 21
+      aes(x = NP, y = NM, group = id, color = RE),
+      size = 2
     ) +
-    scale_colour_continuous_divergingx(
-      name = expression(R[E]),
-      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE,
-      limits = RE_limit
-    ) +
-    scale_fill_continuous_divergingx(
-      name = expression(R[E]),
-      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE,
-      limits = RE_limit
-    ) +
-    xlab(expression("Abundance of primary vectors " * "(" * N[P] * ")")) +
-    ylab(expression("Abundance of secondary vectors " * "(" * N[M] * ")")) +
+    scale_color_viridis(name = expression(R[0])) +
+    xlab(expression("# of primary vectors " * "(" * N[P] * ")")) +
+    ylab(expression("# of secondary vectors " * "(" * N[M] * ")")) +
     theme_classic() +
     theme(
-      axis.text = element_text(size = 14, color = "black"),
+      axis.text = element_text(size = 12, color = "black"),
       axis.title = element_text(size = 15, color = "black")
     )
 
@@ -148,7 +139,6 @@ plot_NM_REff <- function(df, postdisturb) {
     stop("No RE, check column names ")
   }
 
-
   if (postdisturb == "No") {
     subset_df <- df
     subset_df$time <- subset_df$time - 9125
@@ -160,7 +150,7 @@ plot_NM_REff <- function(df, postdisturb) {
 
 
   NM_Reff_GG <- ggplot(
-    subset_df, aes(x = time, y = MtoH / RE, group = id)
+    subset_df, aes(x = time, y = MtoH / RE, group = id, color = RE)
   ) +
     geom_line(
       linewidth = 0.9,
@@ -214,18 +204,14 @@ plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
     maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
   }
 
-  RE_limits <- c(
-    round(min(df$RE), 1),
-    round(max(df$RE), 1) + 0.1
-  )
 
   NV_RE_GG <-
     ggplot(subset_df, aes(x = time)) +
-    geom_path(aes(y = (NP + NM), color = RE, group = id), linewidth = 0.8) +
+    geom_path(aes(y = (NP + NM), color = RE, group = id), linewidth = 0.7) +
     geom_point(
       data = maximum_RE,
-      aes(x = time, y = (NP + NM), group = id, fill = RE),
-      size = 2, shape = 21
+      aes(x = time, y = (NP + NM), group = id, color = RE),
+      size = 2,
     ) +
     geom_hline(
       data = subset(subset_df, subset_df$time == 0),
@@ -233,21 +219,11 @@ plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
     ) +
     xlab("Time since disturbance") +
     ylab("Total vector abundance") +
-    scale_colour_continuous_divergingx(
-      name = expression(R[E]),
-      mid = 1, n_interp = 11, palette = "Roma",
-      rev = TRUE, limits = RE_limit
-    ) +
-    scale_fill_continuous_divergingx(
-      name = expression(R[E]),
-      mid = 1, n_interp = 11, palette = "Roma", rev = TRUE,
-      limits = RE_limit
-    ) +
+    scale_color_viridis(name = expression(R[0])) +
     theme_classic() +
     theme(
       axis.text = element_text(size = 14, color = "black"),
-      axis.title = element_text(size = 15, color = "black"),
-      legend.position = "top"
+      axis.title = element_text(size = 15, color = "black")
     )
   return(NV_RE_GG)
 }
@@ -288,42 +264,27 @@ plot_RE_dynamics <- function(df, postdisturb = "No", RE_limit) {
 
   time_RE_GG <-
     ggplot(subset_df, aes(x = time)) +
-    geom_path(aes(y = RE, group = as.factor(1 - id), color = as.factor(1 - id)), linewidth = 0.8) +
+    geom_path(aes(
+      y = RE, group = as.factor(1 - id),
+      color = as.factor(1 - id)
+    ), linewidth = 0.8) +
     geom_hline(
       data = subset(subset_df, subset_df$time == 0),
       aes(yintercept = RE), color = "grey", alpha = 0.7, linetype = 2
     ) +
-    scale_color_viridis(discrete = TRUE) +
+    scale_color_grey() +
     xlab("Time since disturbance") +
-    ylab(expression("Effective reproductive number (" * R[E] * ")")) +
+    ylab(expression("Reproductive number (" * R[0] * ")")) +
     theme_classic() +
     theme(
+      legend.position = "none",
       axis.text = element_text(size = 14, color = "black"),
       axis.title = element_text(size = 15, color = "black"),
-      legend.position = "none"
-    )
-
-  min_max_RE_df <- rbind(minimum_RE, maximum_RE)
-
-  min_max_RE_GG <-
-    ggplot(min_max_RE_df, aes(x = as.factor(1 - id))) +
-    geom_point(aes(y = RE, fill = as.factor(1 - id)), size = 3, shape = 21) +
-    geom_hline(
-      data = subset(subset_df, subset_df$time == 0),
-      aes(yintercept = RE), color = "grey", alpha = 0.7, linetype = 2
-    ) +
-    scale_fill_viridis(discrete = TRUE, name = "Disturbance \n intensity ") +
-    xlab("Disturbance intensity \nof primary vector") +
-    ylab(expression("Effective reproductive number (" * R[E] * ")")) +
-    theme_classic() +
-    theme(
-      axis.text = element_text(size = 14, color = "black"),
-      axis.title = element_text(size = 15, color = "black"),
-      legend.position = "right"
-    )
+    ) + 
+    theme(aspect.ratio=1)
 
 
-  return(time_RE_GG + min_max_RE_GG)
+  return(time_RE_GG)
 }
 
 
@@ -455,12 +416,12 @@ plot_comparison_RE <- function(df, split_variable) {
     scale_fill_continuous_divergingx(
       name = expression(R[E]),
       mid = 1, n_interp = 11, palette = "Roma",
-      rev = TRUE, limits = c(0.8,1.6)
+      rev = TRUE, limits = c(0.8, 1.6)
     ) +
     theme_classic() +
     theme(
-      axis.text = element_text(size = 14, color = 'black'),
-      axis.title = element_text(size = 15,color = 'black')
+      axis.text = element_text(size = 14, color = "black"),
+      axis.title = element_text(size = 15, color = "black")
     )
 
 
@@ -549,3 +510,19 @@ plot_heatmapintensity <- function(df) {
       axis.title = element_text(color = "black", size = 14)
     )
 }
+
+plot_competition <- function(df) {
+  ggplot(df, aes(x= c_MP/c_PP, y = c_PM/c_MM, fill = RE))+ 
+    geom_tile() + 
+    scale_fill_viridis() + facet_wrap(~mortality_P)
+  }
+plot_competition(RE_DF_inter )
+
+  
+  
+  
+  
+  
+
+
+

@@ -20,23 +20,23 @@
 #' @examples Calculate_Human_REff(model_output, param_standard)
 Calculate_Human_REff <- function(List_x, param) {
   if (length(List_x) != 7 | class(List_x) != "list") {
-    stop("This is not the correct format: x`are you sure this is the model output?")
-  }
+    stop("This is not the correct format: 
+         x`are you sure this is the model output?")}
 
   # Parameters
-  theta_H <- param["theta_H"] # Transmission probability of human
-  theta_P <- param["theta_P"] # Transmission probability of primary vector
-  theta_M <- param["theta_M"] # Transmission probability of secondary vector
-  f_P <- param["f_P"] # Primary biting rate
-  f_M <- param["f_M"] # Secondary biting rate
-  gamma <- param["gamma"] # Recovery rate
-  mu_H <- param["mu_H"] # Human mortality rate
-  mu_V <- param["mu_V"]
-  c_MP <- param["c_MP"] # Competition of secondary on primary
-  c_PM <- param["c_PM"] # Competition of primary on secondary
-  c_MM <- param["c_MM"] # Competition of secondary on secondary
-  c_PP <- param["c_PP"] # Competition of primary on primary
-  ntime <- param["ntime"] # How long does the simulation run for?
+  theta_H <- param[["theta_H"]] # Transmission probability of human
+  theta_P <- param[["theta_P"]] # Transmission probability of primary vector
+  theta_M <- param[["theta_M"]]# Transmission probability of secondary vector
+  f_P <- param[["f_P"]] # Primary biting rate
+  f_M <- param[["f_M"]] # Secondary biting rate
+  gamma <- param[["gamma"]] # Recovery rate
+  mu_H <- param[["mu_H"]] # Human mortality rate
+  mu_V <- param[["mu_V"]]
+  c_MP <- param[["c_MP"]] # Competition of secondary on primary
+  c_PM <- param[["c_PM"]] # Competition of primary on secondary
+  c_MM <- param[["c_MM"]] # Competition of secondary on secondary
+  c_PP <- param[["c_PP"]] # Competition of primary on primary
+  ntime <- param[["ntime"]] # How long does the simulation run for?
 
   # States
   HS <- List_x[[1]] # human susceptible
@@ -63,8 +63,6 @@ Calculate_Human_REff <- function(List_x, param) {
   Secondary_HM <- (theta_H * f_M * (MS/NH)) * (1/ human_wait_time) 
   Secondary_MH <- (theta_M * f_M * (HS/NH)) * (1/mu_V) 
   
-
-
   RE <-   (Primary_HP * Primary_PH) + (Secondary_HM * Secondary_MH)
 
   RE_DF <- cbind.data.frame(
@@ -76,7 +74,7 @@ Calculate_Human_REff <- function(List_x, param) {
     MS = MS,
     HS = HS,
     HI = HI,
-    PtoH =   (Primary_HP * Primary_PH) ,
+    PtoH =  (Primary_HP * Primary_PH) ,
     MtoH = (Secondary_HM * Secondary_MH),
     Primary_HP = Primary_HP,
     Primary_PH  = Primary_PH,
@@ -85,9 +83,6 @@ Calculate_Human_REff <- function(List_x, param) {
   )
   return(RE_DF)
 }
-
-
-
 
 
 
@@ -103,69 +98,118 @@ Calculate_Human_REff <- function(List_x, param) {
 #' @export
 #'
 #' @examples
-Calculate_Human_Reff_Expanded <- function(df_expand, param) {
+Calculate_Human_Reff_Expanded <- function(List_x, param) {
+   
+  if (length(List_x) != 7 | class(List_x) != "list") {
+    stop("This is not the correct format: 
+         x`are you sure this is the model output?")
+  }
+  
   # Parameters
-  theta_H <- param["theta_H"] # Transmission probability of human
-  theta_P <- param["theta_P"] # Transmission probability of primary vector
-  theta_M <- param["theta_M"] # Transmission probability of secondary vector
-
-  f_P <- param["f_P"] # Primary biting rate
-  f_M <- param["f_M"] # Secondary biting rate
-
-  gamma <- param["gamma"] # Recovery rate
-
-  mu_H <- param["mu_H"] # Human mortality rate
-
-  c_MP <- param["c_MP"] # Competition of secondary on primary
-  c_PM <- param["c_PM"] # Competition of primary on secondary
-  c_MM <- param["c_MM"] # Competition of secondary on secondary
-  c_PP <- param["c_PP"] # Competition of primary on primary
+  theta_H <- param[["theta_H"]] # Transmission probability of human
+  theta_P <- param[["theta_P"]] # Transmission probability of primary vector
+  theta_M <- param[["theta_M"]]# Transmission probability of secondary vector
+  f_P <- param[["f_P"]] # Primary biting rate
+  f_M <- param[["f_M"]] # Secondary biting rate
+  gamma <- param[["gamma"]] # Recovery rate
+  mu_H <- param[["mu_H"]] # Human mortality rate
+  mu_V <- param[["mu_V"]]
+  c_MP <- param[["c_MP"]] # Competition of secondary on primary
+  c_PM <- param[["c_PM"]] # Competition of primary on secondary
+  c_MM <- param[["c_MM"]] # Competition of secondary on secondary
+  c_PP <- param[["c_PP"]] # Competition of primary on primary
+  ntime <- param[["ntime"]] # How long does the simulation run for?
 
   HS <- 1000
   NH <- 1000
+  
 
-  NP <- df_expand["NP"]
-  PI <- NP * 0.01
-  PS <- NP - PI
-
-  NM <- df_expand["NM"]
-  MI <- NM * 0.01
-  MS <- NM - MI
-
+  PS <- List_x[[4]] # primary susceptible
+  PI <- List_x[[5]] # primary infected
+  
+  MS <- List_x[[6]] # secondary susceptible
+  MI <- List_x[[7]] # secondary infected
+  
+  NP <- PS + PI # Total primary vectors
+  NM <- MS + MI # Total secondary vectors
 
   # Related to the average dwell time
-  Psi_P <- (c_MP * NM) + c_PP * (PS + (2 * PI))
-  Psi_M <- (c_PM * NP) + c_MM * (MS + (2 * MI))
-  Psi_C <- (c_MP * PI) * (c_PM * MI)
-  Gamma <- (Psi_P * Psi_M) - Psi_C
+  human_wait_time <- gamma + mu_H
+  
+  Primary_HP <- (theta_H * f_P * (PS/NH)) * (1/ human_wait_time) 
+  Primary_PH <- (theta_P * f_P * (HS/NH)) * (1/mu_V) 
+  
+  Secondary_HM <- (theta_H * f_M * (MS/NH)) * (1/ human_wait_time) 
+  Secondary_MH <- (theta_M * f_M * (HS/NH)) * (1/mu_V) 
+  
+  RE <- (Primary_HP * Primary_PH) + (Secondary_HM * Secondary_MH)
+  
 
-  wait_time <- Gamma * (gamma + mu_H) * NH^2
+  RE_DF <- cbind.data.frame(
+    time = seq(1, ntime),
+    RE = RE,
+    NP = NP,
+    NM = NM,
+    PtoH =   (Primary_HP * Primary_PH) ,
+    MtoH = (Secondary_HM * Secondary_MH),
+    Primary_HP = Primary_HP,
+    Primary_PH  = Primary_PH,
+    Secondary_HM = Secondary_HM,
+    Secondary_MH  = Secondary_MH
+  )
+  return(RE_DF)
+}
 
-  Primary <- HS * (theta_H * f_P * PS) * ((Psi_M * (theta_P * f_P) -
-    (c_PM * MI * (theta_M * f_M))))
 
-  Secondary <- HS * (theta_H * f_M * MS) * ((Psi_P * (theta_M * f_M) -
-    (c_MP * PI * (theta_P * f_P))))
+Calculate_Human_Reff_Expanded_static<- function(df, param) {
+  
 
-
-  RE <- (Primary / wait_time) + (Secondary / wait_time)
-
+  # Parameters
+  theta_H <- param[["theta_H"]] # Transmission probability of human
+  theta_P <- param[["theta_P"]] # Transmission probability of primary vector
+  theta_M <- param[["theta_M"]]# Transmission probability of secondary vector
+  f_P <- param[["f_P"]] # Primary biting rate
+  f_M <- param[["f_M"]] # Secondary biting rate
+  gamma <- param[["gamma"]] # Recovery rate
+  mu_H <- param[["mu_H"]] # Human mortality rate
+  mu_V <- param[["mu_V"]]
+  c_MP <- param[["c_MP"]] # Competition of secondary on primary
+  c_PM <- param[["c_PM"]] # Competition of primary on secondary
+  c_MM <- param[["c_MM"]] # Competition of secondary on secondary
+  c_PP <- param[["c_PP"]] # Competition of primary on primary
+  ntime <- param[["ntime"]] # How long does the simulation run for?
+  
+  HS <- 1000
+  NH <- 1000
+  
+  NP <-df["NP"] # Total primary vectors
+  NM <- df["NM"]# Total secondary vectors
+  
+  PS = NP - (NP * 0.001)
+  MS = NM - (NM * 0.001)
+  
+  # Related to the average dwell time
+  human_wait_time <- gamma + mu_H
+  
+  Primary_HP <- (theta_H * f_P * (PS/NH)) * (1/ human_wait_time) 
+  Primary_PH <- (theta_P * f_P * (HS/NH)) * (1/mu_V) 
+  
+  Secondary_HM <- (theta_H * f_M * (MS/NH)) * (1/ human_wait_time) 
+  Secondary_MH <- (theta_M * f_M * (HS/NH)) * (1/mu_V) 
+  
+  RE <- (Primary_HP * Primary_PH) + (Secondary_HM * Secondary_MH)
+  
+  
   RE_DF <- cbind.data.frame(
     RE = RE,
     NP = NP,
     NM = NM,
-    PS = PS,
-    MS = MS,
-    HS = HS,
-    PtoH = Primary / wait_time,
-    MtoH = Secondary / wait_time
+    PtoH =   (Primary_HP * Primary_PH) ,
+    MtoH = (Secondary_HM * Secondary_MH)
   )
-
-  colnames(RE_DF) <- c("RE", "NP", "NM", "PS", "MS", "HS", "PtoH", "MtoH")
-
+  colnames(RE_DF) <- c("RE", "NP","NM", "PtoH", "MtoH")
   return(RE_DF)
 }
-
 
 #' Calculate the total vector abundance for the maximum RE AND the
 #' RE for the maximum vector abundance.

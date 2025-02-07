@@ -11,11 +11,19 @@ params_interest <- c("worse_m","standard", "no_diff", "better_m")
 
 ###Calculate the R0 for the different abundances depending on the parameter.
 df_expand_RE <- lapply(params_interest, function(x) {
-        tmp <- Calculate_Human_Reff_Expanded(abund_expand_DF, get_parameters(x))
-        tmp$id <- x
-        tmp$max_RE <- max(tmp$RE)
+        tmp <- Calculate_Human_Reff_Expanded_static(abund_expand_DF, get_parameters(x))
+        tmp$id = x
+        
         return(tmp)
         })
 
 df_expand_RE <- do.call(rbind, df_expand_RE)
+
+ggplot(df_expand_RE, aes(x= NP,y = NM, fill = MtoH/RE)) + 
+        geom_tile() + facet_wrap(~id) + 
+        scale_fill_viridis(option = 'turbo')
+
+
+
+
 saveRDS(df_expand_RE, file = here("Output","df_expand_RE.rds"))
