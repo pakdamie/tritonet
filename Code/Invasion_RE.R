@@ -26,8 +26,4 @@ RE_mortality_P_post <- subset(
   RE_mortality_P_DF$time < (9125 + 300)
 )
 
-
-ggplot(RE_mortality_P_post, aes(x= time, y= RE, group = id)) + geom_line()
-
 saveRDS(file = here("Output", "df_RE_mortality_P_R0.rds"), RE_mortality_P_post)
-

@@ -1,97 +1,77 @@
 # VARY THE INTERSPECIFIC P on M as well as M_M
-# But fix the MP AS WELL AS PP.
-# Fixed:
-c_MP_standard <- 3e-6 ## Competition effect of s.vector on p.vector
-c_PP_standard <- 4.5e-4 ## Competition effect of p.vector on s.vector
-c_PM_standard <- 3e-4 ## Competition effect of p.vector on s.vector
-c_MM_standard <- 2.5e-4 ## Competition effect of s.vector on s.vector
+# FIXING MP AS WELL AS PP.
+param_standard <- get_parameters("standard")
+c_PM_standard <- param_standard["c_PM"] ## Competition effect of p.vector on s.vector
 
-modifier <- seq(0.01, 2, 0.01)
-Mortality_P <- c(0.01, 0.25, 0.5, 0.75)
+modifier <- seq(0.01, 2, length = 25)
+Mortality_P <- seq(0.01,1, 0.01)
 
 
 competition_param <-
   data.frame(expand.grid(
-    c_PP = c_PP_standard,
-    c_MM = c_MM_standard,
-    c_MP = c_MP_standard,
     c_PM = c_PM_standard * modifier,
     mortality_P = Mortality_P
   ))
 
 
-# stupid way that i'm gonna fix
-
-param_standard_list <- NULL
-for (i in seq(1:nrow(competition_param))) {
-  param_copy <- get_parameters("standard")
-  param_copy["c_PP"] <- competition_param[i, "c_PP"]
-  param_copy["c_MM"] <- competition_param[i, "c_MM"]
-  param_copy["c_PM"] <- competition_param[i, "c_PM"]
-  param_copy["c_MP"] <- competition_param[i, "c_MP"]
-  param_copy["mortality_P"] <- competition_param[i, "mortality_P"]
-  param_standard_list[[i]] <- param_copy
-}
+competition_param_list <- vary_parameter_value(
+  param_standard, c( "c_PM", "mortality_P"), competition_param
+)
 
 
-RE_CM <-
+RE_COMPETITION <-
   Simulate_Model_Output(
     parameter = get_parameters("standard"),
     infection_start = "No",
-    variable_interest = c("c_PP", "C_MM", "c_MP", "c_PM", "mortality_P"),
+    variable_interest = c("c_PM", "mortality_P"),
     vector_value = competition_param
+  ) |>
+  Calculate_change_baseline(
+    competition_param_list,
+    competition_param, "No"
   )
 
-
-RE_DF_inter <- NULL
-for (k in 1:length(RE_CM)) {
-  RE_tmp <- Calculate_Human_Reff_Expanded(RE_CM[[k]], param_standard_list[[k]])
-
-  eq_RE <- RE_tmp[9124, ]$RE
-  eq_NM <- RE_tmp[9124, ]$NM
-  eq_NP <- RE_tmp[9124, ]$NP
-
-  post_df <- na.omit(subset(RE_tmp, RE_tmp$time > 9124))
-
-  RE_max <- cbind(competition_param[k, ],
-    max_NP = max(post_df$NP) - eq_NP,
-    max_NM = max(post_df$NM) - eq_NM,
-    min_NP = max(post_df$NP) - eq_NP,
-    min_NM = max(post_df$NM),
-    max_NV = max(post_df$NM + post_df$NP) - (eq_NM + eq_NP),
-    RE = max(post_df$RE) - eq_RE,
-    min_RE = min(post_df$RE)
-  )
-
-  RE_DF_inter[[k]] <- RE_max
-}
-
-RE_DF_inter <- do.call(rbind, RE_DF_inter)
-
-RE_DF_inter$ext_NP <- ifelse(RE_DF_inter$min_NP < 1, "Extinct", "Not")
-RE_DF_inter$ext_NM <- ifelse(RE_DF_inter$min_NM < 1, "Extinct", "Not")
-RE_DF_inter$coexistence <- ifelse(RE_DF_inter$ext_NP ==
-  RE_DF_inter$ext_NM, "coexistence", "Not")
+panel_1 <- ggplot(
+  RE_COMPETITION, aes(
+    y = 1-mortality_P,
+    x = c_PM/c_PM_standard, fill = RE)) + 
+  geom_tile() + 
+  scale_fill_viridis() + 
+  scale_x_continuous(expand = c(0,0)) +
+  coord_cartesian(xlim=c(0,2)) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  xlab(expression("Modifier of primary on secondary competition ("*c[PM]*")")) +
+  ylab("Proportion of primary vectors removed") + 
+  theme_classic() + 
+  theme(legend.position = 'top', 
+        axis.text = element_text(size = 14, color = 'black'),
+        axis.title = element_text(size = 15, color = 'black'))
+  
+sub_RE_COMPETITION <- subset(RE_COMPETITION,
+                             RE_COMPETITION$mortality_P %in% c(0.01,0.25, 0.5,0.75))
 
 
-ggplot(RE_DF_inter, aes(
-  x = c_PM / c_MP_standard, y = RE, color = max_NM,
-  group = as.factor(1 - mortality_P)
-)) +
-  geom_path(size = 2, linejoin = "mitre", lineend = "round") +
-  xlab("Modifier of primary competition") +
-  ylab(expression(paste("Deviation from the", R[0]^"*"))) +
-  scale_color_viridis(
-    name = expression(paste("Deviation from\nthe", N[P]^"*")),
-    option = "rocket"
-  ) +
-  theme_classic() +
-  theme(
-    axis.text = element_text(size = 13, color = "black"),
-    axis.title = element_text(size = 14, color = "black")
-  )
+panel_2 <- ggplot(
+  sub_RE_COMPETITION , aes(
+    x = c_PM/c_PM_standard,
+    y = (max_NM), color = as.factor(1-mortality_P),
+    group = as.factor(1-mortality_P)))+ 
+    geom_line(size = 1.2)+
+    scale_color_grey() + 
+  coord_cartesian(xlim=c(0,2)) + 
+  scale_x_continuous(expand = c(0,0))+
+  xlab(expression("Modifier of primary on secondary competition ("*c[PM]*")")) +
+  ylab(expression("Increase from " * N[M]^"*"))+
+  theme_classic() + 
+   theme(legend.position = 'none',
+         axis.text = element_text(size = 14, color = 'black'),
+         axis.title = element_text(size = 15, color = 'black'))
+
+
+panel_1/panel_2
 
 
 ggsave(here("Figures", "RE_DF_primarycompetition.pdf"),
-  width = 8, height = 6, units = "in"
+  width = 6, height = 10, units = "in"
 )
+

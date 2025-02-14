@@ -2,7 +2,7 @@
 # Maintained by Damie Pak
 library(here)
 source(here("Code", "Function", "packages.R"))
-sourceCpp(here("Code", "Function", "onepatch_model.cpp"))
+sourceCpp(here("Code", "Function", "model_vectors_host.cpp"))
 source(here("Code", "Function", "simulate_functions.R"))
 source(here("Code", "Function", "calculate_functions.R"))
 source(here("Code", "Function", "plotting_functions.R"))

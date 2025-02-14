@@ -1,4 +1,6 @@
 ### Simulate varying intensity of disturbances for both primary and secondary
+### Supplementary FIGURE 1
+### Analysis and figure are the same
 
 param_standard <- get_parameters("standard")
 Mortality_P <- c(seq(0, 1, 0.1))
@@ -28,22 +30,33 @@ RE_Mort_PM_DF <- subset(
     RE_Mort_PM_DF$time < 14000
 )
 
+
+###What is the RE above the baseline?
 Maximum_RE_Mort_PM <- do.call(
   rbind,
   by(RE_Mort_PM_DF,
     RE_Mort_PM_DF[, c("Mort_P", "Mort_M")],
     function(x) {
-      x[which.max(x$RE), ]
+      cbind.data.frame(Mort_P = x$Mort_P,
+                       Mort_M = x$Mort_M,
+     RE = x[which.max(x$RE), ]$RE - x[x$time == 9124,]$RE)
     },
     simplify = TRUE
   )
 )
 
 
-ggplot(Maximum_RE_Mort_PM, aes(x = (1-Mort_P), y= (1-Mort_M), fill = RE)) + 
+ggplot(Maximum_RE_Mort_PM, 
+  aes(x = (1-Mort_P), y= (1-Mort_M), fill = RE)) + 
   geom_tile() + 
-  scale_fill_viridis()
+  xlab("Proportion of primary vector removed") + 
+  ylab("Proportion of secondary vector removed") + 
+  scale_fill_viridis(expression("Increase above "  * R[0]^"*")) + 
+  scale_x_continuous(expand = c(0,0)) + 
+  scale_y_continuous(expand = c(0,0)) + 
+  coord_equal() + 
+  theme_classic() + 
+  theme(axis.text = element_text(size = 14, color = 'black'),
+        axis.title = element_text(size = 15, color = 'black'))
 
-
-
-save(Maximum_RE_Mort_PM, file = "Output/Maximum_RE_Mort_PM.rds")
+ggsave("Figures/Intensity_PM.pdf", units = "in", height = 6, width = 9)
