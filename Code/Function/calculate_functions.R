@@ -278,6 +278,7 @@ Calculate_change_baseline <- function(model_output, parameter_list, expand_param
       max_NM = max(post_df$NM) - eq_NM,
       max_NV = max(post_df$NM + post_df$NP) - (eq_NM + eq_NP),
       RE = max(post_df$RE) - eq_RE,
+      max_RE = max(post_df$RE),
       max_mtoH = max(post_df$MtoH/post_df$RE)
     )
     

@@ -43,7 +43,6 @@ make_with_recipe(
       area(2, 3, 2, 3)
     )
 
-
     # Full composite figure with all
     Panel_RE_Time + Panel_A + theme(aspect.ratio = 1) + 
       Panel_B + theme(aspect.ratio = 1) +
@@ -75,34 +74,6 @@ removed_0 <- subset(RE_mortality_P_post, RE_mortality_P_post$id != 0)
 plot_NM_REff(removed_0,"No") + 
 
 }
-
-
-make_with_source(
-  note = "Calculate RE (or R0) for different vector abundance",
-  source = "Code/Simulate_R0.R",
-  targets = "Output/df_expand_RE.rds"
-)
-
-make_with_recipe(
-  note = "Plot R0 for different vector abundance using different
-  parameters",
-  label = "plot_heatmap_R0",
-  recipe = {
-    df_expand_RE <- readRDS("Output/df_expand_RE.rds")
-    plot_heatmapR0(df_expand_RE)
-    ggsave(here("Figures", "R0_heatmap.pdf"),
-      width = 13, height = 5, units = "in"
-    )
-    
-  },
-  targets = "Figures/R0_heatmap.pdf",
-  dependencies = "Output/df_expand_RE.rds",
-  envir = environment()
-)
-
-
-
-
 
 
 

@@ -2,8 +2,9 @@ param_standard <- get_parameters("standard")
 Mortality_P <- seq(0.01, 1, length = 10)
 modifier <- seq(0, 2, 0.1)
 
-f_M_standard <- param_standard["f_M"] ## Competition effect of s.vector on p.vector
-theta_M_standard <- param_standard["theta_M"] ## Competition effect of p.vector on s.vector
+### Pull out the standard parameters
+f_M_standard <- param_standard["f_M"]
+theta_M_standard <- param_standard["theta_M"]
 f_P_standard <- param_standard["f_P"]
 theta_P_standard <- param_standard["theta_P"]
 
@@ -46,20 +47,29 @@ heatmap_SM_A <-
   )
 
 
+
+
+
+
+
 heatmap_SM_A <-
   ggplot(RE_SM, aes(x = f_M / f_P_standard, y = 1 - mortality_P, fill = RE)) +
   geom_tile(size = 0.8) +
   coord_equal() +
   xlab("Transmission efficacy of secondary vector \ncompared to primary vector") +
   ylab("Proportion of primary vectors removed") +
-  scale_fill_viridis(option = "mako", name = "Secondary vector contribution to R0") +
+  scale_fill_viridis(option = "viridis", name = "Increase in RE") +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(
     axis.text = element_text(size = 14, color = "black"),
     axis.title = element_text(size = 15, color = "black"),
-    legend.position = "top"
+    legend.position = "right"
   )
+ggsave(here("Figures","SUPP_RE_SecondaryVector.pdf"),
+       units = "in", height =5, width = 6)
+
+
 
 RE_SM_2 <-
   Simulate_Model_Output(

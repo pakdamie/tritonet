@@ -1,7 +1,5 @@
 This is the full code for the model and the subsequent analysis.
 
-
-
 ## The mathematical model
 The full mathematical model is written in `rcpp` and should be in the code
 `model_vectors_host.cpp`
