@@ -1,6 +1,8 @@
 # How does the disturbance intensity of the primary vector influence RE?
 # The secondary vector does not transmit
 # Retrieve "standard" parameters and set the different values of disturbances
+
+
 param_nonesec <- get_parameters("nonesec")
 Mortality_P <- data.frame(Mort_P = c(0,0.01, 0.25, 0.5, 0.75))
 

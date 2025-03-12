@@ -1,4 +1,3 @@
-
 #Pipe-line
 library(makepipe)
 
@@ -13,4 +12,3 @@ library(reshape2)
 library(ggplot2) # Figure making
 library(patchwork) # Put figures together
 library(viridis) # Color scheme
-library(colorspace) # Color scheme 2

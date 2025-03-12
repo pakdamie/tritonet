@@ -287,23 +287,6 @@ plot_RE_dynamics <- function(df, postdisturb = "No", RE_limit) {
   return(time_RE_GG)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #' Plot primary vectors, secondary vectors, and human infections
 #'
 #' Plot the total abundance of both the primary and secondary

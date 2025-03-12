@@ -38,7 +38,8 @@ Rcpp::List model_vectors_host(
   double mortality_P = param["mortality_P"]; // Primary vector mortality
   double mortality_M = param["mortality_M"]; // Secondary vector mortality
   
-  
+
+  //Time anything
   for (int j = 0; j < ntime; j++) {
     
     // Total populations for rate calculations
@@ -52,14 +53,11 @@ Rcpp::List model_vectors_host(
    else{
     HI.row(j) = HI.row(j);
    }
-   
-    
+  
     // Infection ratios
     arma::rowvec HP_ratio = PI.row(j) / NH;
     arma::rowvec HM_ratio = MI.row(j) / NH;
-    arma::rowvec H_ratio =  HI.row(j)/ NH;
-    
-   
+    arma::rowvec H_ratio =  HI.row(j) / NH;
     
     // Human infection rates
     arma::rowvec infections_H_fromP = theta_P * f_P * HP_ratio;

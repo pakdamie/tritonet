@@ -1,104 +1,19 @@
-#' Calculate the effective reproductive number (human) derived analytically
+#' Calculate the reproductive number (human) derived analytically 
+#' assuming that the susceptible human is constant and only the 
+#' susceptible vector population is changing. This is the main
+#' way that the RE was calculated in the main manuscript
 #'
-#' Calculate the effective reproductive number (RE) with the assumption that any
-#' new infection is ONLY from the human. The equation is derived analytically
-#' (check manuscript), and we use the simulation output to track how RE changes
-#' over time.
+#' Function is different than `Calculate_Human_Reff` above because
+#' that is the "true" expected the 
 #'
-#' @param List_x (list) The model output. Should have length of 7 to account
-#' for the seven compartments.
+#' @param List_x (list) The raw model output that should include 7 elements
+#' @param param (data.frame) The data.frame with the parameter
 #'
-#' @param param (data.frame) Parameters used from simulating the model
-#'
-#' @return (data.frame) A that includes the RE, the total number of primary (NP)
-#' and secondary vectors (NM), primary (PS) and secondary (MS) susceptibles,
-#' human susceptibles (HS). The contribution to the RE from the primary vector (
-#' PtoH) and the secondary vector (MtoH), and finally the 'waiting time' (wait_time)
-#'
-#' @export
-#'
-#' @examples Calculate_Human_REff(model_output, param_standard)
-Calculate_Human_REff <- function(List_x, param) {
-  if (length(List_x) != 7 | class(List_x) != "list") {
-    stop("This is not the correct format:
-         x`are you sure this is the model output?")
-  }
-
-  # Parameters
-  theta_H <- param[["theta_H"]] # Transmission probability of human
-  theta_P <- param[["theta_P"]] # Transmission probability of primary vector
-  theta_M <- param[["theta_M"]] # Transmission probability of secondary vector
-  f_P <- param[["f_P"]] # Primary biting rate
-  f_M <- param[["f_M"]] # Secondary biting rate
-  gamma <- param[["gamma"]] # Recovery rate
-  mu_H <- param[["mu_H"]] # Human mortality rate
-  mu_V <- param[["mu_V"]]
-  c_MP <- param[["c_MP"]] # Competition of secondary on primary
-  c_PM <- param[["c_PM"]] # Competition of primary on secondary
-  c_MM <- param[["c_MM"]] # Competition of secondary on secondary
-  c_PP <- param[["c_PP"]] # Competition of primary on primary
-  ntime <- param[["ntime"]] # How long does the simulation run for?
-
-  # States
-  HS <- List_x[[1]] # human susceptible
-  HI <- List_x[[2]] # human infected
-  HR <- List_x[[3]] # human recovered
-
-  PS <- List_x[[4]] # primary susceptible
-  PI <- List_x[[5]] # primary infected
-
-  MS <- List_x[[6]] # secondary susceptible
-  MI <- List_x[[7]] # secondary infected
-
-  NH <- HS + HI + HR # Total humans
-  NP <- PS + PI # Total primary vectors
-  NM <- MS + MI # Total secondary vectors
-
-  # Related to the average dwell time
-  ### Waiting time denominator
-  human_wait_time <- gamma + mu_H
-
-  Primary_HP <- (theta_H * f_P * (PS / NH)) * (1 / human_wait_time)
-  Primary_PH <- (theta_P * f_P * (HS / NH)) * (1 / mu_V)
-
-  Secondary_HM <- (theta_H * f_M * (MS / NH)) * (1 / human_wait_time)
-  Secondary_MH <- (theta_M * f_M * (HS / NH)) * (1 / mu_V)
-
-  RE <- (Primary_HP * Primary_PH) + (Secondary_HM * Secondary_MH)
-
-  RE_DF <- cbind.data.frame(
-    time = seq(1, ntime),
-    RE = RE,
-    NP = NP,
-    NM = NM,
-    PS = PS,
-    MS = MS,
-    HS = HS,
-    HI = HI,
-    PtoH = (Primary_HP * Primary_PH),
-    MtoH = (Secondary_HM * Secondary_MH),
-    Primary_HP = Primary_HP,
-    Primary_PH = Primary_PH,
-    Secondary_HM = Secondary_HM,
-    Secondary_MH = Secondary_MH
-  )
-  return(RE_DF)
-}
-
-
-
-#' Calculate the reproductive number (human) derived analytically
-#'
-#' Function is different than `Calculate_Human_Reff` because instead of
-#' the model output, you
-#'
-#' @param df_expand
-#' @param param
-#'
-#' @returns
+#' @returns a 
 #' @export
 #'
 #' @examples
+
 Calculate_Human_Reff_Expanded <- function(List_x, param) {
   if (length(List_x) != 7 | class(List_x) != "list") {
     stop("This is not the correct format:
@@ -113,16 +28,16 @@ Calculate_Human_Reff_Expanded <- function(List_x, param) {
   f_M <- param[["f_M"]] # Secondary biting rate
   gamma <- param[["gamma"]] # Recovery rate
   mu_H <- param[["mu_H"]] # Human mortality rate
-  mu_V <- param[["mu_V"]]
+  mu_V <- param[["mu_V"]] # Vector mortality rate
   c_MP <- param[["c_MP"]] # Competition of secondary on primary
   c_PM <- param[["c_PM"]] # Competition of primary on secondary
   c_MM <- param[["c_MM"]] # Competition of secondary on secondary
   c_PP <- param[["c_PP"]] # Competition of primary on primary
   ntime <- param[["ntime"]] # How long does the simulation run for?
 
-  HS <- 1000
-  NH <- 1000
-
+  # We keep the number of susceptible human as being consistent 
+  HS <- 1000 #number of susceptible human
+  NH <- 1000 #total human 
 
   PS <- List_x[[4]] # primary susceptible
   PI <- List_x[[5]] # primary infected
@@ -133,29 +48,32 @@ Calculate_Human_Reff_Expanded <- function(List_x, param) {
   NP <- PS + PI # Total primary vectors
   NM <- MS + MI # Total secondary vectors
 
-  # Related to the average dwell time
+  # Related to the average dwell time of the human
   human_wait_time <- gamma + mu_H
 
+  #Primary vector contribution to the RE
   Primary_HP <- (theta_H * f_P * (PS / NH)) * (1 / human_wait_time)
   Primary_PH <- (theta_P * f_P * (HS / NH)) * (1 / mu_V)
 
+  #Secondary contribution to the RE
   Secondary_HM <- (theta_H * f_M * (MS / NH)) * (1 / human_wait_time)
   Secondary_MH <- (theta_M * f_M * (HS / NH)) * (1 / mu_V)
 
+  #The total RE
   RE <- (Primary_HP * Primary_PH) + (Secondary_HM * Secondary_MH)
 
 
   RE_DF <- cbind.data.frame(
-    time = seq(1, ntime),
-    RE = RE,
-    NP = NP,
-    NM = NM,
-    PtoH = (Primary_HP * Primary_PH),
-    MtoH = (Secondary_HM * Secondary_MH),
-    Primary_HP = Primary_HP,
-    Primary_PH = Primary_PH,
-    Secondary_HM = Secondary_HM,
-    Secondary_MH = Secondary_MH
+    time = seq(1, ntime), #Time
+    RE = RE, #RE
+    NP = NP, #Total primary vector 
+    NM = NM, #Total secondary vector 
+    PtoH = (Primary_HP * Primary_PH), # P.vector contribution
+    MtoH = (Secondary_HM * Secondary_MH), #S.vector contribution
+    Primary_HP = Primary_HP, #Human to primary vector
+    Primary_PH = Primary_PH, #P.vector to human 
+    Secondary_HM = Secondary_HM, #Human to secondary vector
+    Secondary_MH = Secondary_MH #S.vector to human
   )
   return(RE_DF)
 }
@@ -299,37 +217,91 @@ Calculate_change_baseline <- function(model_output, parameter_list, expand_param
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-#' Calculate steady state (Caitlin Lienkaemper wrote this)
+#' Calculate the effective reproductive number (human) derived analytically
 #'
-#' Calculates when the system should reach the steady state
-#' (If it doesn't work- blame her)
+#' Calculate the effective reproductive number (RE) with the assumption that any
+#' new infection is ONLY from the human. The equation is derived analytically
+#' (check manuscript), and we use the simulation output to track how RE changes
+#' over time. Note that this is not used in the main manuscript- 
+#' but I think it would be useful for inclusion. 
 #'
-#' @param v
-#' @param max_diff
+#' @param List_x (list) The model output. Should have length of 7 to account
+#' for the seven compartments.
 #'
-#' @returns
+#' @param param (data.frame) Parameters used from simulating the model
+#'
+#' @return (data.frame) A that includes the RE, the total number of primary (NP)
+#' and secondary vectors (NM), primary (PS) and secondary (MS) susceptibles,
+#' human susceptibles (HS). The contribution to the RE from the primary vector (
+#' PtoH) and the secondary vector (MtoH), and finally the 'waiting time' (wait_time)
+#'
 #' @export
 #'
-#' @examples
-Calculate_steady_state <- function(v, max_diff = 10^(-6)) {
-  diffs <- diff(v)
-  n <- length(diffs)
-  for (i in seq_len(n)) {
-    if (max(abs(diffs[i:n])) < max_diff) {
-      return(c(i, v[i]))
-    }
-  }
-  return("that aint it chief")
-}
+#' @examples Calculate_Human_REff(model_output, param_standard)
+#Calculate_Human_REff <- function(List_x, param) {
+#  
+#  if (length(List_x) != 7 | class(List_x) != "list") {
+#    stop("This is not the correct format:
+#         x`are you sure this is the model output?")
+#  }
+#
+#  # Parameters
+#  theta_H <- param[["theta_H"]] # Transmission probability of human
+#  theta_P <- param[["theta_P"]] # Transmission probability of primary vector
+#  theta_M <- param[["theta_M"]] # Transmission probability of secondary vector
+#  f_P <- param[["f_P"]] # Primary biting rate
+#  f_M <- param[["f_M"]] # Secondary biting rate
+#  gamma <- param[["gamma"]] # Recovery rate
+#  mu_H <- param[["mu_H"]] # Human mortality rate
+#  mu_V <- param[["mu_V"]]
+#  c_MP <- param[["c_MP"]] # Competition of secondary on primary
+#  c_PM <- param[["c_PM"]] # Competition of primary on secondary
+#  c_MM <- param[["c_MM"]] # Competition of secondary on secondary
+#  c_PP <- param[["c_PP"]] # Competition of primary on primary
+#  ntime <- param[["ntime"]] # How long does the simulation run for?
+#
+#  # States
+#  HS <- List_x[[1]] # human susceptible
+#  HI <- List_x[[2]] # human infected
+#  HR <- List_x[[3]] # human recovered
+#
+#  PS <- List_x[[4]] # primary susceptible
+#  PI <- List_x[[5]] # primary infected
+#
+#  MS <- List_x[[6]] # secondary susceptible
+#  MI <- List_x[[7]] # secondary infected
+#
+#  NH <- HS + HI + HR # Total humans
+#  NP <- PS + PI # Total primary vectors
+#  NM <- MS + MI # Total secondary vectors
+#
+#  # Related to the average dwell time
+#  ### Waiting time denominator
+#  human_wait_time <- gamma + mu_H
+#
+#  Primary_HP <- (theta_H * f_P * (PS / NH)) * (1 / human_wait_time)
+#  Primary_PH <- (theta_P * f_P * (HS / NH)) * (1 / mu_V)
+#
+#  Secondary_HM <- (theta_H * f_M * (MS / NH)) * (1 / human_wait_time)
+#  Secondary_MH <- (theta_M * f_M * (HS / NH)) * (1 / mu_V)
+#
+#  RE <- (Primary_HP * Primary_PH) + (Secondary_HM * Secondary_MH)
+#
+#  RE_DF <- cbind.data.frame(
+#    time = seq(1, ntime),
+#    RE = RE,
+#    NP = NP,
+#    NM = NM,
+#    PS = PS,
+#    MS = MS,
+#    HS = HS,
+#    HI = HI,
+#    PtoH = (Primary_HP * Primary_PH),
+#    MtoH = (Secondary_HM * Secondary_MH),
+#    Primary_HP = Primary_HP,
+#    Primary_PH = Primary_PH,
+#    Secondary_HM = Secondary_HM,
+#    Secondary_MH = Secondary_MH
+#  )
+#  return(RE_DF)
+#}

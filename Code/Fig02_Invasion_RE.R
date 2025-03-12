@@ -1,7 +1,9 @@
 # How does the disturbance intensity of the primary vector influence RE?
 
 # Retrieve "standard" parameters and set the different values of disturbances
-param_standard <- get_parameters("standard")
+param_standard <- get_parameters("better_m")
+
+
 Mortality_P <- data.frame(Mort_P = c(0, 0.01, 0.25, 0.5, 0.75))
 
 # Simulate model output and calculate the RE from the output

@@ -1,15 +1,17 @@
 #' Retrieve different data.frame of parameters for the model simulation.
 #'
 #' A collection of different parameters I use for analysis: "standard" is the
-#' default.
+#' default. 
 #'
 #' @param type The type of parameters to get. The default is "standard", but other
 #' types could include: no_disturb, post_disturb, post_disturb, and no_diff.
 #'
-#' @return (data.frame) A data.frame of parameter values to.
+#'
+#'
+#' @return (data.frame) A data.frame of parameter values to use for the model
 #' @export
 #'
-#' @examples
+#' @examples get_parameters("standard")
 get_parameters <- function(type = "standard") {
   if (!(type %in% c(
     "standard",
@@ -21,23 +23,25 @@ get_parameters <- function(type = "standard") {
     stop("Ensure that you input a valid type")
   }
 
+  
+  ### The standard parameter that is in the supplement
   param_standard <- c(
-    b_H = 1 / (365 * 70), ## Human mortality rate
+    b_H = 1 / (365 * 70), # Human mortality rate
     b_P = 1 / 10, # P. Vector birth rate
     b_M = 1 / 10, # S. Vector birth rate
-    mu_H = 1 / (365 * 70), ## Human death rate
+    mu_H = 1 / (365 * 70), # Human death rate
     f_P = 0.25, # Biting rate of the p. vector
     f_M = 0.25 * 0.75, # Biting rate of the s.vector
-    theta_P = 0.50, # Transmission probability of p. vector
-    theta_M = 0.50 * 0.75, # Transmission probability of s. vector
+    theta_P = 0.10, # Transmission probability of p. vector
+    theta_M = 0.10 * 0.75, # Transmission probability of s. vector
     theta_H = 0.50, # Transmission probability of human
     gamma = 1 / 90, # Recovery rate of infected human
-    c_PM = 3e-4, ## Competition effect of p.vector on s.vector
-    c_MP = 3e-6, ## Competition effect of s.vector on p.vector
-    c_PP = 4.5e-4, ## Competition effect of p.vector on s.vector
-    c_MM = 2.5e-4, ## Competition effect of s.vector on s.vector
-    mu_V = 1 / 20,
-    ntime = (365 * 50),
+    c_PM = 3e-4, # Competition effect of p.vector on s.vector
+    c_MP = 3e-6, # Competition effect of s.vector on p.vector
+    c_PP = 4.5e-4, # Competition effect of p.vector on s.vector
+    c_MM = 2.5e-4, # Competition effect of s.vector on s.vector
+    mu_V = 1 / 20, # Vector mortality rate 
+    ntime = (365 * 50), #Number of times 
     disturbance_time = (365 * 25),
     infection_time = 1e30,
     delta_T = 1,
@@ -64,8 +68,8 @@ get_parameters <- function(type = "standard") {
 
   ## Secondary vectors better but they are weaker competitors
   param_better_m <- param_standard
-  param_better_m["f_M"] <- param_standard["f_M"] * 1.10
-  param_better_m["theta_M"] <- param_standard["theta_M"] * 1.10
+  param_better_m["f_M"] <- param_standard["f_M"] * 2.10
+  param_better_m["theta_M"] <- param_standard["theta_M"] * 2.10
 
   if (type == "standard") {
     return(param_standard)

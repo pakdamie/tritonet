@@ -1,5 +1,6 @@
 #This is the pipeline for the entirety of the manuscript.
 # Maintained by Damie Pak
+
 library(here)
 source(here("Code", "Function", "packages.R"))
 sourceCpp(here("Code", "Function", "model_vectors_host.cpp"))
@@ -74,11 +75,6 @@ removed_0 <- subset(RE_mortality_P_post, RE_mortality_P_post$id != 0)
 plot_NM_REff(removed_0,"No") + 
 
 }
-
-
-
-
-
 
 
 ###Supplementary Material

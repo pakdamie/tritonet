@@ -14,7 +14,4 @@ eq_NM_25_fig_1  <- (subset(RE_mortality_P_post, RE_mortality_P_post$time == 9124
 paste("The maximum NM reached in Figure 1 is:", round(max_NM_01_fig_1,2), sep = " ")
 paste("The maximum NM reached in Figure 1 is:", round(max_NM_25_fig_1,2), sep = " ")
 
-
-
-
 max(RE_SECONDARY$RE)
