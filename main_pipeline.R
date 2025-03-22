@@ -9,52 +9,93 @@ source(here("Code", "Function", "calculate_functions.R"))
 source(here("Code", "Function", "plotting_functions.R"))
 
 make_with_source(
-  note = "Simulate model with different disturbance intensity for p. vector",
-  source = "Code/Simulate_MortP.R",
+  note = "Simulate model with different disturbance intensity for p. vector 
+  and different parameter",
+  source = "Code/01_RE_mortality_P.R",
   targets = "Output/RE_mortality_P_post.rds")
 
 make_with_recipe(
-  note = "Plot the composite three-panel Figure 1.",
+  note = "Plot the composite 9-panel (Figure 2).",
   label = "plot_NP_NM_RE",
   recipe = {
+    
     RE_mortality_P_post <- readRDS("Output/df_RE_mortality_P_R0.rds")
 
+    #Retrieve "standard" and "better_m"
+    
+    
+    RE_mortality_P_SB <- subset(RE_mortality_P_post, 
+                                RE_mortality_P_post$param %in%
+                                c("standard", "no_diff","better_m"))
+    
+    RE_mortality_P_SB$param <- factor(RE_mortality_P_SB$param,
+                                         levels = c("standard", "no_diff", "better_m"),
+                                         labels = c("Standard", "Same", "Higher"))
+    
+    dstb_time<- get_parameters("standard")["disturbance_time"]
+    
     ### Makes it easyy
     RE_limits <- c(
-      round(min(RE_mortality_P_post$RE), 1),
-      round(max(RE_mortality_P_post$RE), 1) + 0.1
+      round(min(RE_mortality_P_SB$RE), 1),
+      round(max(RE_mortality_P_SB$RE), 1) + 0.1
     )
 
-    Panel_RE_Time <- plot_RE_dynamics(RE_mortality_P_post, "No", NA)
+    Panel_RE_Time <- 
+      plot_RE_dynamics(RE_mortality_P_SB,  dstb_time, "No", NA) + 
+      facet_wrap(~param, ncol = 3) +
+      theme(strip.background = element_blank(),
+            strip.text = element_text(size = 11))
 
     # Plot total vector abundance over time with the RE As color
-    Panel_A <- plot_NV_RE(RE_mortality_P_post, "No", RE_limits)
+    Panel_A <- plot_NV_RE(RE_mortality_P_SB, "No", RE_limits) + 
+      facet_wrap(~param,ncol = 3) +
+      theme(strip.background = element_blank(),
+            strip.text = element_blank()) 
 
     # Remove the situation where 100% of the primary vector is removed,
     # not interesting (dynamically, and a little bug that occurs in Panel B!
     # If you do it individually, it works :/)
-    removed_0 <- subset(RE_mortality_P_post, RE_mortality_P_post$id != 0)
+    removed_0 <- subset(RE_mortality_P_SB, RE_mortality_P_SB$id != 0)
 
     # Plot the secondary versus primary vector with the RE as color
-    Panel_B <- plot_NP_NM_RE(removed_0, postdisturb = "No", RE_limits)
+    Panel_B <- plot_NP_NM_RE(removed_0, postdisturb = "No", RE_limits)+ 
+      facet_wrap(~param,ncol = 3) +
+      theme(strip.background = element_blank(),
+            strip.text = element_blank())
 
-    layout <- c(
-      area(1, 1, 2, 2),
-      area(1, 3, 1),
-      area(2, 3, 2, 3)
-    )
-
+  
     # Full composite figure with all
-    Panel_RE_Time + Panel_A + theme(aspect.ratio = 1) + 
-      Panel_B + theme(aspect.ratio = 1) +
-      plot_layout(guides = "collect", design = layout) +
-      plot_annotation(
-        tag_levels = c("A", "1"),
-        tag_sep = ".", tag_suffix = "."
-      )
-
+    Panel_RE_Time  / 
+      (Panel_A + theme(aspect.ratio = 1)) / 
+      (Panel_B + theme(aspect.ratio = 1)) + 
+      plot_layout(guides = "collect") &
+      theme(legend.position = 'bottom')
+    
+    
     ggsave(here("Figures_Process", "Figure_1.pdf"),
-      width = 10, height = 8, units = "in"
+      width = 6, height =7, units = "in"
+    )
+  },
+  targets = "Figures_Process/Figure_1.pdf",
+  dependencies = "Output/df_RE_mortality_P_R0.rds",
+  envir = environment()
+)
+
+
+make_with_recipe(
+  note = "Plot the s. vector contribution to RE (Figure 3)",
+  label = "plot_M_RE",
+  recipe = {
+    
+    RE_SM <- readRDS("Output/RE_SM.rds") #Non-temporal
+    RE_SM_2_subset <- readRDS("Output/RE_SM_2_subset.rds") #Temporal
+    
+    (plot_m_contribution_heatmap (RE_SM)[[1]] + theme(legend.position = 'top')+
+        coord_equal()) +
+      plot_m_contribution_lineplot(RE_SM_2_subset)
+    
+    ggsave(here("Figures_Process", "Figure_3.pdf"),
+           width = 8, height = 6, units = "in"
     )
   },
   targets = "Figures_Process/Figure_1.pdf",
@@ -63,21 +104,16 @@ make_with_recipe(
 )
 
 
-make_with_recipe(
-  note = "Plot the composite three-panel Figure 1.",
-  label = "plot_NP_NM_RE",
-  recipe = {
-# Remove the situation where 100% of the primary vector is removed,
-# not interesting (dynamically, and a little bug that occurs in Panel B!
-# If you do it individually, it works :/)
-removed_0 <- subset(RE_mortality_P_post, RE_mortality_P_post$id != 0)
-
-plot_NM_REff(removed_0,"No") + 
-
-}
-
-
 ###Supplementary Material
+
+make_with_source(
+  note = "Plot the abundance of NP/NM over time",
+  source = "Code/Supplementary Code/SUPP_Abundance_dynamics.R",
+  targets = "Figures/SUPP_abundance_dynamics.pdf"
+)
+
+
+
 make_with_recipe(
   note = "Plot the vector abundance for the maximum RE and the maximum
   vector abundance and corresponding RE",
@@ -93,7 +129,6 @@ make_with_recipe(
   dependencies = "Output/RE_mortality_P_post.rds",
   envir = environment()
 )
-
 
 make_with_recipe(
   note = "Plot total vector abundance over time and highlight when 
@@ -135,6 +170,77 @@ make_with_recipe(
   dependencies = "Output/df_expand_RE.rds",
   envir = environment()
 )
+
+make_with_recipe(
+  note = "Plot the composite three-panel Figure 1 but for
+  the other standards",
+  label = "SUPP_plot_NP_NM_RE",
+  recipe = {
+    
+    RE_mortality_P_post <- readRDS("Output/df_RE_mortality_P_R0.rds")
+    
+    #Retrieve "standard" and "better_m"
+    RE_mortality_P_worse <- subset(RE_mortality_P_post, 
+                                   RE_mortality_P_post$param %in%
+                                   c("worse_m", "nonesec"))
+    
+    RE_mortality_P_worse$param <- factor(RE_mortality_P_worse$param,
+                                      levels = c("worse_m","nonesec"),
+                                      labels = c("Worse", "None"))
+    
+    ### Makes it easyy
+    RE_limits_worse <- c(
+      round(min(RE_mortality_P_worse$RE), 1),
+      round(max(RE_mortality_P_worse$RE), 1) + 0.1
+    )
+    
+    Panel_RE_Time_SUPP <- 
+      plot_RE_dynamics(RE_mortality_P_worse , "No", NA) + 
+      facet_wrap(~param, ncol = 3) +
+      theme(strip.background = element_blank(),
+            strip.text = element_text(size = 11))
+    
+    # Plot total vector abundance over time with the RE As color
+    Panel_A_SUPP <- plot_NV_RE(RE_mortality_P_worse, "No", RE_limits) + 
+      facet_wrap(~param,ncol = 3) +
+      theme(strip.background = element_blank(),
+            strip.text = element_blank()) 
+    
+    # Remove the situation where 100% of the primary vector is removed,
+    # not interesting (dynamically, and a little bug that occurs in Panel B!
+    # If you do it individually, it works :/)
+    removed_0 <- subset(RE_mortality_P_worse,RE_mortality_P_worse$id != 0)
+    
+    # Plot the secondary versus primary vector with the RE as color
+    Panel_B_SUPP <- plot_NP_NM_RE(removed_0, postdisturb = "No", RE_limits)+ 
+      facet_wrap(~param,ncol = 3) +
+      theme(strip.background = element_blank(),
+            strip.text = element_blank())
+    
+    
+    # Full composite figure with all
+    Panel_RE_Time_SUPP  / 
+      (Panel_A_SUPP + theme(aspect.ratio = 1)) / 
+      (Panel_B_SUPP + theme(aspect.ratio = 1)) + 
+      plot_layout(guides = "collect") 
+    
+    
+    ggsave(here("Figures_Process", "SUPP_Figure_1.pdf"),
+           width = 6, height =7, units = "in"
+    )
+  },
+  targets = "Figures_Process/SUPP_Figure_1.pdf",
+  dependencies = "Output/RE_mortality_P_post.rds",
+  envir = environment()
+)
+
+
+
+
+
+
+
+
 
 
 show_pipeline()

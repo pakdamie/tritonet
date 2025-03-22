@@ -40,7 +40,7 @@ plot_list_groups <- function(full_list) {
 
   full_plot_GG <- ggplot(
     final_melted_frame,
-    aes(x = time, y = log10(value + 1), color = variable)
+    aes(x = time, y =value, color = variable)
   ) +
     geom_line() +
     facet_wrap(~id, scales = "free_y") +
@@ -82,10 +82,10 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
   if (postdisturb == "No") {
     subset_df <- df
     subset_df$time <- subset_df$time - 9125
-    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
+    maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
   } else if (postdisturb == "Yes") {
     subset_df <- df
-    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
+    maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
   }
 
   NP_NM_RE_GG <- ggplot(
@@ -107,15 +107,20 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
     geom_point(
       data = maximum_RE,
       aes(x = NP, y = NM, group = id, color = RE),
-      size = 2
+      size = 1
+    ) +
+    geom_point(
+      data = maximum_RE,
+      aes(x = NP, y = NM, group = id),
+      shape = 21, size = 1.2, fill = NA
     ) +
     scale_color_viridis(name = expression(R[0])) +
     xlab(expression("# of primary vectors " * "(" * N[P] * ")")) +
     ylab(expression("# of secondary vectors " * "(" * N[M] * ")")) +
     theme_classic() +
     theme(
-      axis.text = element_text(size = 12, color = "black"),
-      axis.title = element_text(size = 15, color = "black")
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, color = "black")
     )
 
   return(NP_NM_RE_GG)
@@ -198,20 +203,25 @@ plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
   if (postdisturb == "No") {
     subset_df <- df
     subset_df$time <- subset_df$time - 9125
-    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
+    maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
   } else if (postdisturb == "Yes") {
     subset_df <- df
-    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
+    maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
   }
 
 
   NV_RE_GG <-
     ggplot(subset_df, aes(x = time)) +
-    geom_path(aes(y = (NP + NM), color = RE, group = id), linewidth = 0.7) +
+    geom_path(aes(y = (NP + NM), color = RE, group = id), linewidth = 0.5) +
     geom_point(
       data = maximum_RE,
       aes(x = time, y = (NP + NM), group = id, color = RE),
-      size = 2,
+      size = 1,
+    ) +
+    geom_point(
+      data = maximum_RE,
+      aes(x = time, y = (NP + NM), group = id),
+      shape = 21, size = 1.2, fill = NA
     ) +
     geom_hline(
       data = subset(subset_df, subset_df$time == 0),
@@ -222,8 +232,8 @@ plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
     scale_color_viridis(name = expression(R[0])) +
     theme_classic() +
     theme(
-      axis.text = element_text(size = 14, color = "black"),
-      axis.title = element_text(size = 15, color = "black")
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, color = "black")
     )
   return(NV_RE_GG)
 }
@@ -242,7 +252,7 @@ plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
 #' @export
 #'
 #' @examples
-plot_RE_dynamics <- function(df, postdisturb = "No", RE_limit) {
+plot_RE_dynamics <- function(df, dstb, postdisturb = "No", RE_limit) {
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
   }
@@ -251,9 +261,10 @@ plot_RE_dynamics <- function(df, postdisturb = "No", RE_limit) {
     stop("No RE, check column names ")
   }
 
+
   if (postdisturb == "No") {
     subset_df <- df
-    subset_df$time <- subset_df$time - 9125
+    subset_df$time <- subset_df$time - dstb
     maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
     minimum_RE <- Calculate_max_RE_DF(subset_df, "id")[[2]]
   } else if (postdisturb == "Yes") {
@@ -261,27 +272,27 @@ plot_RE_dynamics <- function(df, postdisturb = "No", RE_limit) {
     maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
   }
 
-
   time_RE_GG <-
     ggplot(subset_df, aes(x = time)) +
     geom_path(aes(
-      y = RE, group = as.factor(1 - id),
+      y = log10(RE),
+      group = as.factor(1 - id),
       color = as.factor(1 - id)
-    ), linewidth = 0.8) +
+    ), linewidth = 0.4) +
     geom_hline(
       data = subset(subset_df, subset_df$time == 0),
-      aes(yintercept = RE), color = "grey", alpha = 0.7, linetype = 2
+      aes(yintercept = log10(RE)), color = "grey", alpha = 0.7, linetype = 2
     ) +
     scale_color_grey() +
     xlab("Time since disturbance") +
-    ylab(expression("Reproductive number (" * R[0] * ")")) +
+    ylab(expression("Reproductive number (" * R[E] * ")")) +
     theme_classic() +
     theme(
       legend.position = "none",
-      axis.text = element_text(size = 14, color = "black"),
-      axis.title = element_text(size = 15, color = "black"),
-    ) + 
-    theme(aspect.ratio=1)
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, color = "black"),
+      aspect.ratio = 1
+    )
 
 
   return(time_RE_GG)
@@ -411,58 +422,128 @@ plot_comparison_RE <- function(df, split_variable) {
   return(max_RE_ab_GG)
 }
 
-
-#' Plot the heat-map of the R0 depending on the abundance of the
-#' primary and secondary vectors.
+#' Title
 #'
-#' @param df The data.frame with the total primary vectors
-#' and the secondary vectors.
+#' @param df 
 #'
-#' @returns A heatmap plot is the
+#' @returns
 #' @export
 #'
 #' @examples
-plot_heatmapR0 <- function(df, facet) {
-  if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
-    stop("You are missing NP and/or NM, check column names")
-  }
-
-  if (any((colnames(df) %in% c("RE"))) == FALSE) {
-    stop("No RE, check column names ")
-  }
-  df$id <- factor(df$id,
-    levels = c("worse_m", "standard", "no_diff", "better_m"),
-    labels = c(
-      expression(lambda[P] * ">>" * lambda[M]),
-      expression(lambda[P] * ">" * lambda[M]),
-      expression(lambda[P] * "=" * lambda[M]),
-      expression(lambda[P] * "<" * lambda[M])
-    )
-  )
+plot_m_contribution_heatmap <- function(df) {
+  param_standard <- get_parameters("standard")
+  theta_M_standard <- param_standard["theta_M"]
+  f_P_standard <- param_standard["f_P"]
+  theta_P_standard <- param_standard["theta_P"]
 
 
 
-  heatmap_GG <- ggplot(
+  GG_heat_mtoH<- ggplot(
     df,
-    aes(x = NP, y = NM, fill = RE / max_RE, group = id)
+    aes(
+      x = (f_M * theta_M_standard) / (f_P_standard * theta_P_standard),
+      y = 1 - mortality_P, z = max_mtoH
+    )
   ) +
-    geom_tile(color = NA) +
-    scale_fill_viridis(option = "mako", name = "Proportion of\nmax R0") +
-    xlab(expression("Abundance of primary vectors " * "(" * N[P] * ")")) +
-    ylab(expression("Abundance of \n secondary vectors " * "(" * N[M] * ")")) +
-    facet_wrap(vars(id), ncol = 4, labeller = label_parsed) +
+    geom_contour_filled(color = "black", linewidth = 0.7, binwidth = 0.10) +
+    geom_textcontour(bins = 10, size = 2.5, textcolour = "white") +
+    coord_equal() +
+    xlab("Transmission efficiency of secondary vector \n in relation to primary vector") +
+    ylab("Proportion of primary vectors removed") +
+    scale_fill_viridis(option = "mako", name = expression("Secondary vector \ncontribution to" ~ R[E]), discrete = TRUE) +
     scale_x_continuous(expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     theme(
-      axis.text = element_text(size = 12.5, color = "black"),
-      axis.title = element_text(size = 14),
-      strip.background = element_blank(),
-      strip.text = element_text(size = 14)
-    ) +
-    coord_equal()
-
-  return(heatmap_GG)
+      aspect.ratio = 1,
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, color = "black"),
+      legend.position = "right",
+      legend.title = element_text(size = 10),
+      legend.text = element_text(size = 9)
+    )
+  
+  GG_heat_RE<- ggplot(
+    df,
+    aes(
+      x = (f_M * theta_M_standard) / (f_P_standard * theta_P_standard),
+      y = 1 - mortality_P, z= max_RE
+    )
+  ) +
+    geom_contour_filled(color = "black", linewidth = 0.7, binwidth =5) +
+    coord_equal() +
+    xlab("Transmission efficiency of secondary vector \n in relation to primary vector") +
+    ylab("Proportion of primary vectors removed") +
+    scale_fill_viridis(option = "mako", name = expression("Increase in" ~ R[E]), discrete = TRUE)+
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    coord_fixed() +
+    theme(
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, color = "black"),
+      legend.position = "right",
+      legend.title = element_text(size = 10),
+      legend.text = element_text(size = 9)
+    )
+  
+  
+  return(list(GG_heat_mtoH,GG_heat_RE))
 }
+
+#' Title
+#'
+#' @param df 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+plot_m_contribution_lineplot <- function(df) {
+  
+  
+  GG_line_RE <- ggplot(
+    df,
+    aes(
+      x = time - 9125,
+      y = max_mtoH,
+      color = as.factor(standardized_ratio),
+      label = as.factor(standardized_ratio)
+    )) +
+    geom_line() +
+    scale_color_grey()+
+    geom_dl(
+            method = list(dl.combine( "last.points")), cex = 0.1)+
+    xlab("Time since disturbance") +
+    ylab("Secondary vector \ncontribution to" ~ R[E]) +
+    theme_classic() +
+    theme(
+      aspect.ratio=1,
+      legend.position = 'none',
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, color = "black")
+    )
+  
+  
+  return(GG_line_RE)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #' Plot heatmap with different intensity
 #'
@@ -495,17 +576,9 @@ plot_heatmapintensity <- function(df) {
 }
 
 plot_competition <- function(df) {
-  ggplot(df, aes(x= c_MP/c_PP, y = c_PM/c_MM, fill = RE))+ 
-    geom_tile() + 
-    scale_fill_viridis() + facet_wrap(~mortality_P)
-  }
-plot_competition(RE_DF_inter )
-
-  
-  
-  
-  
-  
-
-
+  ggplot(df, aes(x = c_MP / c_PP, y = c_PM / c_MM, fill = RE)) +
+    geom_tile() +
+    scale_fill_viridis() +
+    facet_wrap(~mortality_P)
+}
 
