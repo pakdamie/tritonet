@@ -6,8 +6,10 @@ Mortality_P <- seq(0.01,1, 0.01)
 modifier <- seq(0, 2, length = 20)
 
 
-f_P_standard <- 0.25
-theta_P_standard <-  0.50
+f_P_standard <- param_standard["f_P"] 
+theta_P_standard  <- param_standard["theta_P"]
+f_M_standard <- param_standard["f_M"] 
+theta_M_standard  <- param_standard["theta_M"]
 
 
 secondary_param <-
@@ -46,7 +48,7 @@ ggplot(RE_SECONDARY ,aes(x = f_M/f_P_standard,
   scale_y_continuous(expand = c(0,0)) + 
   scale_fill_viridis(name = expression("Increase from " * R[0])) + 
   theme(legend.position = "top",
-        axis.text = element_text(size = 14),
-        axis.title = element_text(size = 15))
+        axis.text = element_text(size = 9),
+        axis.title = element_text(size = 10))
 
-ggsave(here("Figures", "GG_secondary_ecology.pdf"), width = 7, height = 6, units = "in")
+ggsave(here("Main_Figures", "Figure_5.pdf"), width = 6, height = 6, units = "in")

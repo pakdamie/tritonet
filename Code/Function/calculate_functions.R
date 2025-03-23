@@ -236,7 +236,15 @@ Calculate_change_baseline <- function(model_output,
   return(do.call(rbind, RE_list))
 }
 
-Isocline_Primary <- function(c_PM_input) {
+#' Calculate the isoclines 
+#'
+#' @param c_PM_input 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+Calculate_Isocline <- function(c_PM_input) {
   ab <- seq(0, 1200)
   b_V <- param_standard["b_P"]
   mu_V <- param_standard["mu_V"]
@@ -259,15 +267,20 @@ Isocline_Primary <- function(c_PM_input) {
 }
 
 
-Phaseplot_Primary <- function(c_PM_input) {
-  P <- seq(0,1100,100)
-  M <- seq(0,1800,100)
+#' Calculate the phaseplots
+#'
+#' @param c_PM_input 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+Calculate_Phaseplot <- function(c_PM_input) {
+  P <- seq(0,1100,125)
+  M <- seq(0,2000,125)
   expanded_PM <- expand.grid(P,M)
   b_V <- param_standard["b_P"]
   mu_V <- param_standard["mu_V"]
-  
-  
-  
   c_PP <- param_standard["c_PP"]
   c_MP <- param_standard["c_MP"]
   c_MM <- param_standard["c_MM"]
@@ -278,13 +291,29 @@ Phaseplot_Primary <- function(c_PM_input) {
   slope_M <- b_V *  expanded_PM $Var2  * (1- c_MM *  expanded_PM $Var2  - c_PM *  expanded_PM $Var1 ) - mu_V * expanded_PM $Var2 
   
   
-  RE<- Calculate_Human_Reff_Static(expanded_PM $Var1,expanded_PM $Var2, get_parameters("standard"))
+  RE <- Calculate_Human_Reff_Static(expanded_PM $Var1,expanded_PM $Var2, get_parameters("standard"))
   
   
   
   
-  abundance_slope<- cbind(expanded_PM, slope_P, slope_M, RE = RE$RE)
+  abundance_slope<- cbind(expanded_PM, 
+                          slope_P, 
+                          slope_M, RE = RE$RE)
   
   return(abundance_slope)
 }
 
+#' Basic processing function
+#'
+#' @param RE_data 
+#' @param params 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+Process_Results <- function(RE_data, params) {
+  testing <- Calculate_Human_Reff_Expanded(RE_data, params)
+  df_interest<- testing[testing$time > params[["disturbance_time"]] - 1, ]
+  return(df_interest)
+}

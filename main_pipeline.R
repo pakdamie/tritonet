@@ -8,6 +8,9 @@ source(here("Code", "Function", "simulate_functions.R"))
 source(here("Code", "Function", "calculate_functions.R"))
 source(here("Code", "Function", "plotting_functions.R"))
 
+#---------
+#FIGURE 2
+#---------
 make_with_source(
   note = "Simulate model with different disturbance intensity for p. vector 
   and different parameter",
@@ -21,8 +24,7 @@ make_with_recipe(
     
     RE_mortality_P_post <- readRDS("Output/df_RE_mortality_P_R0.rds")
 
-    #Retrieve "standard" and "better_m"
-    
+    #Retrieve "standard", "no_diff","better_m"
     
     RE_mortality_P_SB <- subset(RE_mortality_P_post, 
                                 RE_mortality_P_post$param %in%
@@ -47,7 +49,7 @@ make_with_recipe(
             strip.text = element_text(size = 11))
 
     # Plot total vector abundance over time with the RE As color
-    Panel_A <- plot_NV_RE(RE_mortality_P_SB, "No", RE_limits) + 
+    Panel_A <- plot_NV_RE(RE_mortality_P_SB,  dstb_time,"No", RE_limits) + 
       facet_wrap(~param,ncol = 3) +
       theme(strip.background = element_blank(),
             strip.text = element_blank()) 
@@ -72,36 +74,88 @@ make_with_recipe(
       theme(legend.position = 'bottom')
     
     
-    ggsave(here("Figures_Process", "Figure_1.pdf"),
-      width = 6, height =7, units = "in"
+    ggsave(here("Figures_Process", "Figure_2.pdf"),
+      width = 6, height =6.5, units = "in"
     )
   },
-  targets = "Figures_Process/Figure_1.pdf",
+  targets = "Figures_Process/Figure_2.pdf",
   dependencies = "Output/df_RE_mortality_P_R0.rds",
+  "Code/Functions/plotting_functions.R",
   envir = environment()
 )
 
+#---------
+#FIGURE 3
+#---------
+make_with_source(
+  note = "Simulate model to investigate secondary contribution",
+  source = "Code/02_M_Vec_Contribution.R",
+  targets = "Output/RE_SM_2_subset.rds", "Output/RE_SM.rds")
+
 
 make_with_recipe(
-  note = "Plot the s. vector contribution to RE (Figure 3)",
+  note = "Plot the S. Vector contribution to RE (Figure 3)",
   label = "plot_M_RE",
   recipe = {
+    
+    dstb_time<- get_parameters("standard")["disturbance_time"]
+    
     
     RE_SM <- readRDS("Output/RE_SM.rds") #Non-temporal
     RE_SM_2_subset <- readRDS("Output/RE_SM_2_subset.rds") #Temporal
     
     (plot_m_contribution_heatmap (RE_SM)[[1]] + theme(legend.position = 'top')+
         coord_equal()) +
-      plot_m_contribution_lineplot(RE_SM_2_subset)
+      plot_m_contribution_lineplot(RE_SM_2_subset,dstb_time)
     
     ggsave(here("Figures_Process", "Figure_3.pdf"),
            width = 8, height = 6, units = "in"
     )
   },
-  targets = "Figures_Process/Figure_1.pdf",
-  dependencies = "Output/RE_mortality_P_post.rds",
+  targets = "Figures_Process/Figure_3.pdf",
+  dependencies = "Output/RE_SM.rds","Output/RE_SM_2_subset.rds",
   envir = environment()
 )
+
+#---------
+#FIGURE 4
+#---------
+
+
+# Remove legend from competition plot
+competition_plot <- plot_competition_PM(RE_COMPETITION)[[1]] 
+# Retain legends for phaseplots
+combined_phaseplot <- (plot_phaseplot(df_075, isocline_df[[1]]) + 
+                         theme(legend.position = 'bottom')) +
+  (plot_phaseplot(df_1, isocline_df[[2]]) + theme(legend.position = 'bottom')) +
+  (plot_phaseplot(df_125, isocline_df[[3]]) + theme(legend.position = 'bottom')) 
+
+
+
+competition_plot
+ ggsave(here("Figures_Process", "Figure_4_A.pdf"),
+        width = 6, height = 3, units = "in"
+ )
+ combined_phaseplot 
+ggsave(here("Figures_Process","Figure_4_B.pdf"),
+                    width = 6, height = 3, units = "in")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ###Supplementary Material

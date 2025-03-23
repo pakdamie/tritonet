@@ -61,7 +61,7 @@ RE_mortality_P_DF <- do.call(rbind, unlist(RE_mortality_P, recursive = FALSE))
 # The subset includes data slightly before and after the disturbance event.
 RE_mortality_P_post <- subset(
   RE_mortality_P_DF,
-  RE_mortality_P_DF$time > dstb_time - 100 & # Start time
+  RE_mortality_P_DF$time > dstb_time - 50 & # Start time
     RE_mortality_P_DF$time < (dstb_time + 300) # End time (disturbance + 300 days)
 )
 

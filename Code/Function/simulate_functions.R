@@ -9,20 +9,18 @@
 #' @export
 #'
 #' @examples get_parameters("standard")
-
-
 get_parameters <- function(type = "standard") {
+  
   if (!(type %in% c(
     "standard",
     "no_diff",
     "worse_m",
     "nonesec",
     "better_m"
-  ))) {
+  ))) 
+    {
     stop("Ensure that you're using a valid type")
   }
-
-
   ### The standard parameter that is in the supplement
   param_standard <- c(
     b_H = 1 / (365 * 70), # Human mortality rate
@@ -40,8 +38,8 @@ get_parameters <- function(type = "standard") {
     c_PP = 4.5e-4, # Competition effect of p.vector on s.vector
     c_MM = 2.5e-4, # Competition effect of s.vector on s.vector
     mu_V = 1 / 20, # Vector mortality rate
-    ntime = (365 * 150), # Number of times
-    disturbance_time = (365 * 125),
+    ntime = (365 * 100), # Number of times
+    disturbance_time = (365 * 50),
     infection_time = 1e30,
     delta_T = 1,
     prop = 1,
@@ -68,8 +66,8 @@ get_parameters <- function(type = "standard") {
   ## Secondary vectors are better transmitter but nothing is changed
   ## about their competition
   param_better_m <- param_standard
-  param_better_m["f_M"] <- param_standard["f_M"] * 1.50
-  param_better_m["theta_M"] <- param_standard["theta_M"] * 1.50
+  param_better_m["f_M"] <- param_standard["f_M"] * 1.25
+  param_better_m["theta_M"] <- param_standard["theta_M"] * 1.25
 
   # Depending on type
   param <- switch(type,
@@ -83,7 +81,6 @@ get_parameters <- function(type = "standard") {
 
   return(param)
 }
-
 
 
 #' Vary a parameter at a time for the parameter list
@@ -131,8 +128,6 @@ vary_parameter_value <- function(parameter,
   # Return the list containing modified parameter sets
   return(parameter_list)
 }
-
-
 
 
 #' Create initial states to simulate the model

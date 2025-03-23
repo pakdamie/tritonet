@@ -1,15 +1,4 @@
 #' Plot the total abundance of the different classes
-#'
-#' When given the results of `discrete_trito_model`,
-#' plot out a ggplot with 7 facets (one for each class).
-#' On the x-axis is time and the abundance on the y-axis.
-#'
-#' @param full_list (list) The full model output that comes from
-#' direct simulation - not processed (so no RE)
-#'
-#' @return A ggplot object
-#' @export
-#' @examples
 plot_list_groups <- function(full_list) {
   compartment_labels <- c(
     "HS", "HI", "HR",
@@ -56,21 +45,104 @@ plot_list_groups <- function(full_list) {
   return(full_plot_GG)
 }
 
+
+
+#02-Figure
+#' Plot the RE over time as well as side panels,
+plot_RE_dynamics <- function(df, dstb, postdisturb = "No", RE_limit) {
+  if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
+    stop("You are missing NP and/or NM, check column names")
+  }
+
+  if (any((colnames(df) %in% c("RE"))) == FALSE) {
+    stop("No RE, check column names ")
+  }
+
+  if (postdisturb == "No") {
+    subset_df <- df
+    subset_df$time <- subset_df$time - dstb
+    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
+    minimum_RE <- Calculate_max_RE_DF(subset_df, "id")[[2]]
+  } else if (postdisturb == "Yes") {
+    subset_df <- df
+    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
+  }
+
+  time_RE_GG <-
+    ggplot(subset_df, aes(x = time)) +
+    geom_path(aes(
+      y = (RE),
+      group = as.factor(1 - id),
+      color = as.factor(1 - id)
+    ), linewidth = 0.3) +
+    geom_hline(
+      data = subset(subset_df, subset_df$time == 0),
+      aes(yintercept = (RE)), color = "black", alpha = 0.7, linetype = 3
+    ) +
+    scale_color_discrete_sequential(palette = "ag_Sunset", rev = FALSE) +
+    xlab("Time since disturbance") +
+    ylab(expression("Reproductive number (" * R[E] * ")")) +
+    theme_classic() +
+    theme(
+      legend.position = "none",
+      axis.text = element_text(size = 8, color = "black"),
+      axis.title = element_text(size = 9, color = "black"),
+      aspect.ratio = 1
+    )
+
+
+  return(time_RE_GG)
+}
+#' Plot the total vector abundance over time with the RE being the color.
+plot_NV_RE <- function(df,dstb,  postdisturb = "No", RE_limit) {
+  
+  if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
+    stop("You are missing NP and/or NM, check column names")
+  }
+  
+  if (any((colnames(df) %in% c("RE"))) == FALSE) {
+    stop("No RE, check column names ")
+  }
+  
+  if (postdisturb == "No") {
+    subset_df <- df
+    subset_df$time <- subset_df$time - dstb
+    maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
+  } else if (postdisturb == "Yes") {
+    subset_df <- df
+    maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
+  }
+  
+  
+  NV_RE_GG <-
+    ggplot(subset_df, aes(x = time)) +
+    geom_path(aes(y = (NP + NM), color = RE, group = id), linewidth = 0.3) +
+    geom_point(
+      data = maximum_RE,
+      aes(x = time, y = (NP + NM), group = id, color = RE),
+      size = 1,
+    ) +
+    geom_point(
+      data = maximum_RE,
+      aes(x = time, y = (NP + NM), group = id),
+      shape = 21, size = 1.2, fill = NA
+    ) +
+    geom_hline(
+      data = subset(subset_df, subset_df$time == 0),
+      aes(yintercept = NP + NM), color = "black", alpha = 0.7, linetype = 3
+    ) +
+    xlab("Time since disturbance") +
+    ylab("Total vector abundance") +
+    scale_color_viridis(name = expression(R[0])) +
+    theme_classic() +
+    theme(
+      axis.text = element_text(size = 8, color = "black"),
+      axis.title = element_text(size = 9, color = "black")
+    )
+  return(NV_RE_GG)
+}
 #' Plot trajectories of primary and secondary vectors with the RE
 #' as color
-#'
-#' After a disturbance,plot out how the trajectory of the total primary
-#' and secondary vector with the RE as color. On the x-axis is the total
-#' primary vector, on the y-axis is the total secondary vector. The
-#' different lines represent the different disturbance intensity
-#'
-#'
-#' @param df (data.frame)
-#'
-#' @returns
-#' @export
-#'
-#' @examples
 plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
@@ -78,7 +150,7 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
   if (any((colnames(df) %in% c("RE"))) == FALSE) {
     stop("No RE, check column names ")
   }
-
+  
   if (postdisturb == "No") {
     subset_df <- df
     subset_df$time <- subset_df$time - 9125
@@ -87,13 +159,13 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
     subset_df <- df
     maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
   }
-
+  
   NP_NM_RE_GG <- ggplot(
     subset_df, aes(x = NP, y = NM)
   ) +
     geom_path(
       aes(color = RE),
-      linewidth = 0.7,
+      linewidth = 0.3,
       linejoin = "round",
       lineend = "round"
     ) +
@@ -119,31 +191,26 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
     ylab(expression("# of secondary vectors " * "(" * N[M] * ")")) +
     theme_classic() +
     theme(
-      axis.text = element_text(size = 9, color = "black"),
-      axis.title = element_text(size = 10, color = "black")
+      axis.text = element_text(size = 8, color = "black"),
+      axis.title = element_text(size = 9, color = "black")
     )
-
+  
   return(NP_NM_RE_GG)
 }
 
-#' Plot the secondary contribution of RE to time
-#'
-#' @param df
-#' @param postdisturb
-#'
-#' @returns
-#' @export
-#'
-#' @examples
+
+
+#03-Figure
+#' Plot the maximum secondary contribution of RE 
 plot_NM_REff <- function(df, postdisturb) {
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
   }
-
+  
   if (any((colnames(df) %in% c("RE"))) == FALSE) {
     stop("No RE, check column names ")
   }
-
+  
   if (postdisturb == "No") {
     subset_df <- df
     subset_df$time <- subset_df$time - 9125
@@ -152,8 +219,8 @@ plot_NM_REff <- function(df, postdisturb) {
     subset_df <- df
     maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
   }
-
-
+  
+  
   NM_Reff_GG <- ggplot(
     subset_df, aes(x = time, y = MtoH / RE, group = id, color = RE)
   ) +
@@ -173,142 +240,113 @@ plot_NM_REff <- function(df, postdisturb) {
       axis.text = element_text(size = 14, color = "black"),
       axis.title = element_text(size = 15, color = "black")
     )
-
+  
   return(NM_Reff_GG)
 }
 
-
-#' Plot the total vector abundance over time with the RE being the color.
-#'
-#' Shows how the total vector abundance (both primary and secondary) changes
-#' over time as well as the RE. Points indicate the maximum RE reached and is
-#' used to show how the maximum vector abundance does not correspond to the maximum
-#' RE. The x-axis is time, the y-axis is the total vector abundance.
-
-#' @param df
-#'
-#' @returns A ggplot item
-#' @export
-#'
-#' @examples
-plot_NV_RE <- function(df, postdisturb = "No", RE_limit) {
-  if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
-    stop("You are missing NP and/or NM, check column names")
-  }
-
-  if (any((colnames(df) %in% c("RE"))) == FALSE) {
-    stop("No RE, check column names ")
-  }
-
-  if (postdisturb == "No") {
-    subset_df <- df
-    subset_df$time <- subset_df$time - 9125
-    maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
-  } else if (postdisturb == "Yes") {
-    subset_df <- df
-    maximum_RE <- Calculate_max_RE_DF(subset_df, c("param", "id"))[[1]]
-  }
-
-
-  NV_RE_GG <-
-    ggplot(subset_df, aes(x = time)) +
-    geom_path(aes(y = (NP + NM), color = RE, group = id), linewidth = 0.5) +
-    geom_point(
-      data = maximum_RE,
-      aes(x = time, y = (NP + NM), group = id, color = RE),
-      size = 1,
-    ) +
-    geom_point(
-      data = maximum_RE,
-      aes(x = time, y = (NP + NM), group = id),
-      shape = 21, size = 1.2, fill = NA
-    ) +
-    geom_hline(
-      data = subset(subset_df, subset_df$time == 0),
-      aes(yintercept = NP + NM), color = "grey", alpha = 0.7, linetype = 2
-    ) +
+plot_m_contribution_heatmap <- function(df) {
+  param_standard <- get_parameters("standard")
+  theta_M_standard <- param_standard["theta_M"]
+  f_P_standard <- param_standard["f_P"]
+  theta_P_standard <- param_standard["theta_P"]
+  
+  
+  
+  GG_heat_mtoH<- ggplot(
+    df,
+    aes(
+      x = (f_M * theta_M_standard) / (f_P_standard * theta_P_standard),
+      y = 1 - mortality_P, z = max_mtoH
+    )
+  ) +
+    geom_contour_filled(color = "black", linewidth = 0.7, binwidth = 0.10) +
+    geom_textcontour(bins = 10, size = 2.5, textcolour = "white") +
+    coord_equal() +
+    xlab("Transmission efficiency of secondary vector \n in relation to primary vector") +
+    ylab("Proportion of primary vectors removed") +
+    scale_fill_viridis(option = "mako", name = expression("Secondary vector \ncontribution to" ~ R[E]), discrete = TRUE) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    theme(
+      aspect.ratio = 1,
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, color = "black"),
+      legend.position = "right",
+      legend.title = element_text(size = 8),
+      legend.text = element_text(size = 7)) + 
+   guides( color= guide_legend(override.aes = list(size = 0.5)))
+  
+  
+  
+  
+  GG_heat_RE<- ggplot(
+    df,
+    aes(
+      x = (f_M * theta_M_standard) / (f_P_standard * theta_P_standard),
+      y = 1 - mortality_P, z= max_RE
+    )
+  ) +
+    geom_contour_filled(color = "black", linewidth = 0.7, binwidth =5) +
+    coord_equal() +
+    xlab("Transmission efficiency of secondary vector \n in relation to primary vector") +
+    ylab("Proportion of primary vectors removed") +
+    scale_fill_viridis(option = "mako", name = expression("Increase in" ~ R[E]), discrete = TRUE)+
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    coord_fixed() +
+    theme(
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, color = "black"),
+      legend.position = "right",
+      legend.title = element_text(size = 8),
+      legend.text = element_text(size = 7)
+    )
+  
+  
+  return(list(GG_heat_mtoH,GG_heat_RE))
+}
+#' Plot the secondary contribution of RE overtime time
+plot_m_contribution_lineplot <- function(df, dstb_time) {
+  
+  
+  GG_line_RE <- ggplot(
+    df,
+    aes(
+      x = time - dstb_time,
+      y = max_mtoH,
+      linetype = as.factor(standardized_ratio),
+      label = as.factor(standardized_ratio)
+    )) +
+    geom_line() +
+    geom_point(data = subset(df,
+                df$time == dstb_time  - 1),
+               aes(x = time - dstb_time, y= max_mtoH)) +
+    scale_color_grey()+
+    geom_dl(
+      method = list(dl.combine( "last.points")), cex = 0.1)+
     xlab("Time since disturbance") +
-    ylab("Total vector abundance") +
-    scale_color_viridis(name = expression(R[0])) +
+    ylab("Secondary vector \ncontribution to" ~ R[E]) +
     theme_classic() +
     theme(
+      aspect.ratio=1,
+      legend.position = 'none',
       axis.text = element_text(size = 9, color = "black"),
       axis.title = element_text(size = 10, color = "black")
     )
-  return(NV_RE_GG)
+  
+  
+  return(GG_line_RE)
 }
 
-#' Plot the RE over time as well as side panels,
-#' showing the minimum and maximum RE achieved.
-#'
-#' Shows how the RE changes (both primary and secondary) changes
-#' over time as well as the RE. Points indicate the maximum RE reached and is
-#' used to show how the maximum vector abundance does not correspond to the maximum
-#' RE. The x-axis is time, the y-axis is the total vector abundance.
-
-#' @param df
-#'
-#' @returns A ggplot item
-#' @export
-#'
-#' @examples
-plot_RE_dynamics <- function(df, dstb, postdisturb = "No", RE_limit) {
-  if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
-    stop("You are missing NP and/or NM, check column names")
-  }
-
-  if (any((colnames(df) %in% c("RE"))) == FALSE) {
-    stop("No RE, check column names ")
-  }
 
 
-  if (postdisturb == "No") {
-    subset_df <- df
-    subset_df$time <- subset_df$time - dstb
-    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
-    minimum_RE <- Calculate_max_RE_DF(subset_df, "id")[[2]]
-  } else if (postdisturb == "Yes") {
-    subset_df <- df
-    maximum_RE <- Calculate_max_RE_DF(subset_df, "id")[[1]]
-  }
-
-  time_RE_GG <-
-    ggplot(subset_df, aes(x = time)) +
-    geom_path(aes(
-      y = log10(RE),
-      group = as.factor(1 - id),
-      color = as.factor(1 - id)
-    ), linewidth = 0.4) +
-    geom_hline(
-      data = subset(subset_df, subset_df$time == 0),
-      aes(yintercept = log10(RE)), color = "grey", alpha = 0.7, linetype = 2
-    ) +
-    scale_color_grey() +
-    xlab("Time since disturbance") +
-    ylab(expression("Reproductive number (" * R[E] * ")")) +
-    theme_classic() +
-    theme(
-      legend.position = "none",
-      axis.text = element_text(size = 9, color = "black"),
-      axis.title = element_text(size = 10, color = "black"),
-      aspect.ratio = 1
-    )
 
 
-  return(time_RE_GG)
-}
+
+
+
 
 #' Plot primary vectors, secondary vectors, and human infections
-#'
-#' Plot the total abundance of both the primary and secondary
-#' vector
-#'
-#' @param df
-#'
-#' @returns
-#' @export
-#'
-#' @examples
 plot_state_dynamics <- function(df, mortality_P = 0.25) {
   if (any((colnames(df) %in% c("NP", "NM"))) == FALSE) {
     stop("You are missing NP and/or NM, check column names")
@@ -422,127 +460,6 @@ plot_comparison_RE <- function(df, split_variable) {
   return(max_RE_ab_GG)
 }
 
-#' Title
-#'
-#' @param df 
-#'
-#' @returns
-#' @export
-#'
-#' @examples
-plot_m_contribution_heatmap <- function(df) {
-  param_standard <- get_parameters("standard")
-  theta_M_standard <- param_standard["theta_M"]
-  f_P_standard <- param_standard["f_P"]
-  theta_P_standard <- param_standard["theta_P"]
-
-
-
-  GG_heat_mtoH<- ggplot(
-    df,
-    aes(
-      x = (f_M * theta_M_standard) / (f_P_standard * theta_P_standard),
-      y = 1 - mortality_P, z = max_mtoH
-    )
-  ) +
-    geom_contour_filled(color = "black", linewidth = 0.7, binwidth = 0.10) +
-    geom_textcontour(bins = 10, size = 2.5, textcolour = "white") +
-    coord_equal() +
-    xlab("Transmission efficiency of secondary vector \n in relation to primary vector") +
-    ylab("Proportion of primary vectors removed") +
-    scale_fill_viridis(option = "mako", name = expression("Secondary vector \ncontribution to" ~ R[E]), discrete = TRUE) +
-    scale_x_continuous(expand = c(0, 0)) +
-    scale_y_continuous(expand = c(0, 0)) +
-    theme(
-      aspect.ratio = 1,
-      axis.text = element_text(size = 9, color = "black"),
-      axis.title = element_text(size = 10, color = "black"),
-      legend.position = "right",
-      legend.title = element_text(size = 10),
-      legend.text = element_text(size = 9)
-    )
-  
-  GG_heat_RE<- ggplot(
-    df,
-    aes(
-      x = (f_M * theta_M_standard) / (f_P_standard * theta_P_standard),
-      y = 1 - mortality_P, z= max_RE
-    )
-  ) +
-    geom_contour_filled(color = "black", linewidth = 0.7, binwidth =5) +
-    coord_equal() +
-    xlab("Transmission efficiency of secondary vector \n in relation to primary vector") +
-    ylab("Proportion of primary vectors removed") +
-    scale_fill_viridis(option = "mako", name = expression("Increase in" ~ R[E]), discrete = TRUE)+
-    scale_x_continuous(expand = c(0, 0)) +
-    scale_y_continuous(expand = c(0, 0)) +
-    coord_fixed() +
-    theme(
-      axis.text = element_text(size = 9, color = "black"),
-      axis.title = element_text(size = 10, color = "black"),
-      legend.position = "right",
-      legend.title = element_text(size = 10),
-      legend.text = element_text(size = 9)
-    )
-  
-  
-  return(list(GG_heat_mtoH,GG_heat_RE))
-}
-
-#' Title
-#'
-#' @param df 
-#'
-#' @returns
-#' @export
-#'
-#' @examples
-plot_m_contribution_lineplot <- function(df) {
-  
-  
-  GG_line_RE <- ggplot(
-    df,
-    aes(
-      x = time - 9125,
-      y = max_mtoH,
-      color = as.factor(standardized_ratio),
-      label = as.factor(standardized_ratio)
-    )) +
-    geom_line() +
-    scale_color_grey()+
-    geom_dl(
-            method = list(dl.combine( "last.points")), cex = 0.1)+
-    xlab("Time since disturbance") +
-    ylab("Secondary vector \ncontribution to" ~ R[E]) +
-    theme_classic() +
-    theme(
-      aspect.ratio=1,
-      legend.position = 'none',
-      axis.text = element_text(size = 9, color = "black"),
-      axis.title = element_text(size = 10, color = "black")
-    )
-  
-  
-  return(GG_line_RE)
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #' Plot heatmap with different intensity
@@ -574,6 +491,148 @@ plot_heatmapintensity <- function(df) {
       axis.title = element_text(color = "black", size = 14)
     )
 }
+
+plot_competition_PM <- function(df) {
+  Panel_1_GG <-
+    ggplot(df, aes(
+      x = standardized,
+      y = (RE),
+      group = as.factor(1 - mortality_P)
+    )) +
+    geom_line(aes(color = as.factor(1 - mortality_P))) +
+    geom_rect(
+      xmin = 1.5,
+      xmax = 2,
+      ymin = 0,
+      ymax = 3.3,
+      fill = "grey",
+      alpha = 0.01
+    ) +
+    geom_rect(
+      xmin = 0.5,
+      xmax = .6766667,
+      ymin = 0,
+      ymax = 3.3,
+      fill = "grey",
+      alpha = 0.01
+    ) +
+    geom_point(
+      data = subset(df, df$standardized == 1.00),
+      aes(
+        x = standardized, y = RE,
+        group = as.factor(1 - mortality_P)
+      ),
+      size = 1.5
+    ) +
+    geom_point(
+      data = subset(df, df$standardized %in% c(0.75,1.25) & 
+                      df$mortality_P == 0.01),
+      aes(x = standardized, y = RE), size = 1.5, color = "black"
+    ) +
+    scale_color_discrete_sequential(
+      palette = "ag_Sunset", rev = FALSE,
+      n = 5
+    ) +
+    geom_vline(xintercept = c(.6766667)) +
+    geom_vline(xintercept = c(1.5)) +
+    
+    scale_x_continuous(expand = c(0,0), limits = c(0.5, 2)) + 
+    scale_y_continuous(expand = c(0,0))+
+    xlab(expression("Multiplier of primary on secondary competition (" * c[PM] * ")")) +
+    ylab(expression("Increase from baseline " * R[E]^"*")) +
+    theme_classic() +
+    theme(
+      legend.position = "none",
+      axis.text = element_text(size = 8, color = "black"),
+      axis.title = element_text(size = 9, color = "black")
+    )
+
+  Panel_2_GG <- ggplot(
+    df, aes(
+      x = c_PM / c_PM_standard,
+      y = (max_NM), 
+      group = as.factor(1 - mortality_P)
+    )
+  ) +
+    geom_line(aes(color = as.factor(1 - mortality_P))) +
+    geom_rect(
+      xmin = 1.5,
+      xmax = 2,
+      ymin = 0,
+      ymax = 1250,
+      fill = "grey",
+      alpha = 0.01
+    ) +
+    geom_rect(
+      xmin = 0.5,
+      xmax = .6766667,
+      ymin = 0,
+      ymax = 1250,
+      fill = "grey",
+      alpha = 0.01
+    ) +
+    geom_point(
+      data = subset(df, df$standardized == 1),
+      aes(x = standardized, y = max_NM), size = 1.5, color = "black"
+    ) +
+    geom_point(
+      data = subset(df, df$standardized %in% c(0.75,1.25) 
+                    & df$mortality_P == 0.01),
+      aes(x = standardized, y = max_NM), size = 1.5, color = "black"
+    ) +
+    scale_x_continuous(expand = c(0,0), limits = c(0.5, 2)) + 
+    scale_y_continuous(expand = c(0,0)) +
+    scale_color_discrete_sequential(palette = "ag_Sunset", rev = FALSE, n = 5) +
+    geom_vline(xintercept = c(1.5)) +
+    geom_vline(xintercept = c(.6766667)) + 
+    xlab(expression("Multiplier of primary on secondary competition (" * c[PM] * ")")) +
+    ylab(expression("Increase from " * N[M]^"*")) +
+    theme_classic() +
+    theme(
+      legend.position = "none",
+      axis.text = element_text(size = 8, color = "black"),
+      axis.title = element_text(size = 9, color = "black")
+    )
+
+  return(list(Panel_1_GG,Panel_2_GG))
+}
+
+plot_phaseplot <- function(df_x,isocline_df ){
+  GG_phaseplot <- ggplot() + 
+    geom_segment(data = isocline_df$Isocline[[1]], aes(x = x, xend = xend, y = y, yend= yend), color = "#646198") + 
+    geom_segment(data = isocline_df$Isocline[[2]], aes(x = x, xend = xend, y = y, yend= yend), color = "#D65739")+ 
+    geom_point(aes(x = df_x[1,"NP"],y =  df_x[1,"NM"])) + 
+    theme_classic() + 
+    scale_color_viridis() + 
+    geom_quiver(data = isocline_df$Phaseplot, 
+                aes(x = Var1,
+                    y = Var2, 
+                    u = slope_P, 
+                    v = slope_M, color = RE),
+                vecsize=2,
+                     alpha = 1) +
+    coord_cartesian(xlim = c(0,2000), ylim = c(0, 2000)) + 
+    geom_path(data = df_x, aes( x= NP, y= NM), size = 0.5, alpha =1)+
+    xlab("Primary vectors") + 
+    ylab("Secondary vectors") +
+    theme(aspect.ratio = 1,
+          axis.text = element_text(size = 9, color = 'black'),
+          axis.title = element_text(size = 10, color = 'black'),
+          legend.text = element_text(size = 7),
+          legend.key.size = unit(0.4, 'cm'))
+    
+    return( GG_phaseplot )
+  
+  
+  
+}
+
+
+
+
+
+
+
 
 plot_competition <- function(df) {
   ggplot(df, aes(x = c_MP / c_PP, y = c_PM / c_MM, fill = RE)) +

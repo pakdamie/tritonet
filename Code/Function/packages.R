@@ -13,3 +13,5 @@ library(ggplot2) # Figure making
 library(patchwork) # Put figures together
 library(viridis) # Color scheme
 library(ggquiver)
+library(geomtextpath)
+library(directlabels)
