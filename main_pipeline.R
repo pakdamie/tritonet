@@ -132,6 +132,7 @@ combined_phaseplot <- (plot_phaseplot(df_075, isocline_df[[1]]) +
 
 
 
+
 competition_plot
  ggsave(here("Figures_Process", "Figure_4_A.pdf"),
         width = 6, height = 3, units = "in"
@@ -141,8 +142,10 @@ ggsave(here("Figures_Process","Figure_4_B.pdf"),
                     width = 6, height = 3, units = "in")
 
 
-
-
+plot_competition_PM(RE_COMPETITION)[[2]] 
+ggsave(here("Figures_Process", "Supp_Secondary_Vectors.pdf"),
+       width = 6, height = 6, units = "in"
+)
 
 
 
@@ -233,6 +236,9 @@ make_with_recipe(
     
     RE_mortality_P_post <- readRDS("Output/df_RE_mortality_P_R0.rds")
     
+    dstb_time<- get_parameters("standard")["disturbance_time"]
+    
+    
     #Retrieve "standard" and "better_m"
     RE_mortality_P_worse <- subset(RE_mortality_P_post, 
                                    RE_mortality_P_post$param %in%
@@ -249,13 +255,13 @@ make_with_recipe(
     )
     
     Panel_RE_Time_SUPP <- 
-      plot_RE_dynamics(RE_mortality_P_worse , "No", NA) + 
+      plot_RE_dynamics(RE_mortality_P_worse ,dstb_time, "No", NA) + 
       facet_wrap(~param, ncol = 3) +
       theme(strip.background = element_blank(),
             strip.text = element_text(size = 11))
     
     # Plot total vector abundance over time with the RE As color
-    Panel_A_SUPP <- plot_NV_RE(RE_mortality_P_worse, "No", RE_limits) + 
+    Panel_A_SUPP <- plot_NV_RE(RE_mortality_P_worse,dstb_time, "No", RE_limits) + 
       facet_wrap(~param,ncol = 3) +
       theme(strip.background = element_blank(),
             strip.text = element_blank()) 
@@ -280,7 +286,7 @@ make_with_recipe(
     
     
     ggsave(here("Figures_Process", "SUPP_Figure_1.pdf"),
-           width = 6, height =7, units = "in"
+           width = 6, height = 7, units = "in"
     )
   },
   targets = "Figures_Process/SUPP_Figure_1.pdf",

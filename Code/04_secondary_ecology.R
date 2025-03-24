@@ -6,7 +6,7 @@ Mortality_P <- seq(0.01,1, 0.01)
 modifier <- seq(0, 2, length = 20)
 
 
-f_P_standard <- param_standard["f_P"] 
+f_P_standard  <- param_standard["f_P"] 
 theta_P_standard  <- param_standard["theta_P"]
 f_M_standard <- param_standard["f_M"] 
 theta_M_standard  <- param_standard["theta_M"]

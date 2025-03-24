@@ -3,74 +3,57 @@
 param_standard <- get_parameters("standard")
 c_MM_standard <- param_standard["c_MM"] ## Competition effect of p.vector on s.vector
 
-modifier <- seq(0.01, 2, length = 25)
-Mortality_P <- seq(0.01,1, 0.01)
-
+modifier <- seq(0.01, 2, length = 100)
+Mortality_P <- c(0.01, 0.25, 0.5, 0.75)
 
 competition_param <-
-        data.frame(expand.grid(
-                c_MM = c_MM_standard * modifier,
-                mortality_P = Mortality_P
-        ))
+  data.frame(expand.grid(
+    c_MM = c_MM_standard * modifier,
+    mortality_P = Mortality_P
+  ))
 
 
 competition_param_list <- vary_parameter_value(
-        param_standard, c( "c_MM", "mortality_P"), competition_param
+  param_standard, c("c_MM", "mortality_P"), competition_param
 )
 
 
 RE_COMPETITION <-
-        Simulate_Model_Output(
-                parameter = get_parameters("standard"),
-                infection_start = "No",
-                variable_interest = c("c_MM", "mortality_P"),
-                vector_value = competition_param
-        ) |>
-        Calculate_change_baseline(
-                competition_param_list,
-                competition_param, "No"
-        )
+  Simulate_Model_Output(
+    parameter = get_parameters("standard"),
+    infection_start = "No",
+    variable_interest = c("c_MM", "mortality_P"),
+    vector_value = competition_param
+  ) |>
+  Calculate_change_baseline(
+    competition_param_list,
+    competition_param, "No"
+  )
 
 panel_1 <- ggplot(
-        RE_COMPETITION, aes(
-                y = 1-mortality_P,
-                x = c_MM/c_MM_standard, fill = RE)) + 
-        geom_tile() + 
-        scale_fill_viridis() + 
-        scale_x_continuous(expand = c(0,0)) +
-        scale_y_continuous(expand = c(0,0)) + 
-        xlab(expression("Modifier of secondary on secondary competition ("*c[PM]*")")) +
-        ylab("Proportion of primary vectors removed") + 
-        theme_classic() + 
-        theme(legend.position = 'top', 
-              axis.text = element_text(size = 14, color = 'black'),
-              axis.title = element_text(size = 15, color = 'black'))
-
-sub_RE_COMPETITION <- subset(RE_COMPETITION,
-                             RE_COMPETITION$mortality_P %in% c(0.01,0.25, 0.5,0.75))
-
-
-panel_2 <- ggplot(
-        sub_RE_COMPETITION , aes(
-                x = c_MM/c_MM_standard,
-                y = (max_NM), color = as.factor(1-mortality_P),
-                group = as.factor(1-mortality_P)))+ 
-        geom_line(size = 1.2)+
-        scale_color_grey() + 
-        coord_cartesian(xlim=c(0,2)) + 
-        scale_x_continuous(expand = c(0,0))+
-        xlab(expression("Modifier of secondary on secondary competition ("*c[MM]*")")) +
-        ylab(expression("Increase from " * N[M]^"*"))+
-        theme_classic() + 
-        theme(
-                axis.text = element_text(size = 14, color = 'black'),
-                axis.title = element_text(size = 15, color = 'black'))
+  sub_RE_COMPETITION, aes(
+    x = c_MM / c_MM_standard,
+    y = (RE), color = as.factor(1 - mortality_P),
+    group = as.factor(1 - mortality_P)
+  )
+) +
+  geom_line(size = 0.8) +
+  scale_color_discrete_sequential(name = "Control\nintensity", palette = "ag_Sunset", rev = FALSE, n = 4) +
+  xlab(expression("Multiplier of secondary on secondary competition (" * c[PM] * ")")) +
+  ylab(expression("Increase from " * R[E]^"*"))+
+  theme_classic() + 
+  theme(
+    legend.position = "top",
+    axis.text = element_text(size = 9, color = "black"),
+    axis.title = element_text(size = 10, color = "black")
+  )
 
 
-panel_1/panel_2
 
 
-ggsave(here("Figures", "RE_DF_secondarycompetition.pdf"),
-       width = 8, height = 10, units = "in"
+panel_1 
+
+
+ggsave(here("Main_Figures", "SUPP_RE_secondarycompetition.pdf"),
+  width = 6, height = 6, units = "in"
 )
-
