@@ -1,3 +1,13 @@
+#' Title
+#'
+#' @param parameters 
+#' @param lists 
+#' @param disturbance_time 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
 calculate_R_effective_discrete_net <- function(parameters, lists, disturbance_time) {
   
   # Extract parameters
@@ -95,4 +105,36 @@ calculate_R_effective_discrete_net <- function(parameters, lists, disturbance_ti
   full_time_f <- do.call(rbind.data.frame, full_time)
   
   return(full_time_f)
+}
+
+namer_chosen_compartments <- function(chosen_patch) {
+  
+  compartments <- c("PS", "PI", #primary susceptible and infected
+                    "SS", "SI") #secondary susceptible and infected
+  
+  # Generate the names for each compartment
+  result <- lapply(compartments, function(prefix) {
+    apply(chosen_patch, 2, function(x) paste0(prefix, x), 
+          simplify = TRUE)
+  })
+  
+  
+  return(do.call(rbind,result))
+}
+
+#' Find the closest values
+#'
+#' @param vec1_want 
+#' @param vec2_have 
+#'
+#' @return
+#' @examples
+get_closest_values_vecs <- function(vec1_want, vec2_have){
+  index_closest_value <- NULL
+  
+  for (value in 1:length(vec1_want)){
+    index_closest_value [[value]] <- 
+      which.min(abs(vec1_want[[value]] - vec2_have))
+  }
+  return(do.call(rbind, index_closest_value ))
 }
