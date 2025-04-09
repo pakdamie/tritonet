@@ -11,7 +11,7 @@ create_parameters <- function() {
       b_P = 1 / 10, # P. Vector birth rate
       b_M = 1 / 10, # S. Vector birth rate
       mu_H = 1 / (365 * 70), ## Human death rate
-      mu_V = 1/20,
+      mu_V = 1 / 20,
       f_P = 0.25, # Biting rate of the p. vector
       f_M = 0.25, # Biting rate of the s.vector
       theta_P = 0.25, # Transmission probability of p. vector
@@ -25,10 +25,10 @@ create_parameters <- function() {
       ntime = (365 * 100),
       disturbance_time = (365 * 50),
       delta_T = 1,
-      d = 0.05,
-      prop = 1,
+      d = 9e-3,
+      prop = 0.25,
       mortality_P = 0.25,
-      mortality_M = 0.95
+      mortality_M = 1
     )
 
 
@@ -55,7 +55,7 @@ create_initial_states <- function(
     param,
     patch_num,
     initial_human = 1000,
-    initial_vector_s = 1000,
+    initial_vector_s = 2490,
     initial_vector_i = 10,
     infection = "No") {
   compartment_labels <-
@@ -115,8 +115,9 @@ create_initial_states <- function(
 #' @examples calculate_connectance(nodes = 100, edges = 100)
 #' @examples calculate_connectance(nodes = vcount(igraph), edges = ecount(igraph))
 calculate_connectance <- function(nodes, edges) {
-  return(edges / (nodes^2))
+  return(edges / (nodes * (nodes - 1) / 2))
 }
+
 
 
 #' Simulating the x and y coordinates for the spatial network
@@ -130,14 +131,14 @@ calculate_connectance <- function(nodes, edges) {
 #' the distance matrix with kernal
 #' @examples simulate_xy_coordinates(seed = 24601, 30)
 #'
-simulate_xy_coordinates <- function(seed = 24601, max_distance_param) {
-  set.seed(seed)
-  xy <- seq(1, max_distance_param, length.out = 1000)
+simulate_xy_coordinates <- function(max_distance, dist_modifer) {
+  xy <- seq(1, max_distance, length.out = 1000)
+
   # List of all possible coordinates
   x_coord <- sample(xy, 100, replace = TRUE) # x-coordinate
   y_coord <- sample(xy, 100, replace = TRUE) # y-coordinate
   xy_coord <- cbind(x_coord, y_coord) # xy-coordinates combined
-  NegExpDist <- as.matrix(exp(5 * -dist(xy_coord))) # distance matrix with kernel
+  NegExpDist <- as.matrix(exp(dist_modifer * -dist(xy_coord))) # distance matrix with kernel
 
   return(list(xy_coord, NegExpDist))
 }
@@ -165,14 +166,12 @@ retrieve_biggest_component <- function(xy_list) {
   V(Adj_graph)$Long <- xy_list[[1]][, 1] # x-coordinates
   V(Adj_graph)$Lat <- xy_list[[1]][, 2] # y-coordinates
 
-  # The number of edges we need for a connectance of 10%
-  number_of_edges <- (0.05 * (100^2))
+  # The number of edges we need for a connectance of 5%
+  number_of_edges <- 0.05 * (vcount(Adj_graph) * (vcount(Adj_graph) - 1) / 2)
 
   # You choose the top number of edges (from above) and delete
   # everything else
-  edge_threshold <- sort(E(Adj_graph)$weight,
-    decreasing = TRUE
-  )[number_of_edges]
+  edge_threshold <- sort(E(Adj_graph)$weight, decreasing = TRUE)[number_of_edges]
 
   deleted_edges_graph <- delete_edges(
     Adj_graph,
@@ -189,7 +188,6 @@ retrieve_biggest_component <- function(xy_list) {
   biggest_component_length <- which.max(
     lapply(decomposed_components, function(x) vcount(x))
   )
-
   # Retrieve our network of interest (biggest component)
   network_bigcomp <- decomposed_components[[biggest_component_length]]
 
@@ -205,7 +203,7 @@ retrieve_biggest_component <- function(xy_list) {
 #' retrieve_biggest_component
 #' @return a data.frame that has all the possible edges and their weights in order
 #' @examples
-recalculate_distance_matrix <- function(network_newcomp) {
+recalculate_distance_matrix <- function(network_newcomp, dist_modifier) {
   # Get the x-y coordinates of the newest component
   xy_coord_interest <- cbind(
     V(network_newcomp)$Long,
@@ -213,7 +211,7 @@ recalculate_distance_matrix <- function(network_newcomp) {
   )
 
   # Calculate new distance matrices and apply the distance kernal
-  DispMat_interest <- as.matrix(exp(5 * -dist(xy_coord_interest)))
+  DispMat_interest <- as.matrix(exp(dist_modifier * -dist(xy_coord_interest)))
 
   # We want to ensure that we're not getting multiedges
   DispMat_interest[lower.tri(DispMat_interest)] <- NA
@@ -222,15 +220,15 @@ recalculate_distance_matrix <- function(network_newcomp) {
   edgelist_present <- as_edgelist(network_newcomp, names = T)
 
   ### The new distance matrix
-  melted_edge_list <- melt(DispMat_interest,
-    varnames = c("patch1", "patch2"),
-    value.name = "weight"
-  )
+  melted_edge_list <-
+    melt(DispMat_interest,
+      varnames = c("patch1", "patch2"),
+      value.name = "weight"
+    )
 
   ### Remove self_loop
   melted_edge_list <- na.omit(melted_edge_list[!(melted_edge_list$patch1 ==
     melted_edge_list$patch2), ])
-
 
   edges_to_add <- paste0(melted_edge_list$patch1, "-", melted_edge_list$patch2)
   edges_present <- paste0(edgelist_present[, 1], "-", edgelist_present[, 2])
@@ -255,83 +253,92 @@ recalculate_distance_matrix <- function(network_newcomp) {
 #' in
 #' @return A list of igraph
 #' @examples
-simulate_spatial_network <- function(seed, max_distance, specific_connectance = NA) {
+simulate_spatial_network <- function(max_distance, dist_modifier, specific_connectance = NA) {
   # Generate a list of xy coordinates for the network using the seed and max_distance
-  list_xy_coord <- simulate_xy_coordinates(seed, max_distance)
+  list_xy_coord <- simulate_xy_coordinates(max_distance, dist_modifier)
 
   # Retrieve the largest connected component (network) from the generated coordinates
   network_template <- retrieve_biggest_component(list_xy_coord)
 
   # Recalculate the distance matrix for potential connections between nodes (patches)
-  possible_edges_df <- recalculate_distance_matrix(network_template)
+  possible_edges_df <- recalculate_distance_matrix(network_template, dist_modifier)
 
   # Initialize two lists to store the network structure and related information
   adj_list <- NULL
   adj_info_list <- NULL
 
   ### Manually add the initial network to the lists
-
   # Add the initial network (first component) to the adjacency list
   adj_list[[1]] <- network_template
 
+  template_vcount <- vcount(network_template)
+  template_ecount <- ecount(network_template)
+
   # Store network information such as the number of nodes, edges, and connectance
   adj_info_list[[1]] <- c(
-    num_nodes = vcount(network_template), # Number of nodes in the network
-    num_edges = ecount(network_template), # Number of edges in the network
+    num_nodes = template_vcount, # Number of nodes in the network
+    num_edges = template_ecount, # Number of edges in the network
 
     connectance = calculate_connectance( # Connectance = edges / (nodes * (nodes - 1) / 2)
-      nodes = vcount(network_template),
-      edges = ecount(network_template)
+      nodes = template_vcount,
+      edges = template_ecount
     )
   )
 
-  ### Start the loop to add edges to the network
-
+  ### Start the loop to add edges to the network for the desired connectance
   # Loop through each potential edge and add it to the network
-  for (new_edge in seq(1, nrow(possible_edges_df))) {
+
+  # From the template, how many more edges do I need to add in
+
+  for (C in seq(1, length(specific_connectance))) {
+    sp_edges_necessary <-
+      specific_connectance[C] *
+      (template_vcount * (template_vcount - 1) / 2) -
+      template_ecount
+
+
     # Add an edge between two nodes (patch1 and patch2) with a specific weight
-    network_template <- add_edges(network_template,
+    added_template <- add_edges(network_template,
       c(
-        possible_edges_df[new_edge, "patch1"],
-        possible_edges_df[new_edge, "patch2"]
+        possible_edges_df[1:sp_edges_necessary, "patch1"],
+        possible_edges_df[1:sp_edges_necessary, "patch2"]
       ),
-      weight = possible_edges_df[new_edge, "weight"]
+      weight = possible_edges_df[1:sp_edges_necessary, "weight"]
     )
 
     # Update the adjacency list with the new network after adding the edge
-    adj_list[[new_edge + 1]] <- network_template
+    adj_list[[C + 1]] <- added_template
 
     # Add updated network information to the adj_info_list
-    adj_info_list[[new_edge + 1]] <- c(
-      num_nodes = vcount(network_template),
-      num_edges = ecount(network_template),
+    adj_info_list[[C + 1]] <- c(
+      num_nodes = vcount(added_template),
+      num_edges = ecount(added_template),
       connectance = round(calculate_connectance(
-        vcount(network_template),
-        ecount(network_template)
-      ), 5) # Round connectance to 5 decimal places
+        vcount(added_template),
+        ecount(added_template)
+      ), 2) # Round connectance to 5 decimal places
     )
+
+    # Convert the adj_info_list to a dataframe for easier analysis
+    adj_info_DF <- as.data.frame(do.call(rbind, adj_info_list))
   }
 
-  # Convert the adj_info_list to a dataframe for easier analysis
-  adj_info_DF <- as.data.frame(do.call(rbind, adj_info_list))
 
-  # If a specific connectance is not provided, calculate the range of connectance values
-  if (is.na(specific_connectance) == TRUE) {
-    connectance_interest <- c(adj_info_DF[1, 3], seq(0.1, 1, 0.1)) # Default connectance range
+  return(list(adj_list, adj_info_DF))
+}
 
-    # Find the network that is closest to the connectance values of interest
-    interested_network <- get_closest_values_vecs(
-      connectance_interest,
-      adj_info_DF$connectance
-    )
-  } else {
-    # If a specific connectance is provided, find the network closest to that value
-    interested_network <- get_closest_values_vecs(
-      specific_connectance,
-      adj_info_DF$connectance
-    )
-  }
 
-  # Return the network that matches the closest connectance value
-  return(adj_list[interested_network][[1]])
+
+simulate_as_adjacency_matrix <- function(igraph_object) {
+  
+  adjacency_matrix <- as_adjacency_matrix(
+    igraph_object,
+    type = "both",
+    attr = "weight",
+    names = TRUE,
+    sparse = FALSE
+  )
+  summed_prob <- rowSums(adjacency_matrix)
+  adjacency_matrix_adj <- sweep(adjacency_matrix, MARGIN = 1, summed_prob, `/`)
+  return(adjacency_matrix_adj)
 }

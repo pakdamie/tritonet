@@ -82,7 +82,7 @@ Rcpp::List two_vector_one_host_disp(
     
     arma::rowvec PI_Rates = (infections_P % PS.row(j))- (mu_V * PI.row(j));
     
-    arma::rowvec  MS_Rates = (b_M * NM) % (1-(c_PM * NP + c_MM * NM)); 
+    arma::rowvec  MS_Rates = (b_M * NM) % (1-(c_PM * NP + c_MM * NM))
      - (mu_V + infections_M) % MS.row(j);
     
     arma::rowvec MI_Rates =  (infections_M % MS.row(j))  - (mu_V * MI.row(j));

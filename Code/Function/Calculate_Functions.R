@@ -26,9 +26,7 @@ calculate_R_effective_discrete_net <- function(parameters, lists, disturbance_ti
   
   # Extract lists
   HS <- lists[[1]]
-  HI <- lists[[2]]
-  HR <- lists[[3]]
-  
+ 
   PS <- lists[[4]]
   PI <- lists[[5]]
   
@@ -37,75 +35,52 @@ calculate_R_effective_discrete_net <- function(parameters, lists, disturbance_ti
   
   patch_num <- ncol(HS)
   
-  # Population counts
-  NH <- HS + HI + HR
+  NH <- 1000
   NP <- PS + PI
-  NS <- MS + MI
+  NM <- MS + MI
   
-  # Time window of interest
-  interest <- seq(disturbance_time - 5, disturbance_time + 50)
+  HtoP <- (f_P * theta_H)/(gamma + mu_H) * (PS/NH)
+  PtoH <- (f_P * theta_P)/(mu_V) * (HS/NH)
+
+  HtoM <- (f_M * theta_H)/(gamma + mu_H) * (MS/NH)
+  MtoH <- (f_M * theta_M)/(mu_V) * (HS/NH)
   
-  full_time <- list()
+  Patch_RE <- (HtoP * PtoH) + (HtoM * MtoH)
   
-  for (t in seq_along(interest)) {
-    
-    interest_time <- interest[t]
-    
-    # Ratios and infection forces
-    
-    H_P_ratio <- HS[interest_time,]/NH[interest_time,]
-    H_M_ratio <- HS[interest_time,]/NH[interest_time,]
-    P_H_ratio <- PS[interest_time,]/NH[interest_time,]
-    M_H_ratio <- MS[interest_time,]/NH[interest_time,]
-    
-    
-    P_H_INF <- theta_P * f_P * H_P_ratio
-    M_H_INF <- theta_M * f_M * H_M_ratio
-    H_P_INF <- theta_H * f_P * P_H_ratio
-    H_M_INF <- theta_H * f_M * M_H_ratio
-    
-    # Initialize matrices
-    F_mat <- matrix(0, nrow = length(P_H_INF) * 3, ncol = length( P_H_INF ) * 3, byrow = TRUE)
-    V_mat <- matrix(0, nrow = length(P_H_INF) * 3, ncol = length( P_H_INF ) * 3, byrow = TRUE)
-    
-    for (k in seq_along(P_H_INF)) {
-      index <- (3 * (k - 1) + 1) : (3 * k)
-      
-      F_mat[index, index] <- matrix(c(
-        0, P_H_INF[k], M_H_INF[k],
-        H_P_INF[k], 0, 0,
-        H_M_INF[k], 0, 0
-      ), ncol = 3, byrow = TRUE)
-    }
-    
-    
-    for (l in seq_along(P_H_INF)) {
-      index <- (3 * (l - 1) + 1):(3 * l)
-      
-      H_LEAVE <- 1/gamma + mu_H
-      P_Vout <- (c_MP * NM[interest_time,]) + (c_PP * NP[interest_time,])
-      M_Vout<-  (c_PM * NP[interest_time,]) + (c_MM * NM[interest_time,])
-      
-      P_Vout_Inv <- ifelse(P_Vout == 0, 0, 1/P_Vout)
-      M_Vout_Inv <- ifelse(M_Vout == 0, 0, 1/M_Vout)
-      
-      V_mat[index, index] <- 
-        matrix(c(H_LEAVE, 0, 0,
-                 0,  P_Vout_Inv[l], 0,
-                 0, 0, M_Vout_Inv[l]
-        ), ncol = 3, byrow = TRUE)
-    }
-    
-    FV <- F_mat %*% (V_mat)
-    
-    full_time[[t]] <- cbind(RE = max(Re(eigen(FV)$values)),time = interest_time)
-  }
-  
-  
-  full_time_f <- do.call(rbind.data.frame, full_time)
-  
-  return(full_time_f)
+  return(cbind.data.frame(time = 1:nrow(HS), Patch_RE, total_RE = rowSums(Patch_RE)))
+
 }
+
+
+check_stability <- function(full_list){
+  
+  
+  
+  
+  
+  
+}
+
+
+calculate_CV_RE <- function(df){
+  
+  
+  apply()
+  
+  
+  
+  
+  
+  
+}
+
+
+
+
+
+
+
+
 
 namer_chosen_compartments <- function(chosen_patch) {
   
@@ -121,6 +96,15 @@ namer_chosen_compartments <- function(chosen_patch) {
   
   return(do.call(rbind,result))
 }
+
+
+
+
+
+
+
+
+
 
 #' Find the closest values
 #'
