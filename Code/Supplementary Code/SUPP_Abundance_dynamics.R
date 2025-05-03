@@ -33,6 +33,13 @@ for (i in seq_along(RE_mortality_P)) {
 RE_mortality_P_DF <- do.call(rbind, RE_mortality_P)
 
 
+# --------------------------------------------------------------------------------
+# Step 2: Subset Time Period of Interest
+# --------------------------------------------------------------------------------
+
+# Extract a specific time window from the simulation results.
+# The subset includes data slightly before and after the disturbance event.
+
 # Get the time, total primary and secondary, different disturbance
 # intensity and for melting
 RE_mortality_P_sub <- RE_mortality_P_DF[, c("time", "NP", "NM", "id")] |>
@@ -40,14 +47,14 @@ RE_mortality_P_sub <- RE_mortality_P_DF[, c("time", "NP", "NM", "id")] |>
 
 RE_mortality_P_sub <- subset(
   RE_mortality_P_sub,
-  RE_mortality_P_sub$time > 45000 &
-    RE_mortality_P_sub$time < 46000
+  RE_mortality_P_sub$time > dstb_time - 50 &
+    RE_mortality_P_sub$time < dstb_time + 300
 )
 
 
 
 # -------------------------------------------------------------
-# Step 2: Plot
+# Step 3: Plot
 # -------------------------------------------------------------
 
 ggplot(RE_mortality_P_sub,
@@ -84,7 +91,7 @@ ggplot(RE_mortality_P_sub,
     
   )
 
-ggsave(here("Figures", "SUPP_abundance_dynamics.pdf"),
+ggsave(here("Main_Figures", "SUPP_abundance_dynamics.pdf"),
   width = 6, height = 5, units = "in"
 )
 
@@ -126,7 +133,7 @@ MS_abundance_GG <-
     axis.title = element_text(size = 14, color = "black")
   )
 
-ggsave(here("Figures", "SUPP_over_Eq_M.pdf"),
+ggsave(here("Main_Figures", "SUPP_over_Eq_M.pdf"),
        width = 6, height = 5, units = "in"
 )
 

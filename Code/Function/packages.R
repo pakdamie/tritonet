@@ -15,3 +15,4 @@ library(viridis) # Color scheme
 library(ggquiver)
 library(geomtextpath)
 library(directlabels)
+library(colorspace)

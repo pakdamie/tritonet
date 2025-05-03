@@ -81,7 +81,7 @@ plot_RE_dynamics <- function(df, dstb, postdisturb = "No", RE_limit) {
     ) +
     scale_color_discrete_sequential(palette = "ag_Sunset", rev = FALSE) +
     xlab("Time since disturbance") +
-    ylab(expression("Reproductive number (" * R[E] * ")")) +
+    ylab(expression("Reproductive number (" * R[t] * ")")) +
     theme_classic() +
     theme(
       legend.position = "none",
@@ -132,7 +132,7 @@ plot_NV_RE <- function(df, dstb, postdisturb = "No", RE_limit) {
     ) +
     xlab("Time since disturbance") +
     ylab("Total vector abundance") +
-    scale_color_viridis(name = expression(R[0])) +
+    scale_color_viridis(name = expression(R[t])) +
     theme_classic() +
     theme(
       axis.text = element_text(size = 8, color = "black"),
@@ -185,9 +185,9 @@ plot_NP_NM_RE <- function(df, postdisturb, RE_limit) {
       aes(x = NP, y = NM, group = id),
       shape = 21, size = 1.2, fill = NA
     ) +
-    scale_color_viridis(name = expression(R[0])) +
-    xlab(expression("# of primary vectors " * "(" * N[P] * ")")) +
-    ylab(expression("# of secondary vectors " * "(" * N[M] * ")")) +
+    scale_color_viridis(name = expression(R[t])) +
+    xlab(expression("# of primary vectors " * "(" * N^P * ")")) +
+    ylab(expression("# of secondary vectors " * "(" * N^M * ")")) +
     theme_classic() +
     theme(
       axis.text = element_text(size = 8, color = "black"),
@@ -233,7 +233,7 @@ plot_NM_REff <- function(df, postdisturb) {
       aes(x = time, y = MtoH / RE, group = id)
     ) +
     xlab("Time since disturbance") +
-    ylab("Secondary vector contribution to RE") +
+    ylab("Secondary vector contribution to Rt") +
     theme_classic() +
     theme(
       axis.text = element_text(size = 14, color = "black"),
@@ -263,7 +263,7 @@ plot_m_contribution_heatmap <- function(df) {
     coord_equal() +
     xlab("Transmission efficiency of secondary vector \n in relation to primary vector") +
     ylab("Proportion of primary vectors removed") +
-    scale_fill_viridis(option = "mako", name = expression("Secondary vector \ncontribution to" ~ R[E]), discrete = TRUE) +
+    scale_fill_viridis(option = "mako", name = expression("Secondary vector \ncontribution to" ~ R[t]), discrete = TRUE) +
     scale_x_continuous(expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     theme(
@@ -290,7 +290,7 @@ plot_m_contribution_heatmap <- function(df) {
     coord_equal() +
     xlab("Transmission efficiency of secondary vector \n in relation to primary vector") +
     ylab("Proportion of primary vectors removed") +
-    scale_fill_viridis(option = "mako", name = expression("Increase in" ~ R[E]), discrete = TRUE) +
+    scale_fill_viridis(option = "mako", name = expression("Increase in" ~ R[t]), discrete = TRUE) +
     scale_x_continuous(expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
     coord_fixed() +
@@ -329,7 +329,7 @@ plot_m_contribution_lineplot <- function(df, dstb_time) {
       method = list(dl.combine("last.points")), cex = 0.1
     ) +
     xlab("Time since disturbance") +
-    ylab("Secondary vector \ncontribution to" ~ R[E]) +
+    ylab("Secondary vector \ncontribution to" ~ R[t]) +
     theme_classic() +
     theme(
       aspect.ratio = 1,
@@ -432,7 +432,7 @@ plot_comparison_RE <- function(df, split_variable) {
     xlab("Disturbance intensity on primary vector") +
     ylab("Total vector abundance") +
     scale_fill_continuous_divergingx(
-      name = expression(R[E]),
+      name = expression(R[t]),
       mid = 1, n_interp = 11, palette = "Roma",
       rev = TRUE, limits = c(0.8, 1.6)
     ) +
@@ -459,7 +459,7 @@ plot_heatmapintensity <- function(df) {
     )
   ) +
     geom_raster() +
-    scale_fill_viridis(option = "rocket", name = expression(R[E])) +
+    scale_fill_viridis(option = "rocket", name = expression(R[t])) +
     scale_x_discrete(expand = c(0, 0)) +
     scale_y_discrete(expand = c(0, 0)) +
     xlab(expression("Disturbance intensity of primary vector " * "(" * mu[P] * ")")) +
@@ -517,7 +517,7 @@ plot_competition_PM <- function(df) {
     scale_x_continuous(expand = c(0, 0), limits = c(0.5, 2)) +
     scale_y_continuous(expand = c(0, 0)) +
     xlab(expression("Multiplier of primary on secondary competition (" * c[PM] * ")")) +
-    ylab(expression("Increase from baseline " * R[E]^"*")) +
+    ylab(expression("Increase from baseline " * R[t]^"*")) +
     theme_classic() +
     theme(
       legend.position = "none",
@@ -581,7 +581,7 @@ plot_phaseplot <- function(df_x, isocline_df) {
     geom_segment(data = isocline_df$Isocline[[2]], aes(x = x, xend = xend, y = y, yend = yend), color = "#D65739") +
     geom_point(aes(x = df_x[1, "NP"], y = df_x[1, "NM"])) +
     theme_classic() +
-    scale_color_viridis() +
+    scale_color_viridis(name = "Rt") +
     geom_quiver(
       data = isocline_df$Phaseplot,
       aes(
@@ -607,4 +607,3 @@ plot_phaseplot <- function(df_x, isocline_df) {
 
   return(GG_phaseplot)
 }
-

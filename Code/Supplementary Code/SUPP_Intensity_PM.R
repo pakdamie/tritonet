@@ -14,6 +14,11 @@ Mortality_P <- c(seq(0, 1, 0.1))
 Mortality_M <- c(seq(0, 1, 0.1))
 Mortality_PM_Grid <- expand.grid(Mortality_P, Mortality_M)
 
+
+# When is the system disturbed?
+dstb_time <- get_parameters("standard")[["disturbance_time"]]
+
+
 # --------------------------------------------------------------------------------
 # Step 1: Simulate Model Output and Calculate Re
 # --------------------------------------------------------------------------------
@@ -75,7 +80,7 @@ ggplot(
   geom_tile() +
   xlab("Proportion of primary vector removed") +
   ylab("Proportion of secondary vector removed") +
-  scale_fill_viridis(expression("Increase above " * R[E]^"*")) +
+  scale_fill_viridis(expression("Increase above " * R[t]^"*")) +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   coord_equal() +
@@ -85,4 +90,4 @@ ggplot(
     axis.title = element_text(size = 15, color = "black")
   )
 
-ggsave("Figures/SUPP_Intensity_PM.pdf", units = "in", height = 6, width = 6)
+ggsave("Main_Figures/SUPP_Intensity_PM.pdf", units = "in", height = 6, width = 6)

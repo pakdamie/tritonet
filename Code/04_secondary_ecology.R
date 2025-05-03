@@ -46,7 +46,7 @@ ggplot(RE_SECONDARY ,aes(x = f_M/f_P_standard,
   ylab(expression("Modifier of secondary transmission probability (" *theta[M]/theta[P]*")"))+
   scale_x_continuous(expand = c(0,0)) + 
   scale_y_continuous(expand = c(0,0)) + 
-  scale_fill_viridis(name = expression("Increase from " * R[0])) + 
+  scale_fill_viridis(name = expression("Increase from " * R[t])) + 
   theme(legend.position = "top",
         axis.text = element_text(size = 9),
         axis.title = element_text(size = 10))
