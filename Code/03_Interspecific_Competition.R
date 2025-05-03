@@ -4,6 +4,7 @@
 # with the change in the transmission efficiency?
 # --------------------------------------------------------------------------------
 param_standard <- get_parameters("standard")
+
 c_PM_standard <- param_standard["c_PM"] ## Competition effect of p.vector on s.vector
 c_MM_standard <- param_standard["c_MM"]
 c_MP_standard <- param_standard["c_MP"]
@@ -97,7 +98,6 @@ RE_COMPETITION_2 <-
   ) 
 
 
-
 process_testing <- function(RE_data, params) {
   testing <- Calculate_Human_Reff_Expanded(RE_data, params)
   df_interest<- testing[testing$time > params[["disturbance_time"]] - 1, ]
@@ -108,4 +108,9 @@ df_075 <- Process_Results(RE_COMPETITION_2[[1]],competition_param_list[[1]] )
 df_1 <- Process_Results(RE_COMPETITION_2[[2]],competition_param_list[[2]] )
 df_125 <- Process_Results(RE_COMPETITION_2[[3]],competition_param_list[[3]] )
 
+saveRDS(isocline_df
+        , file = here("Output", "isocline_df.rds"))
+saveRDS(df_075 , file = here("Output", "df_075.rds"))
+saveRDS(df_1 , file = here("Output", "df_1.rds"))
+saveRDS(df_125 , file = here("Output", "df_125.rds"))
 

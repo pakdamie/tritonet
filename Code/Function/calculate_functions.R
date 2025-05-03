@@ -246,6 +246,9 @@ Calculate_change_baseline <- function(model_output,
 #' @examples
 Calculate_Isocline <- function(c_PM_input) {
   ab <- seq(0, 1200)
+  param_standard <- get_parameters("standard")
+  
+  
   b_V <- param_standard["b_P"]
   mu_V <- param_standard["mu_V"]
   
@@ -276,6 +279,9 @@ Calculate_Isocline <- function(c_PM_input) {
 #'
 #' @examples
 Calculate_Phaseplot <- function(c_PM_input) {
+  
+  param_standard <- get_parameters("standard")
+  
   P <- seq(0,1100,125)
   M <- seq(0,2000,125)
   expanded_PM <- expand.grid(P,M)

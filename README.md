@@ -1,10 +1,6 @@
 This is the full code for the model simulation as well as the subsequent analysis.
 This repository is by Damie Pak.
 
-
-
-
-
 ## The Main Infrastructure ("I want to get idea for how the code works!")
 
 ### The Mathematical Model
@@ -31,7 +27,4 @@ figures for the paper!)
 
 ## Rebuilding and Reproducing  ("I want to reproduce your work!")
 
-I provide two ways to reproduce everything:
-
-1. I provide a pipeline using `makepipe` in R. It's called `main_pipeline.R`!
-2. I provide a bashscript (using terminal)
+I provide a pipeline script R. It's called `main_pipeline.R`!

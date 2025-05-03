@@ -459,7 +459,7 @@ plot_heatmapintensity <- function(df) {
     )
   ) +
     geom_raster() +
-    scale_fill_viridis(option = "rocket", name = expression(R[t])) +
+    scale_fill_viridis(option = "viridis", name = expression(R[t])) +
     scale_x_discrete(expand = c(0, 0)) +
     scale_y_discrete(expand = c(0, 0)) +
     xlab(expression("Disturbance intensity of primary vector " * "(" * mu[P] * ")")) +

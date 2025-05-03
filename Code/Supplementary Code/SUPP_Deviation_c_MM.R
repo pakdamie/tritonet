@@ -18,7 +18,7 @@ competition_param_list <- vary_parameter_value(
 )
 
 
-RE_COMPETITION <-
+sub_RE_COMPETITION <-
   Simulate_Model_Output(
     parameter = get_parameters("standard"),
     infection_start = "No",
@@ -40,8 +40,8 @@ panel_1 <- ggplot(
   geom_line(size = 0.8) +
   scale_color_discrete_sequential(name = "Control\nintensity", palette = "ag_Sunset", rev = FALSE, n = 4) +
   xlab(expression("Multiplier of secondary on secondary competition (" * c[PM] * ")")) +
-  ylab(expression("Increase from " * R[E]^"*"))+
-  theme_classic() + 
+  ylab(expression("Increase from " * R[E]^"*")) +
+  theme_classic() +
   theme(
     legend.position = "top",
     axis.text = element_text(size = 9, color = "black"),
@@ -51,7 +51,7 @@ panel_1 <- ggplot(
 
 
 
-panel_1 
+panel_1
 
 
 ggsave(here("Main_Figures", "SUPP_RE_secondarycompetition.pdf"),
